@@ -14,6 +14,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 h1{font:300 44px/1.1 var(--serif);margin:14px 0 6px}
 .meta{color:var(--mu);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
 h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
+.intro{color:var(--mu);margin:0 0 20px}
 .sec{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;margin-top:26px;padding-bottom:4px}
 .sec span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5d5b58;white-space:nowrap}
 .sec .on{color:var(--tx);border-bottom:1px solid var(--ac);padding-bottom:4px}
@@ -70,9 +71,9 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 <div id="modal"></div><div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script>
-/* ---- Config (publishable key is safe in the browser; Row Level Security protects the data) ---- */
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
+const TOKEN=new URLSearchParams(location.search).get('w');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Client Approval'];
 const DEMO=[
@@ -99,7 +100,8 @@ function loadScript(src){return new Promise(r=>{const s=document.createElement('
 async function init(){
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp('<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY);
+  sb=supabase.createClient(SB_URL,SB_KEY,TOKEN?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(TOKEN)return loadShared();
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;boot()}});
   boot();
@@ -129,20 +131,28 @@ async function loadWedding(){
   if(e2)return failView(e2);
   wed={...w,groups:gs};render();
 }
+async function loadShared(){
+  const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
+  if(error)return setApp('<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>This link isn’t working</h2><p class="meta">Please check the link, or ask your photographer for a new one.</p></div>');
+  wed=data;render();
+}
+const reload=()=>TOKEN?loadShared():loadWedding();
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
-const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);loadWedding()}};
+const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload()}};
 
 /* ---- Views ---- */
-function render(){if(wed)setApp(ui.day?dayView():mainView())}
-function row(g){return`<div class="g ${g.done?'done':''}" data-id="${g.id}" ${ui.tab==='all'?'draggable="true"':''}>
-<button class="ck" data-a="tog" data-id="${g.id}" aria-label="Toggle completed">${g.done?'✓':''}</button>
+function render(){if(wed)setApp(TOKEN?clientView():ui.day?dayView():mainView())}
+function row(g){return`<div class="g ${g.done&&!TOKEN?'done':''}" data-id="${g.id}" ${ui.tab==='all'?'draggable="true"':''}>
+${TOKEN?'':`<button class="ck" data-a="tog" data-id="${g.id}" aria-label="Toggle completed">${g.done?'✓':''}</button>`}
 <div class="bd"><div class="nm"><span class="no">${String(G().indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>
 <div class="sub">${CATS[g.category]} · ${mins(g.minutes)}</div>
 ${g.people.length?`<div class="chips">${g.people.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
 ${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}
 <div class="acts"><button data-a="up" data-id="${g.id}" aria-label="Move up">↑</button><button data-a="down" data-id="${g.id}" aria-label="Move down">↓</button><button data-a="edit" data-id="${g.id}">Edit</button><button data-a="del" data-id="${g.id}">Delete</button></div></div></div>`}
+const tabsHtml=()=>`<div class="tabs">${[['all','All'],...Object.entries(CATS)].map(([k,v])=>`<button class="tab ${ui.tab===k?'on':''}" data-a="tab" data-k="${k}">${v}</button>`).join('')}</div>`;
+const listHtml=()=>{const a=G(),l=ui.tab==='all'?a:a.filter(g=>g.category===ui.tab);return`<div>${l.length?l.map(row).join(''):'<p class="empty">No groups here yet.</p>'}</div>`};
 function mainView(){
-  const w=wed,s=stats(),a=G(),list=ui.tab==='all'?a:a.filter(g=>g.category===ui.tab);
+  const w=wed,s=stats();
   return`<div class="brand">ZEMA WEDDING PLANNER</div>
 <h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)} · ${esc(w.city||'')}</div>
 <nav class="sec">${SECS.map(x=>x==='Family & Friends'?`<span class="on">${x}</span>`:`<span title="Coming soon">${x}</span>`).join('')}</nav>
@@ -151,10 +161,19 @@ function mainView(){
 <div class="big">${s.d} / ${s.n} <small>completed</small></div>
 <div class="bar"><i style="width:${s.p}%"></i></div>
 <div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
-<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button></div>
-<div class="tabs">${[['all','All'],...Object.entries(CATS)].map(([k,v])=>`<button class="tab ${ui.tab===k?'on':''}" data-a="tab" data-k="${k}">${v}</button>`).join('')}</div>
-<div>${list.length?list.map(row).join(''):'<p class="empty">No groups here yet.</p>'}</div>
+<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button></div>
+${tabsHtml()}${listHtml()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="reset">Reset demo data</button><button data-a="out">Sign out</button></span></footer>`}
+function clientView(){
+  const w=wed,a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
+  return`<div class="brand">ZEMA WEDDING PLANNER</div>
+<h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)} · ${esc(w.city||'')}</div>
+<h2>Your Family &amp; Friends Photo List</h2>
+<p class="intro">Add the groups you’d like photographed, and put them in the order you’d like. Your photographer will work through this list on the day. Changes save automatically.</p>
+<section class="card"><div class="lbl">Photo list</div><div class="big">${a.length} <small>groups · about ${t} mins</small></div></section>
+<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button></div>
+${tabsHtml()}${listHtml()}
+<footer><span>Private link · changes save automatically</span></footer>`}
 function dayView(){
   const w=wed,s=stats();
   return`<div class="top"><button class="btn" data-a="exit">Exit</button></div>
@@ -163,6 +182,10 @@ function dayView(){
 <div class="big">${s.d} / ${s.n} <small>completed · ${s.p}%</small></div><div class="bar"><i style="width:${s.p}%"></i></div>
 <div>${G().map((g,i)=>`<button class="dr ${g.done?'done':''}" data-a="tog" data-id="${g.id}"><span class="ck">${g.done?'✓':''}</span><span class="dt"><b>${i+1}. ${esc(g.name)}</b><small>${esc(g.people.join(', '))} · ${mins(g.minutes)}</small>${g.notes?`<em>${esc(g.notes)}</em>`:''}</span></button>`).join('')}</div>
 ${s.n&&s.d===s.n?'<p class="fin">All family photographs complete.</p>':''}`}
+function copyLink(){
+  const u=location.origin+location.pathname+'?w='+wed.share_token;
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Client link copied'),()=>prompt('Copy this client link:',u));
+}
 
 /* ---- Modal ---- */
 const closeM=()=>{ui.modal=null;$('#modal').innerHTML=''};
@@ -186,6 +209,12 @@ async function saveForm(){
   const p=$('#fp').value.trim();if(p)ui.modal.people.push(p);
   const o={category:$('#fc').value,name,people:ui.modal.people,minutes:Math.max(1,parseInt($('#fm').value)||3),notes:$('#fo').value.trim()};
   const id=ui.modal.id;
+  if(TOKEN){
+    const{data,error}=await sb.rpc('shared_save_group',{p_token:TOKEN,p_id:id||null,p_category:o.category,p_name:o.name,p_people:o.people,p_minutes:o.minutes,p_notes:o.notes});
+    if(error)return toast('Could not save: '+error.message);
+    if(id)Object.assign(G().find(x=>x.id===id),data);else G().push(data);
+    closeM();render();return;
+  }
   if(id){
     const{error}=await sb.from('photo_groups').update(o).eq('id',id);
     if(error)return toast('Could not save: '+error.message);
@@ -200,8 +229,8 @@ async function saveForm(){
 function ask(msg,fn){ui.modal={type:'confirm',fn};
   $('#modal').innerHTML=`<div class="ov"><div class="m sm"><p>${esc(msg)}</p><div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="yes">Confirm</button></div></div></div>`}
 
-/* ---- Ordering (saves every group's position) ---- */
-const syncOrder=()=>run(sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,done:g.done,position:i}))));
+/* ---- Ordering ---- */
+const syncOrder=()=>run(TOKEN?sb.rpc('shared_reorder',{p_token:TOKEN,p_ids:G().map(g=>g.id)}):sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,done:g.done,position:i}))));
 function move(id,d){
   const a=G(),v=ui.tab==='all'?a:a.filter(x=>x.category===ui.tab),i=v.findIndex(x=>x.id===id),n=v[i+d];
   if(!n)return;const x=a.findIndex(y=>y.id===id),y=a.indexOf(n);[a[x],a[y]]=[a[y],a[x]];render();syncOrder();
@@ -221,16 +250,17 @@ document.addEventListener('click',async e=>{
   const a=t.dataset.a,id=t.dataset.id,g=id&&wed&&G().find(x=>x.id===id);
   if(a==='login')login();
   else if(a==='out')await sb.auth.signOut();
-  else if(a==='retry')loadWedding();
+  else if(a==='retry')reload();
+  else if(a==='copy')copyLink();
   else if(a==='tab'){ui.tab=t.dataset.k;render()}
-  else if(a==='tog'){g.done=!g.done;render();run(sb.from('photo_groups').update({done:g.done}).eq('id',id))}
+  else if(a==='tog'&&!TOKEN){g.done=!g.done;render();run(sb.from('photo_groups').update({done:g.done}).eq('id',id))}
   else if(a==='up'||a==='down')move(id,a==='up'?-1:1);
   else if(a==='edit')openForm(id);
   else if(a==='add')openForm();
-  else if(a==='del')ask(`Delete “${g.name}”?`,()=>{wed.groups=G().filter(x=>x.id!==id);render();run(sb.from('photo_groups').delete().eq('id',id))});
-  else if(a==='day'){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
+  else if(a==='del')ask(`Delete “${g.name}”?`,()=>{wed.groups=G().filter(x=>x.id!==id);render();run(TOKEN?sb.rpc('shared_delete_group',{p_token:TOKEN,p_id:id}):sb.from('photo_groups').delete().eq('id',id))});
+  else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
-  else if(a==='reset')ask('Delete all groups and restore the demo list?',async()=>{await sb.from('photo_groups').delete().eq('wedding_id',wed.id);await run(sb.from('photo_groups').insert(demoRows(wed.id)));ui.tab='all';loadWedding()});
+  else if(a==='reset'&&!TOKEN)ask('Delete all groups and restore the demo list?',async()=>{await sb.from('photo_groups').delete().eq('wedding_id',wed.id);await run(sb.from('photo_groups').insert(demoRows(wed.id)));ui.tab='all';loadWedding()});
   else if(a==='close')closeM();
   else if(a==='save')saveForm();
   else if(a==='addp')addP();
@@ -242,6 +272,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&user&&wed&&!ui.modal)loadWedding()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&wed&&!ui.modal&&(TOKEN||user))reload()});
 init();
 </script></body></html>
