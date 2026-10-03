@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ZEMA WEDDING PLANNER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--s:#151516;--line:#2b2b2d;--tx:#F3EEE6;--mu:#8C8A86;--ac:#B89B72;--serif:"Cormorant Garamond",Georgia,serif;--sans:Inter,system-ui,-apple-system,sans-serif;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+.brand{font-size:11px;letter-spacing:.32em;color:var(--ac);text-transform:uppercase}
+h1{font:300 44px/1.1 var(--serif);margin:14px 0 6px}
+.meta{color:var(--mu);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
+.sec{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;margin-top:26px;padding-bottom:4px}
+.sec span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5d5b58;white-space:nowrap}
+.sec .on{color:var(--tx);border-bottom:1px solid var(--ac);padding-bottom:4px}
+.card{background:var(--s);border:1px solid var(--line);padding:22px;border-radius:4px}
+.lbl{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mu)}
+.big{font:300 40px/1.2 var(--serif);margin:6px 0 14px}.big small{font:12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+.bar{height:3px;background:var(--line);margin-bottom:10px}.bar i{display:block;height:100%;background:var(--ac);transition:width .6s ease}
+.row2{display:flex;justify-content:space-between;font-size:12px;color:var(--mu);letter-spacing:.06em}
+.cta{display:flex;gap:10px;margin:22px 0;flex-wrap:wrap}.cta .btn{flex:1;min-width:150px}
+.btn{font-size:12px;letter-spacing:.16em;text-transform:uppercase;padding:13px 20px;min-height:46px;border:1px solid var(--line);background:none;border-radius:2px;cursor:pointer;transition:.3s}
+.btn:hover{border-color:var(--ac)}.btn.pri{border-color:var(--ac);color:var(--ac)}.btn.fill{background:var(--ac);border-color:var(--ac);color:#0B0B0C;font-weight:500}
+.tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:8px -20px 6px;padding:0 20px}
+.tab{white-space:nowrap;background:none;border:1px solid var(--line);color:var(--mu);padding:9px 16px;border-radius:99px;font-size:13px;cursor:pointer;transition:.3s}
+.tab.on{border-color:var(--ac);color:var(--tx)}
+.g{display:flex;gap:16px;padding:20px 0;border-top:1px solid var(--line);transition:opacity .4s}
+.g.done{opacity:.5}.g.done .nm{text-decoration:line-through;text-decoration-color:var(--mu)}.g.drag{opacity:.3}
+.ck{flex:none;width:30px;height:30px;border:1px solid var(--mu);border-radius:50%;background:none;display:grid;place-items:center;color:#0B0B0C;padding:0;cursor:pointer;transition:.3s}
+.done .ck{background:var(--ac);border-color:var(--ac)}
+.bd{flex:1;min-width:0}.nm{font:400 22px/1.25 var(--serif)}.no{font:11px var(--sans);letter-spacing:.14em;color:var(--ac);margin-right:10px;vertical-align:middle}
+.sub{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;border:1px solid var(--line);padding:3px 11px;border-radius:99px;color:#bdb8b0;display:inline-flex;align-items:center;gap:6px}
+.chip button{background:none;border:0;color:var(--mu);cursor:pointer;padding:0 0 0 2px;font-size:16px;line-height:1}
+.note{font-size:13px;color:var(--ac);margin-top:10px;font-style:italic}
+.acts{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.acts button{background:none;border:1px solid var(--line);color:var(--mu);min-width:44px;height:38px;padding:0 12px;border-radius:2px;font-size:12px;letter-spacing:.08em;cursor:pointer}
+.acts button:hover{color:var(--tx);border-color:var(--mu)}
+.empty{color:var(--mu);padding:30px 0;text-align:center}
+footer{margin-top:40px;font-size:12px;color:#5d5b58;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+footer button{background:none;border:0;color:var(--mu);text-decoration:underline;cursor:pointer;font-size:12px;margin-left:12px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.m{background:var(--s);border:1px solid var(--line);width:100%;max-width:520px;max-height:92%;overflow:auto;padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px))}
+.m h3{font:400 28px var(--serif);margin:0 0 18px}.m.sm p{margin:0 0 20px;font-size:17px}
+.f{margin-bottom:16px}.l{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
+.f input,.f select,.f textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:12px;font-size:16px}
+.f input:focus,.f select:focus,.f textarea:focus{outline:0;border-color:var(--ac)}.f .err{border-color:#b5584f}
+.pr{display:flex;gap:8px}.pr .btn{padding:0 16px}
+#chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.bt{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+@media(min-width:640px){.ov{align-items:center}.m{max-height:88%}h1{font-size:56px}}
+.top{display:flex;justify-content:flex-end;margin-bottom:10px}
+.dr{display:flex;gap:16px;align-items:flex-start;width:100%;text-align:left;background:var(--s);border:1px solid var(--line);border-radius:4px;padding:20px 18px;margin-bottom:10px;min-height:76px;cursor:pointer;transition:.3s}
+.dr .ck{width:38px;height:38px;font-size:19px}
+.dt{display:flex;flex-direction:column;gap:3px;min-width:0}.dt b{font:400 23px/1.25 var(--serif)}
+.dt small{color:var(--mu);font-size:12px;letter-spacing:.06em}.dt em{color:var(--ac);font-size:13px}
+.dr.done{opacity:.45}.dr.done b{text-decoration:line-through}
+.fin{text-align:center;font:300 24px var(--serif);color:var(--ac);margin-top:30px}
+.login{max-width:420px;margin-top:40px}.login .f{margin-top:16px}.login .btn{width:100%;margin-top:6px}
+.bad{color:#d98a82;font-size:13px;min-height:20px;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--s);border:1px solid var(--ac);padding:12px 18px;border-radius:2px;font-size:13px;z-index:20;display:none;max-width:90%}
+</style></head>
+<body>
+<main id="app" class="wrap"><p class="empty">Loading…</p></main>
+<div id="modal"></div><div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+<script>
+/* ---- Config (publishable key is safe in the browser; Row Level Security protects the data) ---- */
+const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
+const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
+const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Client Approval'];
+const DEMO=[
+['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
+['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
+['groom','Groom + Mum + Dad',['Mum','Dad'],2],['groom','Groom + siblings',['Sami','Yonas'],3],['groom','Groom + grandparents',['Grandma'],3],
+['both','Couple + both parents',['Bride’s Mum','Bride’s Dad','Groom’s Mum','Groom’s Dad'],3],['both','Couple + immediate families',['Bride’s family','Groom’s family'],4],
+['friends','Couple + bridesmaids',['Maid of Honour','Bridesmaids'],3],['friends','Couple + groomsmen',['Best Man','Groomsmen'],3],
+['friends','Couple + university friends',['University friends'],4],['friends','Couple + closest friends',['Friends'],4]];
+const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],people:d[2],minutes:d[3],notes:d[4]||'',position:i}));
+
+let sb,user=null,wed=null,ui={tab:'all',day:false,modal:null};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const G=()=>wed.groups;
+const fmtD=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+const mins=m=>m+' min'+(m==1?'':'s');
+function stats(){const g=G(),d=g.filter(x=>x.done).length;return{d,n:g.length,p:g.length?Math.round(d/g.length*100):0,left:g.filter(x=>!x.done).reduce((a,x)=>a+x.minutes,0)}}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',4500)}
+const setApp=h=>{$('#app').innerHTML=h};
+
+/* ---- Startup, auth, loading ---- */
+function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
+async function init(){
+  if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
+  if(!window.supabase)return setApp('<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
+  sb=supabase.createClient(SB_URL,SB_KEY);
+  const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
+  sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;boot()}});
+  boot();
+}
+function boot(){user?loadWedding():setApp(loginView())}
+function loginView(err){return`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h1>Private planning</h1><div class="meta">Photographer login</div>
+<div class="f"><span class="l">Email</span><input id="em" type="email" autocomplete="username" autocapitalize="none"></div>
+<div class="f"><span class="l">Password</span><input id="pw" type="password" autocomplete="current-password"></div>
+<button class="btn fill" data-a="login">Sign in</button><div class="bad" id="lerr">${err?esc(err):''}</div></div>`}
+async function login(){
+  const email=$('#em').value.trim(),password=$('#pw').value;
+  if(!email||!password){$('#lerr').textContent='Enter your email and password.';return}
+  $('#lerr').textContent='Signing in…';
+  const{error}=await sb.auth.signInWithPassword({email,password});
+  if(error)$('#lerr').textContent=error.message;
+}
+async function loadWedding(){
+  const{data:ws,error}=await sb.from('weddings').select('*').order('created_at').limit(1);
+  if(error)return failView(error);
+  let w=ws[0];
+  if(!w){
+    const r=await sb.from('weddings').insert({couple:'Amani & Daniel',wedding_date:'2027-05-22',city:'London',services:'Photo + Video'}).select().single();
+    if(r.error)return failView(r.error);w=r.data;
+    const r2=await sb.from('photo_groups').insert(demoRows(w.id));if(r2.error)return failView(r2.error);
+  }
+  const{data:gs,error:e2}=await sb.from('photo_groups').select('*').eq('wedding_id',w.id).order('position');
+  if(e2)return failView(e2);
+  wed={...w,groups:gs};render();
+}
+function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
+const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);loadWedding()}};
+
+/* ---- Views ---- */
+function render(){if(wed)setApp(ui.day?dayView():mainView())}
+function row(g){return`<div class="g ${g.done?'done':''}" data-id="${g.id}" ${ui.tab==='all'?'draggable="true"':''}>
+<button class="ck" data-a="tog" data-id="${g.id}" aria-label="Toggle completed">${g.done?'✓':''}</button>
+<div class="bd"><div class="nm"><span class="no">${String(G().indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>
+<div class="sub">${CATS[g.category]} · ${mins(g.minutes)}</div>
+${g.people.length?`<div class="chips">${g.people.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
+${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}
+<div class="acts"><button data-a="up" data-id="${g.id}" aria-label="Move up">↑</button><button data-a="down" data-id="${g.id}" aria-label="Move down">↓</button><button data-a="edit" data-id="${g.id}">Edit</button><button data-a="del" data-id="${g.id}">Delete</button></div></div></div>`}
+function mainView(){
+  const w=wed,s=stats(),a=G(),list=ui.tab==='all'?a:a.filter(g=>g.category===ui.tab);
+  return`<div class="brand">ZEMA WEDDING PLANNER</div>
+<h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)} · ${esc(w.city||'')}</div>
+<nav class="sec">${SECS.map(x=>x==='Family & Friends'?`<span class="on">${x}</span>`:`<span title="Coming soon">${x}</span>`).join('')}</nav>
+<h2>Family &amp; Friends Photo Builder</h2>
+<section class="card"><div class="lbl">Family Photo Plan</div>
+<div class="big">${s.d} / ${s.n} <small>completed</small></div>
+<div class="bar"><i style="width:${s.p}%"></i></div>
+<div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
+<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button></div>
+<div class="tabs">${[['all','All'],...Object.entries(CATS)].map(([k,v])=>`<button class="tab ${ui.tab===k?'on':''}" data-a="tab" data-k="${k}">${v}</button>`).join('')}</div>
+<div>${list.length?list.map(row).join(''):'<p class="empty">No groups here yet.</p>'}</div>
+<footer><span>Synced · ${esc(user.email)}</span><span><button data-a="reset">Reset demo data</button><button data-a="out">Sign out</button></span></footer>`}
+function dayView(){
+  const w=wed,s=stats();
+  return`<div class="top"><button class="btn" data-a="exit">Exit</button></div>
+<div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
+<h2>Family Photos</h2>
+<div class="big">${s.d} / ${s.n} <small>completed · ${s.p}%</small></div><div class="bar"><i style="width:${s.p}%"></i></div>
+<div>${G().map((g,i)=>`<button class="dr ${g.done?'done':''}" data-a="tog" data-id="${g.id}"><span class="ck">${g.done?'✓':''}</span><span class="dt"><b>${i+1}. ${esc(g.name)}</b><small>${esc(g.people.join(', '))} · ${mins(g.minutes)}</small>${g.notes?`<em>${esc(g.notes)}</em>`:''}</span></button>`).join('')}</div>
+${s.n&&s.d===s.n?'<p class="fin">All family photographs complete.</p>':''}`}
+
+/* ---- Modal ---- */
+const closeM=()=>{ui.modal=null;$('#modal').innerHTML=''};
+function openForm(id){
+  const g=id?G().find(x=>x.id===id):null,d=g||{category:CATS[ui.tab]?ui.tab:'bride',name:'',minutes:3,notes:''};
+  ui.modal={type:'form',id,people:g?[...g.people]:[]};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${g?'Edit group':'Add group'}</h3>
+<div class="f"><span class="l">Category</span><select id="fc">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${k===d.category?'selected':''}>${v}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Photo group name</span><input id="fn" placeholder="Bride + cousins" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">People</span><div class="pr"><input id="fp" placeholder="Add a name, press Enter"><button class="btn" data-a="addp">Add</button></div><div id="chips"></div></div>
+<div class="f"><span class="l">Estimated time (mins)</span><input id="fm" type="number" min="1" max="60" value="${d.minutes}"></div>
+<div class="f"><span class="l">Notes</span><textarea id="fo" rows="3" placeholder="Make sure Grandma is included.">${esc(d.notes)}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="save">Save group</button></div></div></div>`;
+  chips();
+}
+function chips(){$('#chips').innerHTML=ui.modal.people.map((p,i)=>`<span class="chip">${esc(p)}<button data-a="rmp" data-i="${i}" aria-label="Remove ${esc(p)}">×</button></span>`).join('')}
+function addP(){const el=$('#fp'),v=el.value.trim();if(v){ui.modal.people.push(v);el.value='';chips()}el.focus()}
+async function saveForm(){
+  const name=$('#fn').value.trim();
+  if(!name){$('#fn').classList.add('err');$('#fn').focus();return}
+  const p=$('#fp').value.trim();if(p)ui.modal.people.push(p);
+  const o={category:$('#fc').value,name,people:ui.modal.people,minutes:Math.max(1,parseInt($('#fm').value)||3),notes:$('#fo').value.trim()};
+  const id=ui.modal.id;
+  if(id){
+    const{error}=await sb.from('photo_groups').update(o).eq('id',id);
+    if(error)return toast('Could not save: '+error.message);
+    Object.assign(G().find(x=>x.id===id),o);
+  }else{
+    const{data,error}=await sb.from('photo_groups').insert({...o,wedding_id:wed.id,done:false,position:G().length}).select().single();
+    if(error)return toast('Could not save: '+error.message);
+    G().push(data);
+  }
+  closeM();render();
+}
+function ask(msg,fn){ui.modal={type:'confirm',fn};
+  $('#modal').innerHTML=`<div class="ov"><div class="m sm"><p>${esc(msg)}</p><div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="yes">Confirm</button></div></div></div>`}
+
+/* ---- Ordering (saves every group's position) ---- */
+const syncOrder=()=>run(sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,done:g.done,position:i}))));
+function move(id,d){
+  const a=G(),v=ui.tab==='all'?a:a.filter(x=>x.category===ui.tab),i=v.findIndex(x=>x.id===id),n=v[i+d];
+  if(!n)return;const x=a.findIndex(y=>y.id===id),y=a.indexOf(n);[a[x],a[y]]=[a[y],a[x]];render();syncOrder();
+}
+let dragId=null;
+document.addEventListener('dragstart',e=>{const r=e.target.closest&&e.target.closest('.g');if(r){dragId=r.dataset.id;r.classList.add('drag');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId)}});
+document.addEventListener('dragover',e=>{if(dragId&&e.target.closest('.g'))e.preventDefault()});
+document.addEventListener('drop',e=>{const r=e.target.closest('.g');if(!dragId||!r)return;e.preventDefault();
+  const a=G(),f=a.findIndex(x=>x.id===dragId),t=a.findIndex(x=>x.id===r.dataset.id);
+  if(f!==t){a.splice(t,0,a.splice(f,1)[0]);syncOrder()}});
+document.addEventListener('dragend',()=>{dragId=null;render()});
+
+/* ---- Events ---- */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-a]');
+  if(!t){if(e.target.classList.contains('ov'))closeM();return}
+  const a=t.dataset.a,id=t.dataset.id,g=id&&wed&&G().find(x=>x.id===id);
+  if(a==='login')login();
+  else if(a==='out')await sb.auth.signOut();
+  else if(a==='retry')loadWedding();
+  else if(a==='tab'){ui.tab=t.dataset.k;render()}
+  else if(a==='tog'){g.done=!g.done;render();run(sb.from('photo_groups').update({done:g.done}).eq('id',id))}
+  else if(a==='up'||a==='down')move(id,a==='up'?-1:1);
+  else if(a==='edit')openForm(id);
+  else if(a==='add')openForm();
+  else if(a==='del')ask(`Delete “${g.name}”?`,()=>{wed.groups=G().filter(x=>x.id!==id);render();run(sb.from('photo_groups').delete().eq('id',id))});
+  else if(a==='day'){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
+  else if(a==='exit'){ui.day=false;render()}
+  else if(a==='reset')ask('Delete all groups and restore the demo list?',async()=>{await sb.from('photo_groups').delete().eq('wedding_id',wed.id);await run(sb.from('photo_groups').insert(demoRows(wed.id)));ui.tab='all';loadWedding()});
+  else if(a==='close')closeM();
+  else if(a==='save')saveForm();
+  else if(a==='addp')addP();
+  else if(a==='rmp'){ui.modal.people.splice(+t.dataset.i,1);chips()}
+  else if(a==='yes'){const f=ui.modal.fn;closeM();f()}
+});
+document.addEventListener('keydown',e=>{
+  if(e.target.id==='fp'&&(e.key==='Enter'||e.key===',')){e.preventDefault();addP()}
+  if(e.target.id==='pw'&&e.key==='Enter')login();
+  if(e.key==='Escape'&&ui.modal)closeM();
+});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&user&&wed&&!ui.modal)loadWedding()});
+init();
+</script></body></html>
