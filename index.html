@@ -46,6 +46,9 @@ h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
 .chip{font-size:12px;border:1px solid var(--line);padding:3px 11px;border-radius:99px;color:#bdb8b0;display:inline-flex;align-items:center;gap:6px}
 .chip button{background:none;border:0;color:var(--mu);cursor:pointer;padding:0 0 0 2px;font-size:16px;line-height:1}
 .note{font-size:13px;color:var(--ac);margin-top:10px;font-style:italic}
+.note b{font-style:normal;font-weight:500;letter-spacing:.06em}
+.note.fam{color:#bdb8b0}
+.fnote{margin:14px 0 0;color:var(--tx);font-size:16px}
 .acts{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
 .acts button{background:none;border:1px solid var(--line);color:var(--mu);min-width:44px;height:38px;padding:0 12px;border-radius:2px;font-size:12px;letter-spacing:.08em;cursor:pointer}
 .acts button:hover{color:var(--tx);border-color:var(--mu)}
@@ -169,11 +172,11 @@ function familyView(){
   const w=wed,a=w.groups,n=a.length,d=a.filter(g=>g.done).length,p=n?Math.round(d/n*100):0,rest=a.filter(g=>!g.done),nx=rest[0],then=rest.slice(1,4),fin=a.filter(g=>g.done);
   const pc=g=>g.people.length?`<div class="chips">${g.people.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`:'';
   return`<div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>
-<h2>Family Photos</h2>
+<h2>Family &amp; Friends</h2>
 <section class="card"><div class="lbl">Progress</div><div class="big">${d} / ${n} <small>groups done · ${p}%</small></div><div class="bar"><i style="width:${p}%"></i></div></section>
-${nx?`<section class="card ok" style="margin-top:16px"><div class="lbl">Up next · ${a.indexOf(nx)+1} of ${n}</div><div class="nm" style="margin-top:8px;font-size:30px">${esc(nx.name)}</div>${pc(nx)}<p class="intro" style="margin:14px 0 0">If you’re in this group, please make your way to the photographer now.</p></section>`
-:(n?'<p class="fin">All family photographs are done. Thank you!</p>':'<p class="empty">The photo list is empty.</p>')}
-${then.length?`<h2 style="font-size:20px;margin-top:28px">Then</h2>${then.map(g=>`<div class="fr"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>${pc(g)}</div>`).join('')}`:''}
+${nx?`<section class="card ok" style="margin-top:16px"><div class="lbl">Up next · ${a.indexOf(nx)+1} of ${n}</div><div class="nm" style="margin-top:8px;font-size:30px">${esc(nx.name)}</div>${pc(nx)}${nx.note?`<p class="fnote">${esc(nx.note)}</p>`:''}<p class="intro" style="margin:14px 0 0">If you’re in this group, please make your way to the photographer now.</p></section>`
+:(n?'<p class="fin">All family and friends photographs are done. Thank you!</p>':'<p class="empty">The photo list is empty.</p>')}
+${then.length?`<h2 style="font-size:20px;margin-top:28px">Then</h2>${then.map(g=>`<div class="fr"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>${pc(g)}${g.note?`<div class="note fam" style="font-style:normal">${esc(g.note)}</div>`:''}</div>`).join('')}`:''}
 ${fin.length?`<h2 style="font-size:20px;margin-top:28px">Completed</h2>${fin.map(g=>`<div class="fr d"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div></div>`).join('')}`:''}
 <footer><span>Updates automatically · last updated ${ui.stamp}</span></footer>`}
 const tagHtml=w=>`<div class="tag ${w.approval_status==='approved'?'approved':''}">${w.approval_status==='approved'?'Client confirmed':'Awaiting client'}</div>`;
@@ -183,14 +186,15 @@ function dashView(){
 ${weds.length?weds.map(w=>{const n=w.photo_groups.length,d=w.photo_groups.filter(x=>x.done).length,p=n?Math.round(d/n*100):0;
 return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${dm(w)}</div>${w.services?`<div class="sub">${esc(w.services)}</div>`:''}${tagHtml(w)}
 <div class="bar"><i style="width:${p}%"></i></div><div class="row2"><span>${n} photo group${n==1?'':'s'}</span><span>${d} / ${n} done</span></div>
-<div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button><button data-a="copyFW" data-id="${w.id}">Family link</button></div></div>`}).join(''):'<p class="empty">No weddings yet. Tap “New Wedding” to add your first.</p>'}
+<div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button><button data-a="copyFW" data-id="${w.id}">Family &amp; friends link</button></div></div>`}).join(''):'<p class="empty">No weddings yet. Tap “New Wedding” to add your first.</p>'}
 <footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="out">Sign out</button></span></footer>`}
 function row(g){const lk=locked();return`<div class="g ${g.done&&!TOKEN?'done':''}" data-id="${g.id}" ${ui.tab==='all'&&!lk?'draggable="true"':''}>
 ${TOKEN?'':`<button class="ck" data-a="tog" data-id="${g.id}" aria-label="Toggle completed">${g.done?'✓':''}</button>`}
 <div class="bd"><div class="nm"><span class="no">${String(G().indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>
 <div class="sub">${CATS[g.category]} · ${mins(g.minutes)}</div>
 ${g.people.length?`<div class="chips">${g.people.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
-${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}
+${g.notes?`<div class="note"><b>${TOKEN?'Note to photographer':'Private note'}:</b> ${esc(g.notes)}</div>`:''}
+${g.family_note?`<div class="note fam"><b>Shown to family &amp; friends:</b> ${esc(g.family_note)}</div>`:''}
 ${lk?'':`<div class="acts"><button data-a="up" data-id="${g.id}" aria-label="Move up">↑</button><button data-a="down" data-id="${g.id}" aria-label="Move down">↓</button><button data-a="edit" data-id="${g.id}">Edit</button><button data-a="del" data-id="${g.id}">Delete</button></div>`}</div></div>`}
 const tabsHtml=()=>`<div class="tabs">${[['all','All'],...Object.entries(CATS)].map(([k,v])=>`<button class="tab ${ui.tab===k?'on':''}" data-a="tab" data-k="${k}">${v}</button>`).join('')}</div>`;
 const listHtml=()=>{const a=G(),l=ui.tab==='all'?a:a.filter(g=>g.category===ui.tab);return`<div>${l.length?l.map(row).join(''):'<p class="empty">No groups here yet.</p>'}</div>`};
@@ -207,7 +211,7 @@ ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by|
 <div class="big">${s.d} / ${s.n} <small>completed</small></div>
 <div class="bar"><i style="width:${s.p}%"></i></div>
 <div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
-<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyF">Copy family link</button></div>
+<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyF">Copy family &amp; friends link</button></div>
 ${tabsHtml()}${listHtml()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit wedding details</button><button data-a="out">Sign out</button></span></footer>`}
 function clientView(){
@@ -225,7 +229,7 @@ ${lk||!a.length?'':`<div class="cta"><button class="btn pri" data-a="approve">Co
 <footer><span>Private link · changes save automatically</span></footer>`}
 function dayView(){
   const w=wed,s=stats();
-  return`<div class="top"><button class="btn" data-a="copyF">Family link</button><button class="btn" data-a="exit">Exit</button></div>
+  return`<div class="top"><button class="btn" data-a="copyF">Family &amp; friends link</button><button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
 <h2>Family Photos</h2>
 <div class="big">${s.d} / ${s.n} <small>completed · ${s.p}%</small></div><div class="bar"><i style="width:${s.p}%"></i></div>
@@ -233,7 +237,7 @@ function dayView(){
 ${s.n&&s.d===s.n?'<p class="fin">All family photographs complete.</p>':''}`}
 function copyLink(token,key){
   const u=location.origin+location.pathname+'?'+(key||'w')+'='+token;
-  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family link copied':'Client link copied'),()=>prompt('Copy this link:',u));
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family & friends link copied':'Client link copied'),()=>prompt('Copy this link:',u));
 }
 
 /* ---- Approval ---- */
@@ -286,14 +290,15 @@ async function saveW(){
 /* ---- Group modal ---- */
 const closeM=()=>{ui.modal=null;$('#modal').innerHTML=''};
 function openForm(id){
-  const g=id?G().find(x=>x.id===id):null,d=g||{category:CATS[ui.tab]?ui.tab:'bride',name:'',minutes:3,notes:''};
+  const g=id?G().find(x=>x.id===id):null,d=g||{category:CATS[ui.tab]?ui.tab:'bride',name:'',minutes:3,notes:'',family_note:''};
   ui.modal={type:'form',id,people:g?[...g.people]:[]};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${g?'Edit group':'Add group'}</h3>
 <div class="f"><span class="l">Category</span><select id="fc">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${k===d.category?'selected':''}>${v}</option>`).join('')}</select></div>
 <div class="f"><span class="l">Photo group name</span><input id="fn" placeholder="Bride + cousins" value="${esc(d.name)}"></div>
 <div class="f"><span class="l">People</span><div class="pr"><input id="fp" placeholder="Add a name, press Enter"><button class="btn" data-a="addp">Add</button></div><div id="chips"></div></div>
 <div class="f"><span class="l">Estimated time (mins)</span><input id="fm" type="number" min="1" max="60" value="${d.minutes}"></div>
-<div class="f"><span class="l">Notes</span><textarea id="fo" rows="3" placeholder="Make sure Grandma is included.">${esc(d.notes)}</textarea></div>
+<div class="f"><span class="l">${TOKEN?'Note to your photographer (family won’t see this)':'Private note (photographer only)'}</span><textarea id="fo" rows="2" placeholder="Make sure Grandma is included.">${esc(d.notes)}</textarea></div>
+<div class="f"><span class="l">Note for family &amp; friends (shown on the day)</span><textarea id="ff" rows="2" maxlength="300" placeholder="e.g. Please wait by the fountain until your group is called.">${esc(d.family_note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="save">Save group</button></div></div></div>`;
   chips();
 }
@@ -303,10 +308,10 @@ async function saveForm(){
   const name=$('#fn').value.trim();
   if(!name){$('#fn').classList.add('err');$('#fn').focus();return}
   const p=$('#fp').value.trim();if(p)ui.modal.people.push(p);
-  const o={category:$('#fc').value,name,people:ui.modal.people,minutes:Math.max(1,parseInt($('#fm').value)||3),notes:$('#fo').value.trim()};
+  const o={category:$('#fc').value,name,people:ui.modal.people,minutes:Math.max(1,parseInt($('#fm').value)||3),notes:$('#fo').value.trim(),family_note:$('#ff').value.trim()};
   const id=ui.modal.id;
   if(TOKEN){
-    const{data,error}=await sb.rpc('shared_save_group',{p_token:TOKEN,p_id:id||null,p_category:o.category,p_name:o.name,p_people:o.people,p_minutes:o.minutes,p_notes:o.notes});
+    const{data,error}=await sb.rpc('shared_save_group',{p_token:TOKEN,p_id:id||null,p_category:o.category,p_name:o.name,p_people:o.people,p_minutes:o.minutes,p_notes:o.notes,p_family_note:o.family_note});
     if(error){closeM();toast(error.message);return reload()}
     if(id)Object.assign(G().find(x=>x.id===id),data);else G().push(data);
     closeM();render();return;
@@ -326,7 +331,7 @@ function ask(msg,fn){ui.modal={type:'confirm',fn};
   $('#modal').innerHTML=`<div class="ov"><div class="m sm"><p>${esc(msg)}</p><div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="yes">Confirm</button></div></div></div>`}
 
 /* ---- Ordering ---- */
-const syncOrder=()=>run(TOKEN?sb.rpc('shared_reorder',{p_token:TOKEN,p_ids:G().map(g=>g.id)}):sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,done:g.done,position:i}))));
+const syncOrder=()=>run(TOKEN?sb.rpc('shared_reorder',{p_token:TOKEN,p_ids:G().map(g=>g.id)}):sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,family_note:g.family_note||'',done:g.done,position:i}))));
 function move(id,d){
   const a=G(),v=ui.tab==='all'?a:a.filter(x=>x.category===ui.tab),i=v.findIndex(x=>x.id===id),n=v[i+d];
   if(!n)return;const x=a.findIndex(y=>y.id===id),y=a.indexOf(n);[a[x],a[y]]=[a[y],a[x]];render();syncOrder();
