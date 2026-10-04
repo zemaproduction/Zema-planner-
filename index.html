@@ -64,12 +64,13 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 .bt{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:8px}
 .dng{background:none;border:0;color:#d98a82;text-decoration:underline;cursor:pointer;font-size:12px;margin-right:auto}
 @media(min-width:640px){.ov{align-items:center}.m{max-height:88%}h1{font-size:56px}}
-.top{display:flex;justify-content:flex-end;margin-bottom:10px}
+.top{display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px}
 .dr{display:flex;gap:16px;align-items:flex-start;width:100%;text-align:left;background:var(--s);border:1px solid var(--line);border-radius:4px;padding:20px 18px;margin-bottom:10px;min-height:76px;cursor:pointer;transition:.3s}
 .dr .ck{width:38px;height:38px;font-size:19px}
 .dt{display:flex;flex-direction:column;gap:3px;min-width:0}.dt b{font:400 23px/1.25 var(--serif)}
 .dt small{color:var(--mu);font-size:12px;letter-spacing:.06em}.dt em{color:var(--ac);font-size:13px}
 .dr.done{opacity:.45}.dr.done b{text-decoration:line-through}
+.fr{padding:14px 0;border-top:1px solid var(--line)}.fr .nm{font-size:20px}.fr.d{opacity:.4}.fr.d .nm{text-decoration:line-through}
 .fin{text-align:center;font:300 24px var(--serif);color:var(--ac);margin-top:30px}
 .login{max-width:420px;margin-top:40px}.login .f{margin-top:16px}.login .btn{width:100%;margin-top:6px}
 .bad{color:#d98a82;font-size:13px;min-height:20px;margin-top:10px}
@@ -82,7 +83,7 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const TOKEN=new URLSearchParams(location.search).get('w');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Client Approval'];
 const DEMO=[
@@ -94,7 +95,7 @@ const DEMO=[
 ['friends','Couple + university friends',['University friends'],4],['friends','Couple + closest friends',['Friends'],4]];
 const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],people:d[2],minutes:d[3],notes:d[4]||'',position:i}));
 
-let sb,user=null,wed=null,weds=[],ui={view:'dash',wid:null,tab:'all',day:false,modal:null};
+let sb,user=null,wed=null,weds=[],ui={view:'dash',wid:null,tab:'all',day:false,modal:null,stamp:''};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const G=()=>wed.groups;
@@ -111,7 +112,8 @@ function loadScript(src){return new Promise(r=>{const s=document.createElement('
 async function init(){
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp('<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,TOKEN?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(FTOKEN){loadFamily();setInterval(()=>{if(!document.hidden)loadFamily()},12000);return}
   if(TOKEN)return loadShared();
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;ui.view='dash';boot()}});
@@ -147,16 +149,33 @@ async function loadShared(){
   if(error)return setApp('<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>This link isn’t working</h2><p class="meta">Please check the link, or ask your photographer for a new one.</p></div>');
   wed=data;render();
 }
-const reload=()=>TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash());
+async function loadFamily(){
+  const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
+  if(error){if(!wed)setApp('<div class="login"><div class="brand">ZEMA WEDDING DAY</div><h2>This link isn’t working</h2><p class="meta">Please check the link, or ask the couple or photographer for a new one.</p></div>');return}
+  wed=data;ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});render();
+}
+const reload=()=>FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash());
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload()}};
 
 /* ---- Views ---- */
 function render(){
-  if(TOKEN){if(wed)setApp(clientView())}
+  if(FTOKEN){if(wed)setApp(familyView())}
+  else if(TOKEN){if(wed)setApp(clientView())}
   else if(ui.view==='dash')setApp(dashView());
   else if(wed)setApp(ui.day?dayView():mainView());
 }
+function familyView(){
+  const w=wed,a=w.groups,n=a.length,d=a.filter(g=>g.done).length,p=n?Math.round(d/n*100):0,rest=a.filter(g=>!g.done),nx=rest[0],then=rest.slice(1,4),fin=a.filter(g=>g.done);
+  const pc=g=>g.people.length?`<div class="chips">${g.people.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`:'';
+  return`<div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>
+<h2>Family Photos</h2>
+<section class="card"><div class="lbl">Progress</div><div class="big">${d} / ${n} <small>groups done · ${p}%</small></div><div class="bar"><i style="width:${p}%"></i></div></section>
+${nx?`<section class="card ok" style="margin-top:16px"><div class="lbl">Up next · ${a.indexOf(nx)+1} of ${n}</div><div class="nm" style="margin-top:8px;font-size:30px">${esc(nx.name)}</div>${pc(nx)}<p class="intro" style="margin:14px 0 0">If you’re in this group, please make your way to the photographer now.</p></section>`
+:(n?'<p class="fin">All family photographs are done. Thank you!</p>':'<p class="empty">The photo list is empty.</p>')}
+${then.length?`<h2 style="font-size:20px;margin-top:28px">Then</h2>${then.map(g=>`<div class="fr"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>${pc(g)}</div>`).join('')}`:''}
+${fin.length?`<h2 style="font-size:20px;margin-top:28px">Completed</h2>${fin.map(g=>`<div class="fr d"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div></div>`).join('')}`:''}
+<footer><span>Updates automatically · last updated ${ui.stamp}</span></footer>`}
 const tagHtml=w=>`<div class="tag ${w.approval_status==='approved'?'approved':''}">${w.approval_status==='approved'?'Client confirmed':'Awaiting client'}</div>`;
 function dashView(){
   return`<div class="brand">ZEMA WEDDINGS</div><h1>Weddings</h1><div class="meta">${weds.length} wedding${weds.length==1?'':'s'}</div>
@@ -164,7 +183,7 @@ function dashView(){
 ${weds.length?weds.map(w=>{const n=w.photo_groups.length,d=w.photo_groups.filter(x=>x.done).length,p=n?Math.round(d/n*100):0;
 return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${dm(w)}</div>${w.services?`<div class="sub">${esc(w.services)}</div>`:''}${tagHtml(w)}
 <div class="bar"><i style="width:${p}%"></i></div><div class="row2"><span>${n} photo group${n==1?'':'s'}</span><span>${d} / ${n} done</span></div>
-<div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Copy client link</button></div></div>`}).join(''):'<p class="empty">No weddings yet. Tap “New Wedding” to add your first.</p>'}
+<div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button><button data-a="copyFW" data-id="${w.id}">Family link</button></div></div>`}).join(''):'<p class="empty">No weddings yet. Tap “New Wedding” to add your first.</p>'}
 <footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="out">Sign out</button></span></footer>`}
 function row(g){const lk=locked();return`<div class="g ${g.done&&!TOKEN?'done':''}" data-id="${g.id}" ${ui.tab==='all'&&!lk?'draggable="true"':''}>
 ${TOKEN?'':`<button class="ck" data-a="tog" data-id="${g.id}" aria-label="Toggle completed">${g.done?'✓':''}</button>`}
@@ -188,7 +207,7 @@ ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by|
 <div class="big">${s.d} / ${s.n} <small>completed</small></div>
 <div class="bar"><i style="width:${s.p}%"></i></div>
 <div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
-<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button></div>
+<div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyF">Copy family link</button></div>
 ${tabsHtml()}${listHtml()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit wedding details</button><button data-a="out">Sign out</button></span></footer>`}
 function clientView(){
@@ -206,15 +225,15 @@ ${lk||!a.length?'':`<div class="cta"><button class="btn pri" data-a="approve">Co
 <footer><span>Private link · changes save automatically</span></footer>`}
 function dayView(){
   const w=wed,s=stats();
-  return`<div class="top"><button class="btn" data-a="exit">Exit</button></div>
+  return`<div class="top"><button class="btn" data-a="copyF">Family link</button><button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
 <h2>Family Photos</h2>
 <div class="big">${s.d} / ${s.n} <small>completed · ${s.p}%</small></div><div class="bar"><i style="width:${s.p}%"></i></div>
 <div>${G().map((g,i)=>`<button class="dr ${g.done?'done':''}" data-a="tog" data-id="${g.id}"><span class="ck">${g.done?'✓':''}</span><span class="dt"><b>${i+1}. ${esc(g.name)}</b><small>${esc(g.people.join(', '))} · ${mins(g.minutes)}</small>${g.notes?`<em>${esc(g.notes)}</em>`:''}</span></button>`).join('')}</div>
 ${s.n&&s.d===s.n?'<p class="fin">All family photographs complete.</p>':''}`}
-function copyLink(token){
-  const u=location.origin+location.pathname+'?w='+token;
-  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Client link copied'),()=>prompt('Copy this client link:',u));
+function copyLink(token,key){
+  const u=location.origin+location.pathname+'?'+(key||'w')+'='+token;
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family link copied':'Client link copied'),()=>prompt('Copy this link:',u));
 }
 
 /* ---- Approval ---- */
@@ -335,7 +354,9 @@ document.addEventListener('click',async e=>{
   else if(a==='openW')openWedding(id);
   else if(a==='back')loadDash();
   else if(a==='copyW')copyLink(weds.find(x=>x.id===id).share_token);
+  else if(a==='copyFW')copyLink(weds.find(x=>x.id===id).family_token,'f');
   else if(a==='copy')copyLink(wed.share_token);
+  else if(a==='copyF')copyLink(wed.family_token,'f');
   else if(a==='approve'&&TOKEN)openApprove();
   else if(a==='doApprove'&&TOKEN)doApprove();
   else if(a==='reopen'&&!TOKEN)ask('Reopen this list so the couple can edit it again?',async()=>{const{error}=await sb.from('weddings').update({approval_status:'draft',approved_at:null,approved_by:null}).eq('id',wed.id);if(error)return toast('Could not reopen: '+error.message);Object.assign(wed,{approval_status:'draft',approved_at:null,approved_by:null});render()});
@@ -358,6 +379,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&(TOKEN?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&((TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
