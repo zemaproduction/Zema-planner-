@@ -107,6 +107,8 @@ button.st{cursor:pointer}.st.sel,.st.yr{border-color:var(--ac)}.st.sel span,.st.
 .ptb th{text-align:left;font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:#888;border-bottom:1px solid #ccc;padding:8px 0}
 .ptb td{padding:12px 0;border-bottom:1px solid #e6e6e6;vertical-align:top}
 .ptb th:last-child,.ptb td:last-child{text-align:right;white-space:nowrap;padding-left:16px}
+
+.ptb .mid td{font-weight:500;border-top:1px solid #1a1a1a}
 .ptb .tot td{font-weight:500;font-size:17px;border-bottom:0;border-top:2px solid #1a1a1a}
 .pn{margin-top:26px;color:#666;font-size:13px}
 @media print{html,body{background:#fff!important}.noprint,#toast,#modal{display:none!important}.wrap{padding:0;max-width:none}.paper{padding:0}}
@@ -278,7 +280,7 @@ const STG={pending:'Pending',confirmed:'Confirmed',post:'Post-production',delive
 let PKG=['Platinum','Gold','Silver'];
 const ALB={none:'Not ordered',ordered:'Ordered',delivered:'Delivered',na:'No album'};
 const stg=w=>STG[w.stage]?w.stage:'pending';
-const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Other Small Event'];
+const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
 const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments'];
@@ -287,7 +289,16 @@ const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash 
 const gbp=n=>'£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:Number(n||0)%1?2:0,maximumFractionDigits:2});
 const sum=a=>a.reduce((x,p)=>x+Number(p.amount||0),0);
 const B=w=>{const b=w.event_billing;return(Array.isArray(b)?b[0]:b)||{}};
-const wPrice=w=>B(w).price==null?null:Number(B(w).price);
+/* total = package price + extras (expenses, transport) - discount */
+const tot=b=>b.price==null?null:Math.max(0,Number(b.price)+sum(Array.isArray(b.extras)?b.extras:[])-Number(b.discount||0));
+const wPrice=w=>tot(B(w));
+const planOf=b=>{const p=Array.isArray(b.plan)?b.plan.map(Number).filter(x=>x>0):[];return p.length?p:[25,25,50]};
+function planRows(b,paid){
+  const t=tot(b)||0,pl=planOf(b),full=Math.abs(pl.reduce((a,x)=>a+x,0)-100)<.01;let acc=0;
+  return pl.map((pc,i)=>{const amt=full&&i===pl.length-1?Math.round((t-acc)*100)/100:Math.round(t*pc)/100,st=acc;acc+=amt;
+    const got=Math.max(0,Math.min(amt,paid-st));
+    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100)}})}
+const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label} · ${r.pc}%</span><span>${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' left':'Due'):'Paid'}</span></div></div>`).join('');
 const wPaid=w=>sum(w.payments||[]);
 const wLeft=w=>wPrice(w)==null?0:Math.max(0,wPrice(w)-wPaid(w));
 const recvIn=y=>weds.reduce((a,w)=>a+sum((w.payments||[]).filter(p=>String(p.paid_on||'').slice(0,4)===String(y))),0);
@@ -337,7 +348,7 @@ async function init(){
   sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(PKPAGE){const r=await loadPk();return setApp(pkgView(r.d))}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
-  if(TOKEN)return loadShared();
+  if(TOKEN){if(QS.get('s'))ui.sec=QS.get('s');return loadShared()}
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;ui.view='dash';boot()}});
   boot();
@@ -355,7 +366,8 @@ async function login(){
   if(error)$('#lerr').textContent=error.message;
 }
 async function loadDash(view){
-  let r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no)').order('wedding_date',{ascending:true,nullsFirst:false});
+  let r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no,discount,extras)').order('wedding_date',{ascending:true,nullsFirst:false});
+  if(r.error)r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no)').order('wedding_date',{ascending:true,nullsFirst:false});
   if(r.error)r=await sb.from('weddings').select('*, photo_groups(done)').order('wedding_date',{ascending:true,nullsFirst:false});
   const{data,error}=r;
   if(error)return failView(error);
@@ -388,7 +400,9 @@ async function loadShared(){
   const nt=await sb.rpc('shared_notes_get',{p_token:TOKEN});
   const pg=await sb.rpc('shared_progress_get',{p_token:TOKEN});
   const mt=await sb.rpc('shared_meta_get',{p_token:TOKEN});
-  wed={...data,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const mn=await sb.rpc('shared_money_get',{p_token:TOKEN});
+  const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
+  wed={...data,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -403,7 +417,7 @@ const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+erro
 /* ---- Views ---- */
 function render(){
   if(FTOKEN){if(wed)setApp(familyView())}
-  else if(TOKEN){if(wed)setApp(clientView())}
+  else if(TOKEN){if(wed)setApp(ui.inv&&wed.money?invView():clientView())}
   else if(ui.view==='dash')setApp(dashView());
   else if(ui.view==='pkgs'){if(pk)setApp(pkEdit())}
   else if(ui.view==='year')setApp(yearView());
@@ -411,9 +425,9 @@ function render(){
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='pay'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='pay'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
-const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&SK[x]==='overview'?'Progress':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
+const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
 function famTl(){
   const a=T();
   return a.length?`<h2 style="margin-top:44px">Timeline</h2>${a.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}</div></div>`).join('')}`:'';
@@ -578,7 +592,7 @@ ${T().length>4?`<p class="intro" style="margin:12px 0 0"><button class="lnk" dat
 ${v?`<section class="card" style="margin-top:18px"><div class="lbl">First location · ${esc(v.name)}</div><a class="lnk" href="${esc(mapUrl(v.address))}" target="_blank" rel="noopener">${esc(v.address)}</a></section>`:''}`}
 function secRows(){
   const s=stats(),m=M(),pl=(n,a,b)=>n+' '+(n==1?a:b);
-  const rows=[['timeline','Timeline',pl(T().length,'moment','moments')],['family','Family & Friends',pl(s.n,'group','groups')+' · '+s.d+' done'],['party','Wedding Party',pl(P().length,'person','people')],['musts','Must-Have Moments',m.length+' · '+m.filter(x=>x.done).length+' captured'],['places','Locations',pl(L().length,'location','locations')],['notes','Notes',(N().client_note?'Note from the couple':'No note from the couple')+(N().private_note?' · private note':'')],['pay','Payments',wed.bill.price==null?'No price set':gbp(sum(Y()))+' of '+gbp(wed.bill.price)]];
+  const rows=[['timeline','Timeline',pl(T().length,'moment','moments')],['family','Family & Friends',pl(s.n,'group','groups')+' · '+s.d+' done'],['party','Wedding Party',pl(P().length,'person','people')],['musts','Must-Have Moments',m.length+' · '+m.filter(x=>x.done).length+' captured'],['places','Locations',pl(L().length,'location','locations')],['notes','Notes',(N().client_note?'Note from the couple':'No note from the couple')+(N().private_note?' · private note':'')],['pay','Payments',wed.bill.price==null?'No price set':gbp(sum(Y()))+' of '+gbp(tot(wed.bill))]];
   return`<h2>Sections</h2>${rows.filter(([k])=>secsFor(wed).some(x=>SK[x]===k)).map(([k,n,c])=>`<button class="or" data-a="sec" data-k="${k}"><span class="nm">${esc(n)}</span><span class="sub">${esc(c)}</span></button>`).join('')}`}
 function gaps(){
   const g=[];
@@ -614,90 +628,145 @@ async function setW(o){
   if(error){Object.assign(wed,prev);render();toast(/column|schema/i.test(error.message)?'Run the overview SQL in Supabase first, then refresh.':'Could not save: '+error.message)}
 }
 /* Client view of post-production, only when the photographer has shared it */
+function clMoney(){
+  const m=wed.money;if(!m)return'';
+  const t=tot(m)||0,paid=sum(m.payments||[]),left=Math.max(0,t-paid),p=t?Math.min(100,Math.round(paid/t*100)):0,ex=Array.isArray(m.extras)?m.extras:[],disc=Number(m.discount||0);
+  return`<section class="card" style="margin-bottom:16px"><div class="lbl">Left to pay</div><div class="num">${left?gbp(left):'Paid in full'}</div>
+<div class="bar"><i style="width:${p}%"></i></div>
+<div class="row2"><span>Paid ${gbp(paid)}</span><span>Total ${gbp(t)}</span></div>
+${ex.length||disc?`<div style="margin-top:18px"><div class="row2"><span>Package price</span><span>${gbp(m.price)}</span></div>${ex.map(x=>`<div class="row2" style="margin-top:6px"><span>${esc(x.label)}</span><span>+${gbp(x.amount)}</span></div>`).join('')}${disc?`<div class="row2" style="margin-top:6px"><span>Discount</span><span>−${gbp(disc)}</span></div>`:''}</div>`:''}</section>
+<section class="card" style="margin-bottom:16px"><div class="lbl">Payment plan</div>${planHtml(m,paid)}</section>
+${(m.payments||[]).length?`<section class="card" style="margin-bottom:16px"><div class="lbl">Payments received</div>${m.payments.map(x=>`<div class="pg"><div class="row2"><span class="lbl">${esc(x.label||'Payment')} · ${fmtD(x.paid_on)}</span><span>${gbp(x.amount)}</span></div></div>`).join('')}</section>`:''}
+${m.invoice_no?`<div class="cta" style="margin-top:0"><button class="btn fill" data-a="viewInv">View invoice ${esc(m.invoice_no)}</button></div>`:''}
+${(s=>s.an||s.sc||s.acn?`<section class="card" style="margin-bottom:16px"><div class="lbl">How to pay · ${esc(s.pay||'Bank transfer')}</div><p class="ntx">Account name: ${esc(s.an||'')}\nSort code: ${esc(s.sc||'')}\nAccount number: ${esc(s.acn||'')}</p></section>`:'')(inv||INVDEF)}`}
+/* Client overview: what is left to pay, plus post-production progress when shared */
 function clOv(){
-  const p=wed.prog||{},al=p.album_status;
+  const p=wed.prog,al=p&&p.album_status;
   const line=(label,v,del)=>`<div class="pg"><div class="row2"><span class="lbl">${label}</span><span>${del?'Delivered':(v||0)+'%'}</span></div><div class="bar" style="margin:12px 0 0"><i style="width:${del?100:(v||0)}%"></i></div></div>`;
-  return`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
-<p class="intro" style="margin-top:16px">Your photographer updates this as your photos and film are edited.</p>`}
+  return clMoney()+(p?`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
+<p class="intro" style="margin-top:16px">Your photographer updates this as your photos and film are edited.</p>`:'')}
 /* ---- Payments and invoice (photographer only; never sent to client or family links) ---- */
 function payMain(){
   if(wed.payErr)return`<h2>Payments</h2><p class="empty">Payments aren’t set up in Supabase yet. Run the payments SQL once, then refresh this page.</p>`;
-  const b=wed.bill,price=b.price==null?null:Number(b.price),paid=sum(Y()),left=price==null?null:Math.max(0,price-paid),p=price?Math.min(100,Math.round(paid/price*100)):0;
+  const b=wed.bill,t=tot(b),paid=sum(Y()),left=t==null?null:Math.max(0,t-paid),p=t?Math.min(100,Math.round(paid/t*100)):0,ex=Array.isArray(b.extras)?b.extras:[],disc=Number(b.discount||0);
   return`<h2>Payments</h2>
-<section class="card"><div class="lbl">Agreed price</div><div class="num">${price==null?'Not set':gbp(price)}</div>
-<div class="bar"><i style="width:${p}%"></i></div>
+<section class="card"><div class="lbl">Total to pay</div><div class="num">${t==null?'Not set':gbp(t)}</div>
+${t==null?'':`<div class="row2"><span>Package price</span><span>${gbp(b.price)}</span></div>${ex.map((x,i)=>`<div class="row2" style="margin-top:6px"><span>${esc(x.label)} · <button class="lnk" data-a="delX" data-i="${i}">remove</button></span><span>+${gbp(x.amount)}</span></div>`).join('')}${disc?`<div class="row2" style="margin-top:6px"><span>Discount</span><span>−${gbp(disc)}</span></div>`:''}`}
+<div class="bar" style="margin-top:16px"><i style="width:${p}%"></i></div>
 <div class="row2"><span>Paid ${gbp(paid)}</span><span>${left==null?'':left>0?gbp(left)+' left to pay':'Paid in full'}</span></div>
-<div class="acts"><button data-a="editPrice">${price==null?'Set price':'Change price'}</button></div></section>
+<div class="acts"><button data-a="editPrice">${t==null?'Set price':'Price &amp; discount'}</button><button data-a="addX">Add expense or transport</button></div></section>
+<h2>Payment plan</h2>
+<section class="card">${t==null?'<p class="intro" style="margin:0">Set the price to see each instalment.</p>':planHtml(b,paid)}<div class="acts"><button data-a="editPlan">Change plan</button></div></section>
 <div class="cta"><button class="btn fill" data-a="addPay">+ Add payment</button></div>
-<div>${Y().length?Y().map(x=>`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(x.amount)}</div><div class="sub">${esc(x.label||'Payment')}${x.method?' · '+esc(x.method):''} · ${fmtD(x.paid_on)}</div><div class="acts"><button data-a="editPay" data-id="${x.id}">Edit</button><button data-a="delPay" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No payments recorded yet.</p>'}</div>
+<div>${Y().length?Y().map(x=>`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(x.amount)}</div><div class="sub">${esc(x.label||'Payment')}${x.method?' · '+esc(x.method):''} · ${fmtD(x.paid_on)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}<div class="acts"><button data-a="editPay" data-id="${x.id}">Edit</button><button data-a="delPay" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No payments recorded yet.</p>'}</div>
 <h2>Invoice</h2>
 <section class="card">${b.invoice_no?`<div class="lbl">Invoice ${esc(b.invoice_no)}</div><p class="intro" style="margin:10px 0 0">Dated ${fmtD(b.invoice_date)}${b.bill_to?' · billed to '+esc(b.bill_to.split('\n')[0]):''}</p>
 <button class="tab ${b.invoice_sent?'on':''}" style="margin-top:14px" data-a="togSent">${b.invoice_sent?'✓ Invoice sent'+(b.invoice_sent_on?' on '+fmtD(b.invoice_sent_on):''):'Not sent yet · tap when sent'}</button>
+<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="shareInv">Share to client on WhatsApp</button></div>
 <div class="acts"><button data-a="viewInv">View invoice</button><button data-a="editInv">Edit details</button><button data-a="invSet">Invoice settings</button></div>`
 :`<div class="lbl">No invoice yet</div><p class="intro" style="margin:10px 0 0">Creates an invoice with its own number from the price and payments above.</p><div class="acts"><button data-a="mkInv">Create invoice</button><button data-a="invSet">Invoice settings</button></div>`}</section>
-<p class="intro" style="margin-top:16px;font-size:13px">Payments and invoices are only visible to you. They never appear on the client or family links.</p>`}
+<h2>Client link</h2>
+<section class="card"><button class="tab ${b.share_money!==false?'on':''}" data-a="togMoney">${b.share_money!==false?'✓ The client can see what’s left to pay':'Hidden from the client · tap to share'}</button>
+<p class="intro" style="margin:12px 0 0;font-size:13px">When shared, the client’s link shows the total, the payment plan, payments received and what is left. Your payment notes and the family link never show any of this.</p></section>`}
 function invView(){
-  const w=wed,b=w.bill,s=inv||INVDEF,price=Number(b.price||0),left=Math.max(0,price-sum(Y())),br=t=>esc(t).replace(/\n/g,'<br>');
+  const w=wed,b=w.bill,s=inv||INVDEF,price=Number(b.price||0),t=tot(b)||0,paid=sum(Y()),left=Math.max(0,t-paid),ex=Array.isArray(b.extras)?b.extras:[],disc=Number(b.discount||0),br=x=>esc(x).replace(/\n/g,'<br>'),pr=planRows(b,paid);
   return`<div class="top2 noprint"><button class="btn" data-a="invBack">← Back</button> <button class="btn fill" data-a="invPrint">Print or save as PDF</button></div>
 <div class="paper"><div class="ph"><div><div class="pb">${esc(s.biz||'Zema Production')}</div>${s.addr?`<div class="ps">${br(s.addr)}</div>`:''}${s.contact?`<div class="ps">${br(s.contact)}</div>`:''}</div>
 <div style="text-align:right"><div class="pt">Invoice</div><div class="ps">${esc(b.invoice_no||'')}</div><div class="ps">${fmtD(b.invoice_date)}</div></div></div>
 <div class="pl">Bill to</div><div class="pv">${br(b.bill_to||w.couple)}</div>
 <table class="ptb"><tr><th>Description</th><th>Amount</th></tr>
-<tr><td>${esc(etype(w))}${w.services?' · '+esc(w.services):''}${w.package?' · '+esc(w.package)+' package':''}<br><span class="ps">${esc(w.couple)} · ${fmtD(w.wedding_date)}${w.city?' · '+esc(w.city):''}</span></td><td>${gbp(price)}</td></tr>
+<tr><td>${esc(etype(w))}${w.services?' · '+esc(w.services):''}${w.package?' · '+esc(w.package)+' package':''}${b.hours&&b.hourly_rate?' · '+Number(b.hours)+' hours at '+gbp(b.hourly_rate)+' per hour':''}<br><span class="ps">${esc(w.couple)} · ${fmtD(w.wedding_date)}${w.city?' · '+esc(w.city):''}</span></td><td>${gbp(price)}</td></tr>
+${ex.map(x=>`<tr><td>${esc(x.label)}</td><td>${gbp(x.amount)}</td></tr>`).join('')}
+${disc?`<tr><td>Discount</td><td>−${gbp(disc)}</td></tr>`:''}
+${ex.length||disc?`<tr class="mid"><td>Total${disc?' after discount':''}</td><td>${gbp(t)}</td></tr>`:''}
 ${Y().map(x=>`<tr><td>${esc(x.label||'Payment')} received ${fmtD(x.paid_on)}${x.method?' · '+esc(x.method):''}</td><td>−${gbp(x.amount)}</td></tr>`).join('')}
 <tr class="tot"><td>Balance due</td><td>${gbp(left)}</td></tr></table>
+${pr.length>1?`<div class="pl">Payment plan</div><div class="pv">${pr.map(r=>`${r.label} (${r.pc}%): ${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' still to pay':'to pay'):'paid'}`).join('<br>')}</div>`:''}
 <div class="pl">Payment</div><div class="pv">${esc(s.pay||'')}${s.an||s.sc||s.acn?`<br>Account name: ${esc(s.an||'')}<br>Sort code: ${esc(s.sc||'')}<br>Account number: ${esc(s.acn||'')}`:''}</div>
 ${s.note?`<div class="pn">${br(s.note)}</div>`:''}</div>`}
 async function setB(o){
   const prev={...wed.bill};Object.assign(wed.bill,o);render();
   const{error}=await sb.from('event_billing').upsert({wedding_id:wed.id,...o});
-  if(error){wed.bill=prev;render();toast('Could not save: '+error.message);return false}
+  if(error){wed.bill=prev;render();toast(/column|schema/i.test(error.message)?'Run the latest payments SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
   const d=weds.find(x=>x.id===wed.id);if(d)d.event_billing={...wed.bill};
   return true;
 }
 function openPriceForm(){
   const v=wed.bill.price!=null?wed.bill.price:(pkPrice(wed.package)??'');
   ui.modal={type:'price'};
-  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Agreed price</h3>
-<p class="intro">The total this client is paying${wed.package?', filled in from the '+esc(wed.package)+' package if you haven’t set one':''}. Change it for discounts or extras.</p>
-<div class="f"><span class="l">Price in £</span><input id="yp" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(v)}"></div>
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Price &amp; discount</h3>
+<p class="intro">The package price${wed.package?', filled in from the '+esc(wed.package)+' package if you haven’t set one':''}, and any discount you are giving. The invoice shows both, and the total after discount.</p>
+<div class="f"><span class="l">Package price in £</span><input id="yp" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(v)}"></div>
+<div class="f"><span class="l">Discount in £ (leave empty for none)</span><input id="ydc" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(Number(wed.bill.discount||0)||'')}"></div>
+<p class="intro">For hourly and freelance work, fill in hours and rate instead and the price is worked out for you.</p>
+<div class="f"><span class="l">Hours</span><input id="yh" type="number" inputmode="decimal" min="0" step="0.25" value="${esc(wed.bill.hours??'')}"></div>
+<div class="f"><span class="l">Rate per hour in £</span><input id="yr" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(wed.bill.hourly_rate??'')}"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePrice">Save</button></div></div></div>`;
 }
+function openXForm(){
+  ui.modal={type:'extra'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Add expense or transport</h3>
+<p class="intro">An extra charge added on top of the package price. It shows on the invoice and in the client’s total.</p>
+<div class="f"><span class="l">What it is</span><input id="yxl" list="yxs" maxlength="80" placeholder="Transport"><datalist id="yxs"><option>Transport</option><option>Expenses</option><option>Accommodation</option><option>Extra hours</option><option>Parking</option></datalist></div>
+<div class="f"><span class="l">Amount in £</span><input id="yxa" type="number" inputmode="decimal" min="0" step="0.01"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveX">Add</button></div></div></div>`;
+}
+function openPlanForm(){
+  ui.modal={type:'plan'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Payment plan</h3>
+<p class="intro">The percentage of the total due at each stage, separated by commas. The first is the deposit and the last is the final balance. They should add up to 100.</p>
+<div class="f"><span class="l">Percentages</span><input id="ypl" inputmode="decimal" placeholder="25, 25, 50" value="${esc(planOf(wed.bill).join(', '))}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePlan">Save plan</button></div></div></div>`;
+}
 function openPayForm(id){
-  const x=id?Y().find(y=>y.id===id):null,d=x||{amount:'',paid_on:today(),label:Y().length?'Balance':'Booking fee',method:'Bank transfer'};
+  const x=id?Y().find(y=>y.id===id):null,paid=sum(Y()),t=tot(wed.bill),rows=t==null?[]:planRows(wed.bill,paid).filter(r=>r.left>0),left=t==null?0:Math.max(0,t-paid);
+  const d=x||{amount:rows[0]?rows[0].left:'',paid_on:today(),label:rows[0]?rows[0].label:(Y().length?'Balance':'Deposit'),method:'Bank transfer',note:''};
   ui.modal={type:'pay',id};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit payment':'Add payment'}</h3>
+${!x&&rows.length?`<div class="lbl">Quick fill</div><div class="chipsel" style="margin-bottom:18px">${rows.map(r=>`<button class="tab" data-a="fillPay" data-v="${r.left}" data-l="${esc(r.label)}">${r.label} ${r.pc}% · ${gbp(r.left)}</button>`).join('')}${rows.length>1?`<button class="tab" data-a="fillPay" data-v="${left}" data-l="Full balance">Everything left · ${gbp(left)}</button>`:''}</div>`:''}
 <div class="f"><span class="l">Amount in £</span><input id="ya" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.amount)}"></div>
 <div class="f"><span class="l">Date paid</span><input id="yd" type="date" value="${esc(d.paid_on||'')}"></div>
-<div class="f"><span class="l">What it was for</span><input id="yl" list="yls" maxlength="80" value="${esc(d.label||'')}"><datalist id="yls"><option>Booking fee</option><option>Balance</option><option>Full payment</option><option>Extra hours</option></datalist></div>
+<div class="f"><span class="l">What it was for · shown on the invoice</span><input id="yl" list="yls" maxlength="80" value="${esc(d.label||'')}"><datalist id="yls"><option>Deposit</option><option>Payment 2</option><option>Final balance</option><option>Full payment</option><option>Extra hours</option></datalist></div>
 <div class="f"><span class="l">How it was paid</span><select id="ym">${['Bank transfer','Cash'].map(m=>`<option ${m===d.method?'selected':''}>${m}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Private note (only you see this)</span><textarea id="yn" rows="2" maxlength="500" placeholder="e.g. Paid by the bride’s father.">${esc(d.note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePay">Save payment</button></div></div></div>`;
 }
 async function savePay(){
   const amount=parseFloat($('#ya').value);
   if(!(amount>0)){$('#ya').classList.add('err');$('#ya').focus();return}
   if(!$('#yd').value){$('#yd').classList.add('err');$('#yd').focus();return}
-  const o={amount,paid_on:$('#yd').value,label:$('#yl').value.trim(),method:$('#ym').value},id=ui.modal.id;
+  const o={amount,paid_on:$('#yd').value,label:$('#yl').value.trim(),method:$('#ym').value,note:$('#yn').value.trim()},id=ui.modal.id;
+  const msg=e=>/column|schema/i.test(e.message)?'Run the latest payments SQL in Supabase first, then refresh.':'Could not save: '+e.message;
   if(id){
     const{error}=await sb.from('payments').update(o).eq('id',id);
-    if(error)return toast('Could not save: '+error.message);
+    if(error)return toast(msg(error));
     Object.assign(Y().find(x=>x.id===id),o);
   }else{
     const{data,error}=await sb.from('payments').insert({...o,wedding_id:wed.id}).select().single();
-    if(error)return toast('Could not save: '+error.message);
+    if(error)return toast(msg(error));
     Y().push(data);
   }
   Y().sort((a,b)=>String(a.paid_on).localeCompare(String(b.paid_on)));
   closeM();render();
 }
-function openInvForm(){
+function openInvForm(msg){
   const b=wed.bill;
   ui.modal={type:'inv'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Invoice details</h3>
+${msg?`<p class="intro">${esc(msg)}</p>`:''}
 <div class="f"><span class="l">Invoice number</span><input id="vn" maxlength="40" value="${esc(b.invoice_no||'')}"></div>
 <div class="f"><span class="l">Invoice date</span><input id="vd" type="date" value="${esc(b.invoice_date||today())}"></div>
 <div class="f"><span class="l">Bill to · name, then address if needed</span><textarea id="vb" rows="4" maxlength="400">${esc(b.bill_to||wed.couple)}</textarea></div>
+<div class="f"><span class="l">Client’s WhatsApp number</span><input id="vp" type="tel" maxlength="30" placeholder="07…" value="${esc(b.client_phone||'')}"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveInv">Save</button></div></div></div>`;
+}
+function shareInv(){
+  const b=wed.bill,t=tot(b)||0,paid=sum(Y()),ph=String(b.client_phone||'').replace(/\D/g,'').replace(/^00/,'').replace(/^0/,'44');
+  if(!ph)return openInvForm('Add the client’s WhatsApp number, save, then tap Share again.');
+  const link=location.origin+location.pathname+'?w='+wed.share_token+'&s=overview';
+  const msg=`Hello, here is invoice ${b.invoice_no} from ${(inv||INVDEF).biz||'Zema Production'} for ${wed.couple}.\n\nTotal: ${gbp(t)}\nPaid so far: ${gbp(paid)}\nBalance due: ${gbp(Math.max(0,t-paid))}\n\nYou can view the invoice and save it as a PDF here:\n${link}`;
+  window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');
+  if(!b.invoice_sent)setB({invoice_sent:true,invoice_sent_on:today()});
 }
 function openSetForm(){
   const s=inv||INVDEF,F=(l,k,ph)=>`<div class="f"><span class="l">${l}</span><input data-s="${k}" value="${esc(s[k]||'')}" placeholder="${ph||''}"></div>`,TA=(l,k,ph)=>`<div class="f"><span class="l">${l}</span><textarea data-s="${k}" rows="2" placeholder="${ph||''}">${esc(s[k]||'')}</textarea></div>`;
@@ -762,7 +831,7 @@ ${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location<
 ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
-  const H={overview:'Your Photos &amp; Film',timeline:'Your Wedding Day Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
+  const H={overview:'Your Overview',timeline:'Your Wedding Day Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
   const I={timeline:'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.',
 family:'Add the groups you’d like photographed, and put them in the order you’d like. Your photographer will work through this list on the day.',
 musts:'Tell your photographer the moments and shots you don’t want missed: a detail, a person, a surprise. Family and friends can’t see this list.',
@@ -1142,7 +1211,14 @@ document.addEventListener('click',async e=>{
   else if(a==='prog'&&!TOKEN){const k=t.dataset.k==='video'?'video_progress':'photo_progress';setW({[k]:Math.max(0,Math.min(100,(wed[k]||0)+(+t.dataset.d)))})}
   else if(a==='togW'&&!TOKEN&&['photos_delivered','film_delivered','share_progress'].includes(t.dataset.k))setW({[t.dataset.k]:!wed[t.dataset.k]});
   else if(a==='editPrice'&&!TOKEN)openPriceForm();
-  else if(a==='savePrice'&&!TOKEN){const v=$('#yp').value.trim();closeM();setB({price:v===''?null:Math.max(0,parseFloat(v)||0)})}
+  else if(a==='savePrice'&&!TOKEN){const v=$('#yp').value.trim(),dc=Math.max(0,parseFloat($('#ydc').value)||0),h=parseFloat($('#yh').value),r=parseFloat($('#yr').value),hr=h>0&&r>0;closeM();setB({price:hr?Math.round(h*r*100)/100:v===''?null:Math.max(0,parseFloat(v)||0),discount:dc,hours:hr?h:null,hourly_rate:hr?r:null})}
+  else if(a==='addX'&&!TOKEN)openXForm();
+  else if(a==='saveX'&&!TOKEN){const l=$('#yxl').value.trim(),am=parseFloat($('#yxa').value);if(!l){$('#yxl').classList.add('err');return}if(!(am>0)){$('#yxa').classList.add('err');return}closeM();setB({extras:[...(Array.isArray(wed.bill.extras)?wed.bill.extras:[]),{label:l,amount:am}]})}
+  else if(a==='delX'&&!TOKEN){const i=+t.dataset.i,l=Array.isArray(wed.bill.extras)?wed.bill.extras:[];ask(`Remove “${(l[i]||{}).label||'this extra'}”?`,()=>setB({extras:l.filter((_,j)=>j!==i)}))}
+  else if(a==='editPlan'&&!TOKEN)openPlanForm();
+  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0);closeM();await setB({plan:p});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
+  else if(a==='fillPay'){$('#ya').value=t.dataset.v;$('#yl').value=t.dataset.l}
+  else if(a==='togMoney'&&!TOKEN)setB({share_money:wed.bill.share_money===false})
   else if(a==='addPay'&&!TOKEN)openPayForm();
   else if(a==='editPay'&&!TOKEN)openPayForm(id);
   else if(a==='savePay'&&!TOKEN)savePay();
@@ -1152,7 +1228,8 @@ document.addEventListener('click',async e=>{
   else if(a==='invBack'){ui.inv=false;render()}
   else if(a==='invPrint')window.print();
   else if(a==='editInv'&&!TOKEN)openInvForm();
-  else if(a==='saveInv'&&!TOKEN){const o={invoice_no:$('#vn').value.trim(),invoice_date:$('#vd').value||null,bill_to:$('#vb').value.trim()};closeM();setB(o)}
+  else if(a==='saveInv'&&!TOKEN){const o={invoice_no:$('#vn').value.trim(),invoice_date:$('#vd').value||null,bill_to:$('#vb').value.trim(),client_phone:$('#vp').value.trim()};closeM();setB(o)}
+  else if(a==='shareInv'&&!TOKEN)shareInv();
   else if(a==='togSent'&&!TOKEN)setB({invoice_sent:!wed.bill.invoice_sent,invoice_sent_on:wed.bill.invoice_sent?null:today()});
   else if(a==='invSet'&&!TOKEN)openSetForm();
   else if(a==='saveSet'&&!TOKEN)saveSet();
