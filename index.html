@@ -94,7 +94,7 @@ const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Client Approval'];
-const SK={'Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party'};
+const SK={'Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -111,6 +111,9 @@ const G=()=>wed.groups;
 const T=()=>wed.timeline;
 const M=()=>wed.musts;
 const P=()=>wed.party;
+const L=()=>wed.places;
+const lsort=()=>L().sort((a,b)=>(!a.arrive_time-!b.arrive_time)||String(a.arrive_time).localeCompare(String(b.arrive_time)));
+const mapUrl=a=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a);
 const tel=p=>String(p).replace(/[^\d+]/g,'');
 /* Timeline is always ordered by time; moments without a time go last */
 const tsort=()=>T().sort((a,b)=>(!a.at_time-!b.at_time)||String(a.at_time).localeCompare(String(b.at_time)));
@@ -176,7 +179,8 @@ async function loadWedding(id){
   const tl=await sb.from('timeline_items').select('*').eq('wedding_id',id).order('created_at');
   const mh=await sb.from('must_haves').select('*').eq('wedding_id',id).order('created_at');
   const pt=await sb.from('wedding_party').select('*').eq('wedding_id',id).order('created_at');
-  wed={...w,groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error};tsort();render();
+  const lc=await sb.from('wedding_locations').select('*').eq('wedding_id',id).order('created_at');
+  wed={...w,groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -184,7 +188,8 @@ async function loadShared(){
   const tl=await sb.rpc('shared_timeline_get',{p_token:TOKEN});
   const mh=await sb.rpc('shared_musts_get',{p_token:TOKEN});
   const pt=await sb.rpc('shared_party_get',{p_token:TOKEN});
-  wed={...data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error};tsort();render();
+  const lc=await sb.rpc('shared_places_get',{p_token:TOKEN});
+  wed={...data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -204,7 +209,7 @@ function render(){
   else if(wed)setApp(ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
-const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr'};
+const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr'};
 const secOff=k=>!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>ERR[k]&&!secOff(k)?k:'family';
 const secNav=cl=>`<nav class="sec">${SECS.filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
@@ -296,6 +301,23 @@ function ptMain(){
 <div class="row2"><span>Tap a number to call</span><span>Hidden from the family link</span></div></section>
 <div class="cta"><button class="btn fill" data-a="addPt">+ Add Person</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button></div>
 ${ptList()}`}
+/* ---- Locations (photographer and client only, never shown on the family link) ---- */
+function lcRow(x){const lk=locked();return`<div class="g">
+<div class="tm">${esc(x.arrive_time||'—')}</div>
+<div class="bd"><div class="nm">${esc(x.name)}</div>
+${x.address?`<a class="lnk" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${esc(x.address)}</a>`:''}
+${x.note?`<div class="note">${esc(x.note)}</div>`:''}
+${lk?'':`<div class="acts"><button data-a="editL" data-id="${x.id}">Edit</button><button data-a="delL" data-id="${x.id}">Delete</button></div>`}</div></div>`}
+const lcList=()=>{const a=L();return`<div>${a.length?a.map(lcRow).join(''):'<p class="empty">No locations yet. Add the first one, for example “Ceremony”.</p>'}</div>`};
+function lcMain(){
+  const a=L();
+  if(wed.lcErr)return`<h2>Locations</h2><p class="empty">Locations aren’t set up in Supabase yet. Run the locations SQL once, then refresh this page.</p>`;
+  return`<h2>Locations</h2>
+<section class="card"><div class="lbl">Places of the day</div>
+<div class="big">${a.length} <small>location${a.length==1?'':'s'}</small></div>
+<div class="row2"><span>Tap an address for directions</span><span>Hidden from the family link</span></div></section>
+<div class="cta"><button class="btn fill" data-a="addL">+ Add Location</button><button class="btn pri" data-a="day">Wedding Day Mode</button><button class="btn" data-a="copy">Copy client link</button></div>
+${lcList()}`}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -313,7 +335,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():famMain()}
+${ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit wedding details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -336,13 +358,19 @@ function clPt(lk){
   return`<section class="card"><div class="lbl">Wedding party</div><div class="big">${a.length} <small>${a.length==1?'person':'people'}</small></div></section>
 ${lk?'':`<div class="cta"><button class="btn fill" data-a="addPt">+ Add Person</button><button class="btn pri" data-a="approve">Confirm my plan</button></div>`}
 ${ptList()}`}
+function clLc(lk){
+  const a=L();
+  return`<section class="card"><div class="lbl">Locations</div><div class="big">${a.length} <small>location${a.length==1?'':'s'}</small></div></section>
+${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location</button><button class="btn pri" data-a="approve">Confirm my plan</button></div>`}
+${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
-  const H={timeline:'Your Wedding Day Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party'};
+  const H={timeline:'Your Wedding Day Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations'};
   const I={timeline:'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.',
 family:'Add the groups you’d like photographed, and put them in the order you’d like. Your photographer will work through this list on the day.',
 musts:'Tell your photographer the moments and shots you don’t want missed: a detail, a person, a surprise. Family and friends can’t see this list.',
-party:'Add the key people of your day with their role and a phone number, such as your Maid of Honour, Best Man, parents and coordinator. Your photographer uses this to know who’s who and who to call. Family and friends can’t see this list.'};
+party:'Add the key people of your day with their role and a phone number, such as your Maid of Honour, Best Man, parents and coordinator. Your photographer uses this to know who’s who and who to call. Family and friends can’t see this list.',
+places:'Add each place your photographer needs to be: where you’re getting ready, the ceremony, the reception and any photo spots. Include the full address with postcode, the time to arrive, and anything useful about parking or access. Family and friends can’t see this list.'};
   return`<div class="brand">ZEMA WEDDING PLANNER</div>
 <h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>
 ${secNav(1)}
@@ -350,7 +378,7 @@ ${secNav(1)}
 ${lk?`<section class="card ok" style="margin-bottom:20px"><div class="lbl">Confirmed</div><div class="big" style="font-size:28px">Your plan is confirmed</div>
 <p class="intro" style="margin:0">Confirmed by ${esc(w.approved_by||'you')} on ${fmtD((w.approved_at||'').slice(0,10))}. Your photographer will use your plan on the day. If you need a change, please contact your photographer and they can reopen it.</p></section>`
 :`<p class="intro">${I[sec]} When you’re happy with your whole plan, tap “Confirm my plan”.</p>`}
-${sec==='timeline'?clTl(lk):sec==='musts'?clMh(lk):sec==='party'?clPt(lk):clFam(lk)}
+${sec==='timeline'?clTl(lk):sec==='musts'?clMh(lk):sec==='party'?clPt(lk):sec==='places'?clLc(lk):clFam(lk)}
 <footer><span>Private link · changes save automatically</span></footer>`}
 function dayFam(){
   const s=stats();
@@ -376,12 +404,18 @@ function dayPt(){
 <div>${a.map(x=>{const b=`<span class="dt"><b>${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;
 return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>
 ${a.length?'':'<p class="empty">No one added yet. Exit and add people in the Wedding Party section.</p>'}`}
+function dayLc(){
+  const a=L();
+  return`<h2>Locations</h2>
+<div>${a.map(x=>{const b=`<span class="dt"><b>${x.arrive_time?esc(x.arrive_time)+' · ':''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;
+return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>
+${a.length?'':'<p class="empty">No locations yet. Exit and add them in the Locations section.</p>'}`}
 function dayView(){
   const w=wed,sec=SK_OK(ui.sec);
   return`<div class="top"><button class="btn" data-a="copyF">Family &amp; friends link</button><button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">ZEMA WEDDING DAY</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
-<div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People']].map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
-${sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():dayFam()}`}
+<div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People'],['places','Places']].map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
+${sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():dayFam()}`}
 function copyLink(token,key){
   const u=location.origin+location.pathname+'?'+(key||'w')+'='+token;
   (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family & friends link copied':'Client link copied'),()=>prompt('Copy this link:',u));
@@ -391,7 +425,7 @@ function copyLink(token,key){
 function openApprove(){
   ui.modal={type:'approve'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Confirm your plan</h3>
-<p class="intro">This tells your photographer that your whole plan is ready. After you confirm, you won’t be able to edit them unless your photographer reopens the plan.</p>
+<p class="intro">This tells your photographer that your whole plan is ready. After you confirm, you won’t be able to edit it unless your photographer reopens the plan.</p>
 <div class="f"><span class="l">Your name</span><input id="an" placeholder="e.g. Amani"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="doApprove">Confirm plan</button></div></div></div>`;
 }
@@ -574,6 +608,39 @@ async function savePt(){
   closeM();render();
 }
 
+/* ---- Location modal ---- */
+function openLForm(id){
+  const x=id?L().find(y=>y.id===id):null,d=x||{name:'',address:'',arrive_time:'',note:''};
+  ui.modal={type:'lform',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit location':'Add location'}</h3>
+<div class="f"><span class="l">What happens here</span><input id="ln" maxlength="120" placeholder="Ceremony" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">Address with postcode</span><textarea id="la" rows="2" maxlength="300" placeholder="Venue name, street, London, postcode">${esc(d.address||'')}</textarea></div>
+<div class="f"><span class="l">Arrival time (optional)</span><input id="lt" type="time" value="${esc(d.arrive_time||'')}"></div>
+<div class="f"><span class="l">Note (optional)</span><textarea id="lo" rows="2" maxlength="500" placeholder="e.g. Parking behind the hall. Use the side entrance.">${esc(d.note||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveL">Save location</button></div></div></div>`;
+}
+async function saveL(){
+  const name=$('#ln').value.trim();
+  if(!name){$('#ln').classList.add('err');$('#ln').focus();return}
+  const o={name,address:$('#la').value.trim(),arrive_time:($('#lt').value||'').slice(0,5),note:$('#lo').value.trim()},id=ui.modal.id;
+  if(TOKEN){
+    const{data,error}=await sb.rpc('shared_places_save',{p_token:TOKEN,p_id:id||null,p_name:o.name,p_address:o.address,p_time:o.arrive_time,p_note:o.note});
+    if(error){closeM();toast(error.message);return reload()}
+    if(id)Object.assign(L().find(x=>x.id===id),data);else L().push(data);
+    closeM();lsort();render();return;
+  }
+  if(id){
+    const{error}=await sb.from('wedding_locations').update(o).eq('id',id);
+    if(error)return toast('Could not save: '+error.message);
+    Object.assign(L().find(x=>x.id===id),o);
+  }else{
+    const{data,error}=await sb.from('wedding_locations').insert({...o,wedding_id:wed.id}).select().single();
+    if(error)return toast('Could not save: '+error.message);
+    L().push(data);
+  }
+  closeM();lsort();render();
+}
+
 /* ---- Ordering ---- */
 const syncOrder=()=>run(TOKEN?sb.rpc('shared_reorder',{p_token:TOKEN,p_ids:G().map(g=>g.id)}):sb.from('photo_groups').upsert(G().map((g,i)=>({id:g.id,wedding_id:wed.id,category:g.category,name:g.name,people:g.people,minutes:g.minutes,notes:g.notes,family_note:g.family_note||'',done:g.done,position:i}))));
 function move(id,d){
@@ -592,7 +659,7 @@ document.addEventListener('dragend',()=>{if(dragId){dragId=null;render()}});
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-a]');
   if(!t){if(e.target.classList.contains('ov'))closeM();return}
-  const a=t.dataset.a,id=t.dataset.id,g=id&&wed&&wed.groups&&G().find(x=>x.id===id),ti=id&&wed&&wed.timeline&&T().find(x=>x.id===id),mi=id&&wed&&wed.musts&&M().find(x=>x.id===id),pi=id&&wed&&wed.party&&P().find(x=>x.id===id);
+  const a=t.dataset.a,id=t.dataset.id,g=id&&wed&&wed.groups&&G().find(x=>x.id===id),ti=id&&wed&&wed.timeline&&T().find(x=>x.id===id),mi=id&&wed&&wed.musts&&M().find(x=>x.id===id),pi=id&&wed&&wed.party&&P().find(x=>x.id===id),li=id&&wed&&wed.places&&L().find(x=>x.id===id);
   if(a==='login')login();
   else if(a==='out')await sb.auth.signOut();
   else if(a==='retry')reload();
@@ -630,6 +697,10 @@ document.addEventListener('click',async e=>{
   else if(a==='editPt')openPForm(id);
   else if(a==='savePt')savePt();
   else if(a==='delPt'&&pi)ask(`Remove “${pi.name}”?`,()=>{wed.party=P().filter(x=>x.id!==id);render();run(TOKEN?sb.rpc('shared_party_delete',{p_token:TOKEN,p_id:id}):sb.from('wedding_party').delete().eq('id',id))});
+  else if(a==='addL')openLForm();
+  else if(a==='editL')openLForm(id);
+  else if(a==='saveL')saveL();
+  else if(a==='delL'&&li)ask(`Delete “${li.name}”?`,()=>{wed.places=L().filter(x=>x.id!==id);render();run(TOKEN?sb.rpc('shared_places_delete',{p_token:TOKEN,p_id:id}):sb.from('wedding_locations').delete().eq('id',id))});
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
