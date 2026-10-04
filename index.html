@@ -16,8 +16,9 @@ h1{font:300 44px/1.1 var(--serif);margin:14px 0 6px}
 h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
 .intro{color:var(--mu);margin:0 0 20px}
 .sec{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;margin-top:26px;padding-bottom:4px}
-.sec span,.sec button{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5d5b58;white-space:nowrap;padding:8px 0 4px}
+.sec span,.sec button,.sec a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5d5b58;white-space:nowrap;padding:8px 0 4px}
 .sec button{background:none;border:0;color:var(--mu);cursor:pointer}
+.sec a{color:var(--mu);text-decoration:none}
 .sec .on{color:var(--tx);border-bottom:1px solid var(--ac);padding-bottom:4px}
 .card{background:var(--s);border:1px solid var(--line);padding:22px;border-radius:4px}
 .card.ok{border-color:var(--ac)}
@@ -91,6 +92,12 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 .pgc button{width:38px;height:38px;border:1px solid var(--line);background:none;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;padding:0}
 .or{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:16px 0;cursor:pointer}
 .or .nm{font-size:20px}.or .sub{margin:0;text-align:right}
+.pk{margin-bottom:16px}.pk .nm{font-size:32px}
+.prc{font:500 15px var(--sans);letter-spacing:.1em;color:var(--ac);margin:6px 0 14px}
+.fl{list-style:none;margin:16px 0 20px;padding:0}.fl li{padding:10px 0 10px 20px;border-top:1px solid var(--line);position:relative;color:#d9d3ca}
+.fl li:before{content:"";position:absolute;left:2px;top:20px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.pk a.btn{width:100%}
+.tc p{color:var(--mu);font-size:14px;margin:0 0 14px}
 .gp{padding:6px 0;color:#bdb8b0}.gp:before{content:"·";color:var(--ac);margin-right:10px}
 .dr.nx{border-color:var(--ac)}a.dr{text-decoration:none;color:inherit}a.lnk{display:inline-block;margin-top:8px}.dt .live{color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 </style></head>
@@ -101,7 +108,7 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null;
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes'};
@@ -114,6 +121,132 @@ const DEMO=[
 ['friends','Couple + university friends',['University friends'],4],['friends','Couple + closest friends',['Friends'],4]];
 const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],people:d[2],minutes:d[3],notes:d[4]||'',position:i}));
 
+/* ---- Packages page content (shown at ?p=1). Edit prices and wording here. ---- */
+const CONTACT={tel:'+447449727801',wa:'https://wa.me/447449727801',ig:'https://www.instagram.com/zemaproduction_'};
+const WPK=[
+{n:'Platinum',p:'£3,800',d:'The complete wedding experience, with cinematic videography, timeless photography and a pre-wedding shoot.',f:[
+'Pre-wedding photoshoot with 20–50 edited images, delivered before your wedding day',
+'Cinematic pre-wedding highlight film',
+'Two videographers on the wedding day',
+'Drone filming',
+'Short cinematic highlight film',
+'Full wedding film of 1–3 hours, with personal messages from your guests',
+'Wedding film delivered on a personalised USB keepsake',
+'Wedding highlight photos within 1–2 weeks of the wedding',
+'Up to 200 professionally edited photos in a luxury photo book',
+'All remaining unedited images in an online gallery',
+'Custom guest signing board']},
+{n:'Gold',p:'£3,400',d:'Elegant full wedding day photography and cinematic videography coverage.',f:[
+'Two videographers',
+'Drone filming',
+'Cinematic wedding highlight film',
+'Full wedding film of 1–2 hours',
+'Wedding film delivered in a custom USB presentation box',
+'Wedding highlight photos delivered after the wedding',
+'Up to 200 professionally edited photos, printed in a luxury photo book',
+'All remaining unedited images in an online gallery']},
+{n:'Silver',p:'£2,800',d:'Half-day coverage for intimate weddings, registry ceremonies, or couples who want the most important moments captured.',f:[
+'Half-day coverage',
+'One photographer and one videographer',
+'Professionally edited wedding film of up to 20–30 minutes',
+'Film delivered digitally or on USB',
+'Edited highlight photos within 1–2 weeks of the wedding',
+'Up to 120 professionally edited images',
+'All remaining images in high resolution via online gallery or USB']}];
+const EPK=[
+{n:'Essential',p:'£1,000',d:'5 hours of photography and videography coverage.'},
+{n:'Signature',p:'£1,400',d:'8 hours of photography and videography coverage.'},
+{n:'Premium',p:'£1,800',d:'10 hours of photography and videography coverage, including a luxury photo album.'}];
+const TERMS=[
+'Please note that all bookings are subject to confirmation and are not officially secured until approved by Zema Production.',
+'A booking fee is required to secure your date and is strictly non-refundable. This payment acts as a commitment fee and covers pre-production planning, scheduling, preparation, crew arrangements, equipment reservations, location planning, camera setup, and other production-related expenses undertaken prior to your event or photoshoot.',
+'Some photoshoot and filming locations may require permits or prior authorisation. As certain areas are public or privately managed spaces, access and photography/videography permissions cannot always be guaranteed, and authorities or venue management may request filming or photography to stop at any time.',
+'By proceeding with a booking, clients acknowledge and agree that photographs and video content captured by Zema Production may be used for portfolio purposes, social media, marketing, advertising, website content, and other promotional materials unless otherwise agreed in writing before the event date.',
+'Clients are responsible for providing accurate event information, including timings and locations, at the time of booking. Any major changes should be communicated as early as possible.',
+'By submitting a booking enquiry or payment, you confirm that you have read and agreed to these Terms & Conditions.'];
+const waLink=t=>CONTACT.wa+'?text='+encodeURIComponent(t);
+/* Defaults used until packages are saved from the editor; after that the saved version is shown */
+const PKDEF={hide:false,
+wedNote:'Each wedding package covers one wedding day. If additional days are needed, an extra package will be required.',
+wed:WPK,
+evIntro:'Perfect for birthdays, baptisms, engagements and intimate celebrations. Your photos and videos are professionally edited and delivered through an online gallery.',
+ev:EPK,
+evNote:'These packages are for small events only, such as birthdays, baptisms, engagements and private celebrations, and are not available for weddings. For events outside London, additional travel costs may apply depending on the distance and location.',
+hr:{p:'£200 per hour',d:'Minimum booking of 3 hours.'},
+terms:TERMS};
+function pkNorm(d){
+  const o=JSON.parse(JSON.stringify({...PKDEF,...(d&&typeof d==='object'?d:{})}));
+  if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];
+  if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
+  o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[]});
+  return o}
+async function loadPk(){
+  try{const{data,error}=await sb.rpc('packages_get');return{d:pkNorm(error?null:data),err:!!error}}
+  catch(_){return{d:pkNorm(null),err:true}}
+}
+function pkgView(d){
+  const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>Packages</h1><div class="meta">Photography &amp; videography · London</div>
+<nav class="sec"><a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#tc">Terms</a></nav>
+<h2 id="wed">Wedding Packages</h2>
+${d.wedNote?`<p class="intro">${esc(d.wedNote)}</p>`:''}
+${d.wed.map((k,i)=>`<section class="card pk ${i?'':'ok'}"><div class="nm">${esc(k.n)}</div>${prc(k.p)}${k.d?`<p class="intro" style="margin:0">${esc(k.d)}</p>`:''}
+<ul class="fl">${k.f.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+<a class="btn ${i?'pri':'fill'}" href="${esc(waLink('Hello Zema Production, I’d like to ask about the '+k.n+' wedding package.'))}" target="_blank" rel="noopener">Enquire about ${esc(k.n)}</a></section>`).join('')}
+<h2 id="ev">Small Events</h2>
+${d.evIntro?`<p class="intro">${esc(d.evIntro)}</p>`:''}
+${d.ev.map(k=>`<section class="card pk"><div class="nm" style="font-size:26px">${esc(k.n)}</div>${prc(k.p)}<p class="intro" style="margin:0 0 18px">${esc(k.d||'')}</p>
+<a class="btn pri" href="${esc(waLink('Hello Zema Production, I’d like to ask about the '+k.n+' small events package.'))}" target="_blank" rel="noopener">Enquire about ${esc(k.n)}</a></section>`).join('')}
+${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
+<h2 id="hr">Hourly Rate</h2>
+<section class="card pk"><div class="nm" style="font-size:26px">By the hour</div>${prc(d.hr.p)}<p class="intro" style="margin:0 0 18px">${esc(d.hr.d||'')}</p>
+<a class="btn pri" href="${esc(waLink('Hello Zema Production, I’d like to ask about booking by the hour.'))}" target="_blank" rel="noopener">Enquire about hourly booking</a></section>
+<h2 id="tc">Terms &amp; Conditions</h2>
+<div class="tc">${d.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>
+<div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
+<footer><span>Zema Production · London</span></footer>`}
+/* ---- Packages editor (photographer only) ---- */
+function pkEdit(){
+  const d=pk;
+  const F=(l,f,v,ph)=>`<div class="f"><span class="l">${l}</span><input data-f="${f}" value="${esc(v||'')}" placeholder="${ph||''}"></div>`;
+  const TA=(l,f,v,rows,list)=>`<div class="f"><span class="l">${l}</span><textarea data-f="${f}" ${list?'data-list="1"':''} rows="${rows}">${esc(list?(v||[]).join('\n'):(v||''))}</textarea></div>`;
+  const acts=(g,i)=>`<div class="acts"><button data-a="pkUp" data-g="${g}" data-i="${i}" aria-label="Move up">↑</button><button data-a="pkDown" data-g="${g}" data-i="${i}" aria-label="Move down">↓</button><button data-a="pkDel" data-g="${g}" data-i="${i}">Remove package</button></div>`;
+  return`<div class="top2"><button class="btn" data-a="back">← All weddings</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Edit packages</h1><div class="meta">Shown on your packages link</div>
+${pkErr?'<p class="intro" style="margin-top:16px">Saving isn’t set up yet. Run the packages SQL in Supabase once, then refresh this page.</p>':''}
+<div class="cta"><button class="btn fill" data-a="savePk">Save changes</button><button class="btn" data-a="viewPk">View live page</button><button class="btn" data-a="copyP">Copy packages link</button></div>
+<section class="card"><div class="lbl">Prices</div><button class="tab ${d.hide?'':'on'}" style="margin-top:12px" data-a="togHide">${d.hide?'Prices are hidden · tap to show':'✓ Prices are shown · tap to hide'}</button>
+<p class="intro" style="margin:12px 0 0;font-size:13px">When hidden, the page says “Price on request” in place of every price. This button saves straight away.</p></section>
+<h2>Wedding packages</h2>
+${TA('Note above the wedding packages','wedNote',d.wedNote,3)}
+${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Wedding package ${i+1}</div>${F('Name','wed.'+i+'.n',k.n)}${F('Price','wed.'+i+'.p',k.p,'£0,000')}${TA('Short description','wed.'+i+'.d',k.d,3)}${TA('What’s included · one item per line','wed.'+i+'.f',k.f,10,1)}${acts('wed',i)}</section>`).join('')}
+<div class="cta"><button class="btn" data-a="pkAdd" data-g="wed">+ Add wedding package</button></div>
+<h2>Small events</h2>
+${TA('Introduction','evIntro',d.evIntro,3)}
+${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
+<div class="cta"><button class="btn" data-a="pkAdd" data-g="ev">+ Add small events package</button></div>
+${TA('Note below the small events packages','evNote',d.evNote,4)}
+<h2>Hourly rate</h2>
+<section class="card pk">${F('Price','hr.p',d.hr.p,'£000 per hour')}${F('Detail','hr.d',d.hr.d)}</section>
+<h2>Terms &amp; Conditions</h2>
+${TA('One paragraph per line','terms',d.terms,16,1)}
+<div class="cta"><button class="btn fill" data-a="savePk">Save changes</button></div>`}
+/* Copy whatever is typed in the editor back into pk before any re-render or save */
+function collectPk(){
+  document.querySelectorAll('[data-f]').forEach(el=>{
+    const path=el.dataset.f.split('.');let o=pk;
+    for(let i=0;i<path.length-1;i++){o=o&&o[path[i]]}
+    if(o)o[path[path.length-1]]=el.dataset.list?el.value.split('\n').map(x=>x.trim()).filter(Boolean):el.value.trim();
+  });
+}
+async function savePk(){
+  collectPk();
+  const{error}=await sb.from('app_content').upsert({key:'packages',data:pk,updated_at:new Date().toISOString()});
+  if(error){toast(/relation|schema|find the table/i.test(error.message)?'Run the packages SQL in Supabase first, then refresh.':'Could not save: '+error.message);render();return false}
+  pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);render();toast('Packages saved');return true;
+}
+
+let pk=null,pkErr=false;
 let sb,user=null,wed=null,weds=[],chans={},ui={view:'dash',wid:null,sec:'family',tab:'all',day:false,modal:null,stamp:'',live:false};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -124,7 +257,7 @@ const P=()=>wed.party;
 const L=()=>wed.places;
 const N=()=>wed.notes;
 const STG={pending:'Pending',confirmed:'Confirmed',post:'Post-production',delivered:'Delivered'};
-const PKG=['Platinum','Gold','Silver'];
+let PKG=['Platinum','Gold','Silver'];
 const ALB={none:'Not ordered',ordered:'Ordered',delivered:'Delivered',na:'No album'};
 const stg=w=>STG[w.stage]?w.stage:'pending';
 const daysTo=d=>d?Math.round((new Date(d+'T00:00:00')-new Date(new Date().toDateString()))/864e5):null;
@@ -160,9 +293,11 @@ function watchFamily(){
 /* ---- Startup, auth, loading ---- */
 function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
 async function init(){
+  if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
-  if(!window.supabase)return setApp('<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(PKPAGE){const r=await loadPk();return setApp(pkgView(r.d))}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
   if(TOKEN)return loadShared();
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
@@ -184,6 +319,7 @@ async function login(){
 async function loadDash(){
   const{data,error}=await sb.from('weddings').select('*, photo_groups(done)').order('wedding_date',{ascending:true,nullsFirst:false});
   if(error)return failView(error);
+  if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
   weds=data;wed=null;ui.view='dash';ui.day=false;render();
 }
 const openWedding=id=>{ui.wid=id;ui.view='wed';ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
@@ -225,6 +361,7 @@ function render(){
   if(FTOKEN){if(wed)setApp(familyView())}
   else if(TOKEN){if(wed)setApp(clientView())}
   else if(ui.view==='dash')setApp(dashView());
+  else if(ui.view==='pkgs'){if(pk)setApp(pkEdit())}
   else if(wed)setApp(ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
@@ -251,7 +388,7 @@ ${famTl()}
 const tagHtml=w=>`<div><span class="tag ${stg(w)==='pending'?'':'approved'}">${STG[stg(w)]}</span>${w.package?`<span class="tag">${esc(w.package)}</span>`:''}<span class="tag ${w.approval_status==='approved'?'approved':''}">${w.approval_status==='approved'?'Plan confirmed':'Plan not confirmed'}</span></div>`;
 function dashView(){
   return`<div class="brand">ZEMA WEDDINGS</div><h1>Weddings</h1><div class="meta">${weds.length} wedding${weds.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Wedding</button></div>
+<div class="cta"><button class="btn fill" data-a="newW">+ New Wedding</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button></div>
 ${weds.length?weds.map(w=>{const n=w.photo_groups.length,d=w.photo_groups.filter(x=>x.done).length,p=n?Math.round(d/n*100):0;
 return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${dm(w)}</div>${w.services?`<div class="sub">${esc(w.services)}</div>`:''}${tagHtml(w)}
 <div class="bar"><i style="width:${p}%"></i></div><div class="row2"><span>${n} photo group${n==1?'':'s'}</span><span>${d} / ${n} done</span></div>
@@ -353,7 +490,7 @@ function statusCard(){
   return`<section class="card"><div class="lbl">Project status</div>
 <div class="chipsel">${Object.entries(STG).map(([k,v])=>`<button class="tab ${s===k?'on':''}" data-a="setStage" data-k="${k}">${v}</button>`).join('')}</div>
 <div class="lbl" style="margin-top:22px">Package</div>
-<div class="chipsel">${PKG.map(p=>`<button class="tab ${w.package===p?'on':''}" data-a="setPkg" data-k="${p}">${p}</button>`).join('')}</div>
+<div class="chipsel">${[...new Set([...PKG,w.package].filter(Boolean))].map(p=>`<button class="tab ${w.package===p?'on':''}" data-a="setPkg" data-k="${p}">${p}</button>`).join('')}</div>
 ${dd===null&&!w.services?'':`<div class="row2" style="margin-top:22px"><span>${dd===null?'':dd>0?dd+' day'+(dd==1?'':'s')+' to go':dd===0?'Today':(-dd)+' day'+(dd==-1?'':'s')+' since the wedding'}</span><span>${w.services?esc(w.services):''}</span></div>`}</section>`}
 function glance(){
   const t=T().slice(0,4),v=L().find(x=>x.address);
@@ -506,7 +643,7 @@ function dayView(){
 ${sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():sec==='notes'?dayNt():dayFam()}`}
 function copyLink(token,key){
   const u=location.origin+location.pathname+'?'+(key||'w')+'='+token;
-  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family & friends link copied':'Client link copied'),()=>prompt('Copy this link:',u));
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family & friends link copied':key==='p'?'Packages link copied':'Client link copied'),()=>prompt('Copy this link:',u));
 }
 
 /* ---- Approval ---- */
@@ -775,11 +912,19 @@ document.addEventListener('click',async e=>{
   else if(a==='saveW')saveW();
   else if(a==='delW')ask('Delete this wedding and its whole photo list? This cannot be undone.',async()=>{const{error}=await sb.from('weddings').delete().eq('id',ui.modal&&ui.modal.id||wed.id);if(error)return toast('Could not delete: '+error.message);loadDash()});
   else if(a==='openW')openWedding(id);
-  else if(a==='back')loadDash();
+  else if(a==='back'){if(ui.view==='pkgs')pk=null;loadDash()}
   else if(a==='copyW')copyLink(weds.find(x=>x.id===id).share_token);
   else if(a==='copyFW')copyLink(weds.find(x=>x.id===id).family_token,'f');
   else if(a==='copy')copyLink(wed.share_token);
   else if(a==='copyF')copyLink(wed.family_token,'f');
+  else if(a==='copyP')copyLink('1','p');
+  else if(a==='editPk'&&!TOKEN&&pk){ui.view='pkgs';render();scrollTo(0,0)}
+  else if(a==='savePk'&&!TOKEN)savePk();
+  else if(a==='togHide'&&!TOKEN){collectPk();pk.hide=!pk.hide;if(!await savePk()){pk.hide=!pk.hide;render()}}
+  else if(a==='viewPk')window.open(location.origin+location.pathname+'?p=1','_blank');
+  else if(a==='pkAdd'&&!TOKEN){collectPk();pk[t.dataset.g==='ev'?'ev':'wed'].push(t.dataset.g==='ev'?{n:'New package',p:'',d:''}:{n:'New package',p:'',d:'',f:[]});render()}
+  else if((a==='pkUp'||a==='pkDown')&&!TOKEN){collectPk();const l=pk[t.dataset.g==='ev'?'ev':'wed'],i=+t.dataset.i,j=i+(a==='pkUp'?-1:1);if(l[j]){[l[i],l[j]]=[l[j],l[i]];render()}}
+  else if(a==='pkDel'&&!TOKEN){collectPk();const l=pk[t.dataset.g==='ev'?'ev':'wed'],i=+t.dataset.i;ask(`Remove “${l[i].n||'this package'}”? It disappears from the page when you save.`,()=>{l.splice(i,1);render()})}
   else if(a==='approve'&&TOKEN)openApprove();
   else if(a==='doApprove'&&TOKEN)doApprove();
   else if(a==='reopen'&&!TOKEN)ask('Reopen this plan so the couple can edit it again?',async()=>{const{error}=await sb.from('weddings').update({approval_status:'draft',approved_at:null,approved_by:null}).eq('id',wed.id);if(error)return toast('Could not reopen: '+error.message);Object.assign(wed,{approval_status:'draft',approved_at:null,approved_by:null});render()});
@@ -828,6 +973,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&((TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&!PKPAGE&&ui.view!=='pkgs'&&((TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
