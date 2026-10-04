@@ -49,6 +49,7 @@ h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
 .note b{font-style:normal;font-weight:500;letter-spacing:.06em}
 .note.fam{color:#bdb8b0}
 .fnote{margin:14px 0 0;color:var(--tx);font-size:16px}
+.live{color:var(--ac)}
 .acts{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
 .acts button{background:none;border:1px solid var(--line);color:var(--mu);min-width:44px;height:38px;padding:0 12px;border-radius:2px;font-size:12px;letter-spacing:.08em;cursor:pointer}
 .acts button:hover{color:var(--tx);border-color:var(--mu)}
@@ -98,7 +99,7 @@ const DEMO=[
 ['friends','Couple + university friends',['University friends'],4],['friends','Couple + closest friends',['Friends'],4]];
 const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],people:d[2],minutes:d[3],notes:d[4]||'',position:i}));
 
-let sb,user=null,wed=null,weds=[],ui={view:'dash',wid:null,tab:'all',day:false,modal:null,stamp:''};
+let sb,user=null,wed=null,weds=[],chans={},ui={view:'dash',wid:null,tab:'all',day:false,modal:null,stamp:'',live:false};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const G=()=>wed.groups;
@@ -110,13 +111,29 @@ function stats(){const g=G(),d=g.filter(x=>x.done).length;return{d,n:g.length,p:
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',5000)}
 const setApp=h=>{$('#app').innerHTML=h};
 
+/* ---- Live updates: the photographer sends a tiny "refresh" signal, family pages refetch ---- */
+function notifyFamily(){
+  if(TOKEN||FTOKEN||!wed||!wed.family_token)return;
+  const n='fam-'+wed.family_token;
+  let c=chans[n];
+  if(!c){c=chans[n]=sb.channel(n);c.subscribe()}
+  try{c.send({type:'broadcast',event:'upd',payload:{t:Date.now()}})}catch(_){}
+}
+function watchFamily(){
+  const ch=sb.channel('fam-'+FTOKEN);
+  ch.on('broadcast',{event:'upd'},()=>loadFamily()).subscribe(st=>{
+    ui.live=(st==='SUBSCRIBED');
+    if(st==='SUBSCRIBED')loadFamily();else if(wed)render();
+  });
+}
+
 /* ---- Startup, auth, loading ---- */
 function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
 async function init(){
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp('<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
   sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
-  if(FTOKEN){loadFamily();setInterval(()=>{if(!document.hidden)loadFamily()},12000);return}
+  if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
   if(TOKEN)return loadShared();
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;ui.view='dash';boot()}});
@@ -155,11 +172,11 @@ async function loadShared(){
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
   if(error){if(!wed)setApp('<div class="login"><div class="brand">ZEMA WEDDING DAY</div><h2>This link isn’t working</h2><p class="meta">Please check the link, or ask the couple or photographer for a new one.</p></div>');return}
-  wed=data;ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});render();
+  wed=data;ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
 const reload=()=>FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash());
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
-const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload()}};
+const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
 function render(){
@@ -178,7 +195,7 @@ ${nx?`<section class="card ok" style="margin-top:16px"><div class="lbl">Up next 
 :(n?'<p class="fin">All family and friends photographs are done. Thank you!</p>':'<p class="empty">The photo list is empty.</p>')}
 ${then.length?`<h2 style="font-size:20px;margin-top:28px">Then</h2>${then.map(g=>`<div class="fr"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div>${pc(g)}${g.note?`<div class="note fam" style="font-style:normal">${esc(g.note)}</div>`:''}</div>`).join('')}`:''}
 ${fin.length?`<h2 style="font-size:20px;margin-top:28px">Completed</h2>${fin.map(g=>`<div class="fr d"><div class="nm"><span class="no">${String(a.indexOf(g)+1).padStart(2,'0')}</span>${esc(g.name)}</div></div>`).join('')}`:''}
-<footer><span>Updates automatically · last updated ${ui.stamp}</span></footer>`}
+<footer><span>${ui.live?'<span class="live">● Live</span>':'Updating every 30 seconds'} · last updated ${ui.stamp}</span></footer>`}
 const tagHtml=w=>`<div class="tag ${w.approval_status==='approved'?'approved':''}">${w.approval_status==='approved'?'Client confirmed':'Awaiting client'}</div>`;
 function dashView(){
   return`<div class="brand">ZEMA WEDDINGS</div><h1>Weddings</h1><div class="meta">${weds.length} wedding${weds.length==1?'':'s'}</div>
@@ -277,7 +294,7 @@ async function saveW(){
     const{error}=await sb.from('weddings').update(o).eq('id',id);
     if(error)return toast('Could not save: '+error.message);
     closeM();
-    if(wed&&wed.id===id){Object.assign(wed,o);render()}else loadDash();
+    if(wed&&wed.id===id){Object.assign(wed,o);render();notifyFamily()}else loadDash();
     return;
   }
   const seed=$('#wseed').checked;
@@ -325,7 +342,7 @@ async function saveForm(){
     if(error)return toast('Could not save: '+error.message);
     G().push(data);
   }
-  closeM();render();
+  closeM();render();notifyFamily();
 }
 function ask(msg,fn){ui.modal={type:'confirm',fn};
   $('#modal').innerHTML=`<div class="ov"><div class="m sm"><p>${esc(msg)}</p><div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="yes">Confirm</button></div></div></div>`}
