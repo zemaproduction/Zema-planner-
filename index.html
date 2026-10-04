@@ -348,7 +348,7 @@ async function init(){
   sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(PKPAGE){const r=await loadPk();return setApp(pkgView(r.d))}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
-  if(TOKEN){if(QS.get('s'))ui.sec=QS.get('s');return loadShared()}
+  if(TOKEN){ui.sec=QS.get('s')||'overview';return loadShared()}
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;ui.view='dash';boot()}});
   boot();
@@ -636,7 +636,7 @@ function clMoney(){
 <div class="row2"><span>Paid ${gbp(paid)}</span><span>Total ${gbp(t)}</span></div>
 ${ex.length||disc?`<div style="margin-top:18px"><div class="row2"><span>Package price</span><span>${gbp(m.price)}</span></div>${ex.map(x=>`<div class="row2" style="margin-top:6px"><span>${esc(x.label)}</span><span>+${gbp(x.amount)}</span></div>`).join('')}${disc?`<div class="row2" style="margin-top:6px"><span>Discount</span><span>−${gbp(disc)}</span></div>`:''}</div>`:''}</section>
 <section class="card" style="margin-bottom:16px"><div class="lbl">Payment plan</div>${planHtml(m,paid)}</section>
-${(m.payments||[]).length?`<section class="card" style="margin-bottom:16px"><div class="lbl">Payments received</div>${m.payments.map(x=>`<div class="pg"><div class="row2"><span class="lbl">${esc(x.label||'Payment')} · ${fmtD(x.paid_on)}</span><span>${gbp(x.amount)}</span></div></div>`).join('')}</section>`:''}
+${(m.payments||[]).length?`<section class="card" style="margin-bottom:16px"><div class="lbl">Payments received</div>${m.payments.map(x=>`<div class="pg"><div class="row2"><span class="lbl">${esc(x.label||'Payment')} · ${fmtD(x.paid_on)}</span><span>${gbp(x.amount)}</span></div>${x.invoice_note?`<div class="note fam" style="font-style:normal">${esc(x.invoice_note)}</div>`:''}</div>`).join('')}</section>`:''}
 ${m.invoice_no?`<div class="cta" style="margin-top:0"><button class="btn fill" data-a="viewInv">View invoice ${esc(m.invoice_no)}</button></div>`:''}
 ${(s=>s.an||s.sc||s.acn?`<section class="card" style="margin-bottom:16px"><div class="lbl">How to pay · ${esc(s.pay||'Bank transfer')}</div><p class="ntx">Account name: ${esc(s.an||'')}\nSort code: ${esc(s.sc||'')}\nAccount number: ${esc(s.acn||'')}</p></section>`:'')(inv||INVDEF)}`}
 /* Client overview: what is left to pay, plus post-production progress when shared */
@@ -658,7 +658,7 @@ ${t==null?'':`<div class="row2"><span>Package price</span><span>${gbp(b.price)}<
 <h2>Payment plan</h2>
 <section class="card">${t==null?'<p class="intro" style="margin:0">Set the price to see each instalment.</p>':planHtml(b,paid)}<div class="acts"><button data-a="editPlan">Change plan</button></div></section>
 <div class="cta"><button class="btn fill" data-a="addPay">+ Add payment</button></div>
-<div>${Y().length?Y().map(x=>`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(x.amount)}</div><div class="sub">${esc(x.label||'Payment')}${x.method?' · '+esc(x.method):''} · ${fmtD(x.paid_on)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}<div class="acts"><button data-a="editPay" data-id="${x.id}">Edit</button><button data-a="delPay" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No payments recorded yet.</p>'}</div>
+<div>${Y().length?Y().map(x=>`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(x.amount)}</div><div class="sub">${esc(x.label||'Payment')}${x.method?' · '+esc(x.method):''} · ${fmtD(x.paid_on)}</div>${x.invoice_note?`<div class="note fam"><b>On the invoice:</b> ${esc(x.invoice_note)}</div>`:''}${x.note?`<div class="note"><b>Private:</b> ${esc(x.note)}</div>`:''}<div class="acts"><button data-a="editPay" data-id="${x.id}">Edit</button><button data-a="delPay" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No payments recorded yet.</p>'}</div>
 <h2>Invoice</h2>
 <section class="card">${b.invoice_no?`<div class="lbl">Invoice ${esc(b.invoice_no)}</div><p class="intro" style="margin:10px 0 0">Dated ${fmtD(b.invoice_date)}${b.bill_to?' · billed to '+esc(b.bill_to.split('\n')[0]):''}</p>
 <button class="tab ${b.invoice_sent?'on':''}" style="margin-top:14px" data-a="togSent">${b.invoice_sent?'✓ Invoice sent'+(b.invoice_sent_on?' on '+fmtD(b.invoice_sent_on):''):'Not sent yet · tap when sent'}</button>
@@ -679,7 +679,7 @@ function invView(){
 ${ex.map(x=>`<tr><td>${esc(x.label)}</td><td>${gbp(x.amount)}</td></tr>`).join('')}
 ${disc?`<tr><td>Discount</td><td>−${gbp(disc)}</td></tr>`:''}
 ${ex.length||disc?`<tr class="mid"><td>Total${disc?' after discount':''}</td><td>${gbp(t)}</td></tr>`:''}
-${Y().map(x=>`<tr><td>${esc(x.label||'Payment')} received ${fmtD(x.paid_on)}${x.method?' · '+esc(x.method):''}</td><td>−${gbp(x.amount)}</td></tr>`).join('')}
+${Y().map(x=>`<tr><td>${esc(x.label||'Payment')} received ${fmtD(x.paid_on)}${x.method?' · '+esc(x.method):''}${x.invoice_note?`<br><span class="ps">${br(x.invoice_note)}</span>`:''}</td><td>−${gbp(x.amount)}</td></tr>`).join('')}
 <tr class="tot"><td>Balance due</td><td>${gbp(left)}</td></tr></table>
 ${pr.length>1?`<div class="pl">Payment plan</div><div class="pv">${pr.map(r=>`${r.label} (${r.pc}%): ${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' still to pay':'to pay'):'paid'}`).join('<br>')}</div>`:''}
 <div class="pl">Payment</div><div class="pv">${esc(s.pay||'')}${s.an||s.sc||s.acn?`<br>Account name: ${esc(s.an||'')}<br>Sort code: ${esc(s.sc||'')}<br>Account number: ${esc(s.acn||'')}`:''}</div>
@@ -728,6 +728,7 @@ ${!x&&rows.length?`<div class="lbl">Quick fill</div><div class="chipsel" style="
 <div class="f"><span class="l">Date paid</span><input id="yd" type="date" value="${esc(d.paid_on||'')}"></div>
 <div class="f"><span class="l">What it was for · shown on the invoice</span><input id="yl" list="yls" maxlength="80" value="${esc(d.label||'')}"><datalist id="yls"><option>Deposit</option><option>Payment 2</option><option>Final balance</option><option>Full payment</option><option>Extra hours</option></datalist></div>
 <div class="f"><span class="l">How it was paid</span><select id="ym">${['Bank transfer','Cash'].map(m=>`<option ${m===d.method?'selected':''}>${m}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Note shown on the invoice (optional)</span><textarea id="yv" rows="2" maxlength="300" placeholder="e.g. Deposit to secure the date.">${esc(d.invoice_note||'')}</textarea></div>
 <div class="f"><span class="l">Private note (only you see this)</span><textarea id="yn" rows="2" maxlength="500" placeholder="e.g. Paid by the bride’s father.">${esc(d.note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePay">Save payment</button></div></div></div>`;
 }
@@ -735,7 +736,7 @@ async function savePay(){
   const amount=parseFloat($('#ya').value);
   if(!(amount>0)){$('#ya').classList.add('err');$('#ya').focus();return}
   if(!$('#yd').value){$('#yd').classList.add('err');$('#yd').focus();return}
-  const o={amount,paid_on:$('#yd').value,label:$('#yl').value.trim(),method:$('#ym').value,note:$('#yn').value.trim()},id=ui.modal.id;
+  const o={amount,paid_on:$('#yd').value,label:$('#yl').value.trim(),method:$('#ym').value,note:$('#yn').value.trim(),invoice_note:$('#yv').value.trim()},id=ui.modal.id;
   const msg=e=>/column|schema/i.test(e.message)?'Run the latest payments SQL in Supabase first, then refresh.':'Could not save: '+e.message;
   if(id){
     const{error}=await sb.from('payments').update(o).eq('id',id);
