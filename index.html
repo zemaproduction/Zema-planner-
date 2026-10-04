@@ -80,7 +80,8 @@ footer button{background:none;border:0;color:var(--mu);text-decoration:underline
 .login{max-width:420px;margin-top:40px}.login .f{margin-top:16px}.login .btn{width:100%;margin-top:6px}
 .bad{color:#d98a82;font-size:13px;min-height:20px;margin-top:10px}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--s);border:1px solid var(--ac);padding:12px 18px;border-radius:2px;font-size:13px;z-index:20;display:none;max-width:90%}
-.tm{flex:none;width:54px;font:400 20px/1.35 var(--serif);color:var(--ac);font-variant-numeric:tabular-nums}
+.tm{flex:none;width:54px;font:500 14px/1.95 var(--sans);letter-spacing:.06em;color:var(--ac);font-variant-numeric:tabular-nums}
+.tn{font:500 15px var(--sans);letter-spacing:.06em;color:var(--ac);font-variant-numeric:tabular-nums;margin-right:10px;vertical-align:middle}
 .fr.tl{display:flex;gap:14px}
 .dr.nx{border-color:var(--ac)}a.dr{text-decoration:none;color:inherit}a.lnk{display:inline-block;margin-top:8px}.dt .live{color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 </style></head>
@@ -390,7 +391,7 @@ function dayTl(){
   const a=T(),d=a.filter(x=>x.done).length,p=a.length?Math.round(d/a.length*100):0,nx=a.find(x=>!x.done);
   return`<h2>Timeline</h2>
 <div class="big">${d} / ${a.length} <small>completed · ${p}%</small></div><div class="bar"><i style="width:${p}%"></i></div>
-<div>${a.map(x=>`<button class="dr ${x.done?'done':''} ${x===nx?'nx':''}" data-a="togT" data-id="${x.id}"><span class="ck">${x.done?'✓':''}</span><span class="dt">${x===nx?'<small class="live">Up next</small>':''}<b>${x.at_time?esc(x.at_time)+' · ':''}${esc(x.title)}</b>${x.location?`<small>${esc(x.location)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span></button>`).join('')}</div>
+<div>${a.map(x=>`<button class="dr ${x.done?'done':''} ${x===nx?'nx':''}" data-a="togT" data-id="${x.id}"><span class="ck">${x.done?'✓':''}</span><span class="dt">${x===nx?'<small class="live">Up next</small>':''}<b>${x.at_time?`<span class="tn">${esc(x.at_time)}</span>`:''}${esc(x.title)}</b>${x.location?`<small>${esc(x.location)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span></button>`).join('')}</div>
 ${a.length?(d===a.length?'<p class="fin">Every moment on the timeline is done.</p>':''):'<p class="empty">No timeline yet. Exit and add moments in the Timeline section.</p>'}`}
 function dayMh(){
   const a=M(),d=a.filter(x=>x.done).length,p=a.length?Math.round(d/a.length*100):0;
@@ -407,7 +408,7 @@ ${a.length?'':'<p class="empty">No one added yet. Exit and add people in the Wed
 function dayLc(){
   const a=L();
   return`<h2>Locations</h2>
-<div>${a.map(x=>{const b=`<span class="dt"><b>${x.arrive_time?esc(x.arrive_time)+' · ':''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;
+<div>${a.map(x=>{const b=`<span class="dt"><b>${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;
 return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>
 ${a.length?'':'<p class="empty">No locations yet. Exit and add them in the Locations section.</p>'}`}
 function dayView(){
