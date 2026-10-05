@@ -1,0 +1,19 @@
+name: Keep Zema Planner awake
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the database for the public packages
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            -X POST "https://emhunzaxnzmqgueryczl.supabase.co/rest/v1/rpc/packages_get" \
+            -H "apikey: sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes" \
+            -H "Authorization: Bearer sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes" \
+            -H "Content-Type: application/json" \
+            -d '{}' > /dev/null
