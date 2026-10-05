@@ -500,7 +500,7 @@ async function loadDash(view){
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
   else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today());if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
-const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
+const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;scrollTo(0,0);return loadWedding(id).then(r=>{scrollTo(0,0);return r})};
 async function loadWedding(id){
   const{data:w,error}=await sb.from('weddings').select('*').eq('id',id).single();
   if(error)return failView(error);
@@ -2250,7 +2250,7 @@ document.addEventListener('click',async e=>{
   else if(a==='iconV'&&!TOKEN)openIconForm();
   else if(a==='copyGo'&&!TOKEN){const u=location.origin+location.pathname+'?go='+t.dataset.k;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Open it in Safari, then Share, Add to Home Screen.'),()=>prompt('Copy this link:',u))}
   else if(a==='cpy'){const v=t.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Password copied'),()=>prompt('Copy this:',v))}
-  else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else loadDash(BACKN[ui.from]?ui.from:'dash')}
+  else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else{scrollTo(0,0);loadDash(BACKN[ui.from]?ui.from:'dash')}}
   else if(a==='togHideMoney'){hideMoney=!hideMoney;try{localStorage.setItem('zemaHideMoney',hideMoney?'1':'0')}catch(_){}render()}
   else if(a==='out')await sb.auth.signOut();
   else if(a==='retry')reload();
@@ -2263,7 +2263,7 @@ document.addEventListener('click',async e=>{
   else if(a==='saveW')saveW();
   else if(a==='delW')ask('Delete this event and everything in it? This cannot be undone.',async()=>{const{error}=await sb.from('weddings').delete().eq('id',ui.modal&&ui.modal.id||wed.id);if(error)return toast('Could not delete: '+error.message);loadDash()});
   else if(a==='openW')openWedding(id);
-  else if(a==='back'){if(ui.view==='pkgs')pk=null;loadDash()}
+  else if(a==='back'){if(ui.view==='pkgs')pk=null;scrollTo(0,0);loadDash()}
   else if(a==='copyW')copyLink(weds.find(x=>x.id===id).share_token);
   else if(a==='copyFW')copyLink(weds.find(x=>x.id===id).family_token,'f');
   else if(a==='copy')copyLink(wed.share_token);
@@ -2280,7 +2280,7 @@ document.addEventListener('click',async e=>{
   else if(a==='doApprove'&&TOKEN)doApprove();
   else if(a==='reopen'&&!TOKEN)ask('Reopen this plan so the couple can edit it again?',async()=>{const{error}=await sb.from('weddings').update({approval_status:'draft',approved_at:null,approved_by:null}).eq('id',wed.id);if(error)return toast('Could not reopen: '+error.message);Object.assign(wed,{approval_status:'draft',approved_at:null,approved_by:null});render()});
   else if(a==='tab'){ui.tab=t.dataset.k;render()}
-  else if(a==='sec'){ui.sec=t.dataset.k;render()}
+  else if(a==='sec'){const top=!ui.day&&ui.sec==='overview';ui.sec=t.dataset.k;render();if(top)scrollTo(0,0)}
   else if(a==='tog'&&!TOKEN){g.done=!g.done;render();run(sb.from('photo_groups').update({done:g.done}).eq('id',id))}
   else if(a==='togT'&&!TOKEN&&ti){ti.done=!ti.done;render();run(sb.from('timeline_items').update({done:ti.done}).eq('id',id))}
   else if(a==='up'||a==='down')move(id,a==='up'?-1:1);
