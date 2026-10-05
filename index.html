@@ -112,6 +112,20 @@ button.st{cursor:pointer}.st.sel,.st.yr{border-color:var(--ac)}.st.sel span,.st.
 .ptb .tot td{font-weight:500;font-size:17px;border-bottom:0;border-top:2px solid #1a1a1a}
 .pn{margin-top:26px;color:#666;font-size:13px}
 @media print{html,body{background:#fff!important}.noprint,#toast,#modal{display:none!important}.wrap{padding:0;max-width:none}.paper{padding:0}}
+.hero{position:relative;aspect-ratio:16/10;background:#121213 center/cover no-repeat;border-radius:4px;overflow:hidden;display:flex;align-items:flex-end}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,11,12,.96) 0%,rgba(11,11,12,.35) 55%,rgba(11,11,12,.15) 100%)}
+.hero .hx{position:relative;padding:20px;width:100%}.hero h1{margin:8px 0 4px;font-size:38px}
+.player{aspect-ratio:16/9;background:#000;border-radius:4px;overflow:hidden}.player iframe{width:100%;height:100%;border:0;display:block}
+.rowx{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px 6px}
+.fc{flex:none;width:250px;background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit}
+.fc .th{aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border-radius:4px;border:1px solid var(--line);transition:.3s}
+.fc:hover .th,.fc.on .th{border-color:var(--ac)}
+.fc b{display:block;font:400 20px/1.25 var(--serif);margin-top:10px}.fc small{color:var(--mu);font-size:12px;letter-spacing:.06em}
+.cgrid{display:grid;grid-template-columns:1fr;gap:18px}@media(min-width:640px){.cgrid{grid-template-columns:1fr 1fr}}
+.gcard{display:flex;align-items:flex-end;position:relative;aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border:1px solid var(--line);border-radius:4px;overflow:hidden;text-decoration:none;color:inherit;transition:.3s}
+.gcard:hover{border-color:var(--ac)}.gcard:before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,11,12,.92),rgba(11,11,12,.1) 70%)}
+.gcard span{position:relative;padding:16px 18px}.gcard small{display:block;color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+.th2{flex:none;width:96px;aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border-radius:3px;border:1px solid var(--line)}
 .pk{margin-bottom:16px}.pk .nm{font-size:32px}
 .prc{font:500 15px var(--sans);letter-spacing:.1em;color:var(--ac);margin:6px 0 14px}
 .fl{list-style:none;margin:16px 0 20px;padding:0}.fl li{padding:10px 0 10px 20px;border-top:1px solid var(--line);position:relative;color:#d9d3ca}
@@ -130,8 +144,8 @@ const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew','Delivery'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -366,7 +380,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Crew'];
+const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Crew','Delivery'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 const gbp=n=>'£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:Number(n||0)%1?2:0,maximumFractionDigits:2});
@@ -457,11 +471,12 @@ async function loadDash(view){
   if(error)return failView(error);
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
   await refreshCrew();
+  {const q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
   weds=data;wed=null;ui.view=view||'dash';ui.day=false;render();
 }
-const openWedding=id=>{ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
+const openWedding=(id,c)=>{ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
 async function loadWedding(id){
   const{data:w,error}=await sb.from('weddings').select('*').eq('id',id).single();
   if(error)return failView(error);
@@ -475,7 +490,8 @@ async function loadWedding(id){
   const py=await sb.from('payments').select('*').eq('wedding_id',id).order('paid_on');
   const bl=await sb.from('event_billing').select('*').eq('wedding_id',id).maybeSingle();
   const ec=await sb.from('event_crew').select('*, crew(name,phone)').eq('wedding_id',id).order('created_at');
-  wed={...w,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
+  wed={...w,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -488,8 +504,10 @@ async function loadShared(){
   const pg=await sb.rpc('shared_progress_get',{p_token:TOKEN});
   const mt=await sb.rpc('shared_meta_get',{p_token:TOKEN});
   const mn=await sb.rpc('shared_money_get',{p_token:TOKEN});
+  const dv=await sb.rpc('shared_delivery_get',{p_token:TOKEN}),dl=dv.error?null:dv.data;
+  if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -497,7 +515,7 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
@@ -510,13 +528,14 @@ function render(){
   else if(ui.view==='pkgs'){if(pk)setApp(pkEdit())}
   else if(ui.view==='year')setApp(yearView());
   else if(ui.view==='crew')setApp(crewListView());
-  else if(wed)setApp(ui.inv?invView():ui.day?dayView():mainView());
+  else if(ui.view==='cine')setApp(cineGrid());
+  else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
-const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
+const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
 function famTl(){
   const a=T();
   return a.length?`<h2 style="margin-top:44px">Timeline</h2>${a.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}</div></div>`).join('')}`:'';
@@ -548,7 +567,7 @@ function dashView(){
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
   const fl=STG[ui.flt]?weds.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${weds.length} event${weds.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button></div>
+<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="cineV">Cinema</button></div>
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
@@ -947,6 +966,75 @@ async function saveEc(){
   if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the crew SQL in Supabase first, then refresh.':'Could not save: '+error.message);
   closeM();await loadWedding(wed.id);
 }
+/* ---- Delivery / Zema Cinema: films (unlisted YouTube) and photo galleries per event ---- */
+let dels=[];
+const safeU=u=>/^https:\/\//i.test(String(u||'').trim())?String(u).trim():'';
+const ytId=u=>{const m=String(u||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);return m?m[1]:''};
+const fThumb=f=>safeU(f.cover)||(ytId(f.url)?'https://i.ytimg.com/vi/'+ytId(f.url)+'/hqdefault.jpg':'');
+const delOf=d=>({published:!!(d&&d.published),hero:safeU(d&&d.hero),films:Array.isArray(d&&d.films)?d.films:[],galleries:Array.isArray(d&&d.galleries)?d.galleries:[]});
+const bgi=u=>u?`background-image:url('${esc(u)}')`:'';
+const cineLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=del';
+function cineBody(){
+  const w=wed,d=delOf(w.del),f=d.films,g=d.galleries,pi=ui.play,cur=pi!=null?f[pi]:null,hero=d.hero||(f[0]&&fThumb(f[0]))||(g[0]&&safeU(g[0].cover))||'';
+  return`${cur&&ytId(cur.url)?`<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(cur.url)}?autoplay=1&rel=0&playsinline=1" title="${esc(cur.title||'Film')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
+<div style="margin-top:14px"><div class="brand">Now playing</div><div class="nm" style="font-size:28px;margin-top:6px">${esc(cur.title||'Film')}</div>${cur.desc?`<p class="intro" style="margin:6px 0 0">${esc(cur.desc)}</p>`:''}<p style="margin:10px 0 0"><button class="lnk" data-a="cstop">Close player</button></p></div>`
+:`<div class="hero" style="${bgi(hero)}"><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">▶ Play ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
+${f.length?`<h2>Films</h2><div class="rowx">${f.map((x,i)=>`<button class="fc ${pi===i?'on':''}" data-a="cplay" data-i="${i}"><div class="th" style="${bgi(fThumb(x))}"></div><b>${esc(x.title||'Film')}</b><small>${esc([x.dur,pi===i?'Now playing':''].filter(Boolean).join(' · '))}</small></button>`).join('')}</div>`:''}
+${g.length?`<h2>Photos</h2><div class="cgrid">${g.filter(x=>safeU(x.url)).map(x=>`<a class="gcard" href="${esc(safeU(x.url))}" target="_blank" rel="noopener" style="${bgi(safeU(x.cover))}"><span><b class="nm">${esc(x.title||'Photo gallery')}</b><small>Open gallery</small></span></a>`).join('')}</div>`:''}
+${!f.length&&!g.length?'<p class="empty">Nothing has been added yet.</p>':''}`}
+function cineView(){return`<div class="top2 noprint"><button class="btn" data-a="cineBack">← Back</button> <button class="btn" data-a="cineEdit">Edit delivery</button></div>${cineBody()}`}
+function cineGrid(){
+  const items=dels.map(d=>({d:delOf(d),w:weds.find(w=>w.id===d.wedding_id)})).filter(x=>x.w&&(x.d.films.length||x.d.galleries.length)).sort((a,b)=>String(b.w.wedding_date||'').localeCompare(String(a.w.wedding_date||'')));
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA CINEMA</div><h1>Cinema</h1><div class="meta">${items.length} collection${items.length==1?'':'s'}</div>
+${items.length?`<div class="cgrid" style="margin-top:26px">${items.map(({d,w})=>{const th=d.hero||(d.films[0]&&fThumb(d.films[0]))||(d.galleries[0]&&safeU(d.galleries[0].cover))||'';return`<button class="fc" style="width:100%" data-a="openCine" data-id="${w.id}"><div class="th" style="${bgi(th)}"></div><b>${esc(w.couple)}</b><small>${esc(etype(w))} · ${fmtD(w.wedding_date)} · ${[d.films.length?d.films.length+' film'+(d.films.length==1?'':'s'):'',d.galleries.length?'photos':''].filter(Boolean).join(' + ')}${d.published?'':' · not published'}</small></button>`}).join('')}</div>`:'<p class="empty">No films or galleries yet. Open an event, go to its Delivery tab and add them.</p>'}`}
+function delMain(){
+  if(wed.delErr)return`<h2>Delivery</h2><p class="empty">Delivery isn’t set up in Supabase yet. Run the delivery SQL once, then refresh this page.</p>`;
+  const d=delOf(wed.del),mv=(a,i)=>`<button data-a="${a}Up" data-i="${i}" aria-label="Move up">↑</button><button data-a="${a}Down" data-i="${i}" aria-label="Move down">↓</button><button data-a="edit${a}" data-i="${i}">Edit</button><button data-a="del${a}" data-i="${i}">Delete</button>`;
+  return`<h2>Delivery</h2>
+<section class="card"><div class="lbl">The client’s cinema page</div><button class="tab ${d.published?'on':''}" style="margin-top:12px" data-a="togPub">${d.published?'✓ Published · the client can see it':'Not published · tap to publish'}</button>
+<p class="intro" style="margin:12px 0 0;font-size:13px">Add films, photo galleries, or both. The page only shows what you add, so photo-only and video-only events work too.</p>
+<div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="editHero">Cover image</button></div></section>
+<h2>Films</h2>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFilm">+ Add film</button></div>
+<div>${d.films.length?d.films.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(fThumb(x))}"></div><div class="bd"><div class="nm">${esc(x.title||'Film')}</div><div class="sub">${esc(x.dur||'')}${ytId(x.url)?'':' YouTube link not recognised'}</div>${x.desc?`<div class="note fam" style="font-style:normal">${esc(x.desc)}</div>`:''}<div class="acts">${mv('Film',i)}</div></div></div>`).join(''):'<p class="empty">No films. Leave this empty for a photo-only delivery.</p>'}</div>
+<h2>Photo galleries</h2>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addGal">+ Add gallery</button></div>
+<div>${d.galleries.length?d.galleries.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(safeU(x.cover))}"></div><div class="bd"><div class="nm">${esc(x.title||'Photo gallery')}</div><div class="sub" style="text-transform:none;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.url||'')}</div><div class="acts">${mv('Gal',i)}</div></div></div>`).join(''):'<p class="empty">No galleries. Leave this empty for a video-only delivery.</p>'}</div>`}
+async function setD(o){
+  const prev={...(wed.del||{})};wed.del={...prev,...o};render();
+  const{error}=await sb.from('event_delivery').upsert({wedding_id:wed.id,...o,updated_at:new Date().toISOString()});
+  if(error){wed.del=prev;render();toast(/relation|schema|find the table|column/i.test(error.message)?'Run the delivery SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  const i=dels.findIndex(x=>x.wedding_id===wed.id),row={wedding_id:wed.id,...wed.del};if(i>=0)dels[i]=row;else dels.push(row);
+  return true;
+}
+function openFilmForm(i){
+  const x=i!=null?delOf(wed.del).films[i]:null,d=x||{title:'',url:'',desc:'',dur:'',cover:''};
+  ui.modal={type:'film',i};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit film':'Add film'}</h3>
+<div class="f"><span class="l">Title</span><input id="zt" list="zts" maxlength="80" value="${esc(d.title||'')}"><datalist id="zts"><option>Highlights</option><option>Full Wedding Film</option><option>Teaser</option><option>Same Day Edit</option><option>Pre-Wedding Film</option><option>Ceremony</option><option>Speeches</option></datalist></div>
+<div class="f"><span class="l">YouTube link (unlisted)</span><input id="zu" inputmode="url" autocapitalize="none" maxlength="300" placeholder="https://youtu.be/…" value="${esc(d.url||'')}"></div>
+<div class="f"><span class="l">Short description (optional)</span><textarea id="zd" rows="2" maxlength="300">${esc(d.desc||'')}</textarea></div>
+<div class="f"><span class="l">Length (optional)</span><input id="zl" maxlength="20" placeholder="e.g. 6 min" value="${esc(d.dur||'')}"></div>
+<div class="f"><span class="l">Custom thumbnail image link (optional)</span><input id="zc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Leave empty to use YouTube’s thumbnail" value="${esc(d.cover||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveFilm">Save film</button></div></div></div>`;
+}
+function openGalForm(i){
+  const x=i!=null?delOf(wed.del).galleries[i]:null,d=x||{title:'Wedding Photos',url:'',cover:''};
+  ui.modal={type:'gal',i};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit gallery':'Add gallery'}</h3>
+<div class="f"><span class="l">Title</span><input id="gt" maxlength="80" value="${esc(d.title||'')}"></div>
+<div class="f"><span class="l">Gallery link</span><input id="gu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…pixieset.com/…" value="${esc(d.url||'')}"></div>
+<div class="f"><span class="l">Cover image link (optional)</span><input id="gc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="A link to one photo, starting with https://" value="${esc(d.cover||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveGal">Save gallery</button></div></div></div>`;
+}
+function openHeroForm(){
+  ui.modal={type:'hero'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Cover image</h3>
+<p class="intro">The large image at the top of the cinema page and on the card in your Cinema view. Leave empty to use the first film’s thumbnail.</p>
+<div class="f"><span class="l">Image link</span><input id="hu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…" value="${esc((wed.del&&wed.del.hero)||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveHero">Save</button></div></div></div>`;
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -964,7 +1052,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -994,6 +1082,7 @@ ${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location<
 ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
+  if(sec==='del')return`${secNav(1)}<div style="height:20px"></div>${cineBody()}<footer><span>Private link · Zema Production</span></footer>`;
   const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
   const I={timeline:isWed(w)?'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.':'Add the key moments of your event with their times, such as when guests arrive, the cake and any speeches. They sort themselves by time.',
 family:'Add the groups you’d like photographed, and put them in the order you’d like. Your photographer will work through this list on the day.',
@@ -1416,6 +1505,27 @@ document.addEventListener('click',async e=>{
   else if(a==='bkWa'&&!TOKEN){const b=bks.find(x=>x.id===id);window.open('https://wa.me/'+waNum(b.phone)+'?text='+encodeURIComponent(`Hello ${b.name}, thank you for your booking request with Zema Production for ${fmtD(b.event_date)}.`),'_blank')}
   else if(a==='bkDecline'&&!TOKEN)ask('Decline this booking request? It is removed from your dashboard.',async()=>{const{error}=await sb.from('bookings').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);bks=bks.filter(x=>x.id!==id);render()});
   else if(a==='copyBk'){const u=location.origin+location.pathname+'?p=1#book';(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Booking form link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='cplay'){ui.play=+t.dataset.i;render();scrollTo(0,0)}
+  else if(a==='cstop'){ui.play=null;render()}
+  else if(a==='cineV'&&!TOKEN){ui.view='cine';render();scrollTo(0,0)}
+  else if(a==='openCine'&&!TOKEN){ui.fromCine=true;openWedding(id,1)}
+  else if(a==='cineOpen'&&!TOKEN){ui.fromCine=false;ui.cine=true;ui.play=null;render();scrollTo(0,0)}
+  else if(a==='cineBack'){ui.cine=false;ui.play=null;if(ui.fromCine){ui.fromCine=false;ui.view='cine';wed=null}render()}
+  else if(a==='cineEdit'&&!TOKEN){ui.cine=false;ui.play=null;ui.fromCine=false;ui.sec='del';render()}
+  else if(a==='togPub'&&!TOKEN)setD({published:!delOf(wed.del).published});
+  else if(a==='addFilm'&&!TOKEN)openFilmForm();
+  else if(a==='editFilm'&&!TOKEN)openFilmForm(+t.dataset.i);
+  else if(a==='saveFilm'&&!TOKEN){const o={title:$('#zt').value.trim()||'Film',url:$('#zu').value.trim(),desc:$('#zd').value.trim(),dur:$('#zl').value.trim(),cover:safeU($('#zc').value)};if(!ytId(o.url)){$('#zu').classList.add('err');return toast('That doesn’t look like a YouTube link. Paste the link from YouTube’s Share button.')}const l=[...delOf(wed.del).films],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({films:l})}
+  else if(a==='delFilm'&&!TOKEN){const i=+t.dataset.i;ask('Remove this film from the delivery? The video itself stays on YouTube.',()=>setD({films:delOf(wed.del).films.filter((_,j)=>j!==i)}))}
+  else if((a==='FilmUp'||a==='FilmDown'||a==='GalUp'||a==='GalDown')&&!TOKEN){const k=a.startsWith('Film')?'films':'galleries',l=[...delOf(wed.del)[k]],i=+t.dataset.i,j=i+(a.endsWith('Up')?-1:1);if(l[j]){[l[i],l[j]]=[l[j],l[i]];setD({[k]:l})}}
+  else if(a==='addGal'&&!TOKEN)openGalForm();
+  else if(a==='editGal'&&!TOKEN)openGalForm(+t.dataset.i);
+  else if(a==='saveGal'&&!TOKEN){const o={title:$('#gt').value.trim()||'Photo gallery',url:safeU($('#gu').value),cover:safeU($('#gc').value)};if(!o.url){$('#gu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const l=[...delOf(wed.del).galleries],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({galleries:l})}
+  else if(a==='delGal'&&!TOKEN){const i=+t.dataset.i;ask('Remove this gallery from the delivery?',()=>setD({galleries:delOf(wed.del).galleries.filter((_,j)=>j!==i)}))}
+  else if(a==='editHero'&&!TOKEN)openHeroForm();
+  else if(a==='saveHero'&&!TOKEN){const v=$('#hu').value.trim();if(v&&!safeU(v)){$('#hu').classList.add('err');return toast('The image link must start with https://')}closeM();setD({hero:safeU(v)})}
+  else if(a==='copyCine'&&!TOKEN){const u=cineLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Cinema link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='waCine'&&!TOKEN){if(!delOf(wed.del).published)return toast('Publish the cinema page first, so the link works for the client.');const ph=waNum(wed.bill&&wed.bill.client_phone);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hello, your films and photos from Zema Production are ready. You can watch and view them here:\n${cineLink()}`),'_blank')}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
@@ -1429,6 +1539,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&!PKPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
