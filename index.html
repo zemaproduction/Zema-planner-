@@ -1636,7 +1636,7 @@ async function doBackup(){
 let sels=[];
 const SELG='1. Open the gallery using the button on your page. Enter the password if it asks for one.\n2. Tap the heart on each photo you love. The first time, the gallery asks for your email so your choices are saved.\n3. Keep going until you have chosen {n} photos. Tap the heart at the top of the gallery to see your list and how many you have.\n4. When you are done, come back to your page and tap “I’ve finished choosing”.';
 let selGuide=SELG;
-const guide=s=>String(s.instructions||'').replace(/\{n\}/g,s.pick_count||200).trim();
+const guide=s=>String(s.instructions||(TOKEN?'':selGuide)||'').replace(/\{n\}/g,s.pick_count||200).trim();
 const selState=s=>!s||!s.asked_at?'none':s.done_at?'done':'wait';
 const selLink=w=>location.origin+location.pathname+'?w='+w.share_token+'&s=overview';
 const selAskMsg=(w,s)=>`Hello, your photos from ${w.couple} are uploaded and ready to view. Please choose your ${s.pick_count||200} favourites${s.purpose?' for '+s.purpose:''}${s.deadline?' by '+fmtD(s.deadline):''}.${guide(s)?'\n\nHow to choose:\n'+guide(s):''}\n\n${guide(s)?'Your page:':'Open your page to view the gallery, and tap “I’ve finished choosing” when you’re done:'}\n${selLink(w)}`;
@@ -1661,8 +1661,8 @@ function openSelForm(){
 <div class="f"><span class="l">How many photos should they pick</span><input id="sgn" type="number" inputmode="numeric" min="1" step="1" value="${esc(s.pick_count||200)}"></div>
 <div class="f"><span class="l">What the picks are for</span><input id="sgp" maxlength="60" placeholder="your album" value="${esc(s.purpose??'your album')}"></div>
 <div class="f"><span class="l">Deadline (optional)</span><input id="sgd" type="date" value="${esc(s.deadline||'')}"></div>
-<div class="f"><span class="l">How to choose · sent on WhatsApp and shown on their page</span><textarea id="sgi" rows="9" maxlength="1500">${esc(s.instructions??selGuide)}</textarea></div>
-<p class="intro" style="font-size:13px">Write {n} where the number of photos should appear. What you save here becomes the starting text for your next event. Leave it empty to send no instructions.</p>
+<div class="f"><span class="l">How to choose · sent on WhatsApp and shown on their page</span><textarea id="sgi" rows="9" maxlength="1500">${esc(s.instructions||selGuide)}</textarea></div>
+<p class="intro" style="font-size:13px">Write {n} where the number of photos should appear. What you save here becomes the starting text for your next event.</p>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="selSave">Save</button></div></div></div>`;
 }
 async function setSel(o){
@@ -2277,7 +2277,7 @@ document.addEventListener('click',async e=>{
   else if(a==='postDel'&&!TOKEN){await openWedding(id);ui.sec='del';render()}
   else if(a==='selEdit'&&!TOKEN)openSelForm();
   else if(a==='selSave'&&!TOKEN){const u=safeU($('#sgu').value);if(!u){$('#sgu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const o={gallery_url:u,gallery_password:$('#sgw').value.trim(),pick_count:Math.max(1,parseInt($('#sgn').value)||200),purpose:$('#sgp').value.trim(),deadline:$('#sgd').value||null,instructions:$('#sgi').value.trim()};closeM();if(await setSel(o)&&o.instructions&&o.instructions!==selGuide){selGuide=o.instructions;sb.from('app_content').upsert({key:'sel_guide',data:{text:selGuide},updated_at:new Date().toISOString()}).then(()=>{})}}
-  else if(a==='selAsk'&&!TOKEN){const s=wed.sel;window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true})}
+  else if(a==='selAsk'&&!TOKEN){const s=wed.sel;window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true,...(s.instructions?{}:{instructions:selGuide})})}
   else if(a==='selRem'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selRemMsg(wed,wed.sel)),'_blank');
   else if(a==='selRemW'&&!TOKEN){const w=weds.find(x=>x.id===id),s=sels.find(x=>x.wedding_id===id);if(w&&s)window.open('https://wa.me/'+waNum(B(w).client_phone)+'?text='+encodeURIComponent(selRemMsg(w,s)),'_blank')}
   else if(a==='selDone'&&!TOKEN)setSel({done_at:new Date().toISOString(),seen:true});
