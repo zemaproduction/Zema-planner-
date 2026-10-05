@@ -195,14 +195,14 @@ const BKQ=[
 {k:'phone',q:'Phone or WhatsApp number',t:'tel',req:1},
 {k:'email',q:'Email address',sub:'Optional.',t:'email'},
 {k:'event_date',q:'Date of the event',t:'date',req:1},
-{k:'location',q:'Where is it?',sub:'Please give the full address with postcode. Locations two and three are optional, for events in more than one place.',t:'locs',req:1},
+{k:'location',q:'Where is it?',sub:'Please give the address and postcode. Locations two and three are optional, for events in more than one place.',t:'locs',req:1},
 {k:'services',q:'What would you like?',t:'choice',o:['Photography','Videography','Photography & Videography']},
 {k:'message',q:'Anything else we should know?',sub:'Timings, number of guests, special requests. Optional.',t:'area'},
 {k:'source',q:'How did you hear about us?',t:'choice',o:['Instagram','Recommendation','Google','An event we covered','Other']},
 {k:'agree',q:'Terms & Conditions',t:'agree',req:1}];
 const bkAct=()=>BKQ.filter(q=>!q.when||q.when(bk.v));
 const bkLocs=[['location','Location one'],['location2','Location two (optional)'],['location3','Location three (optional)']];
-function bkRead(q){const el=$('#bkf');if(q.t==='locs')bkLocs.forEach(([k],i)=>{const e=$('#bkl'+i);if(e)bk.v[k]=e.value.trim()});else if(el)bk.v[q.k]=q.t==='agree'?(el.checked?'yes':''):el.value.trim()}
+function bkRead(q){const el=$('#bkf');if(q.t==='locs'){if($('#bkl0')){bk.loc=bkLocs.map((_,i)=>({a:(($('#bkl'+i)||{}).value||'').trim(),p:(($('#bkp'+i)||{}).value||'').trim().toUpperCase().replace(/\s+/g,' ')}));bkLocs.forEach(([k],i)=>{const L=bk.loc[i];bk.v[k]=L.a?L.a+(L.p?', '+L.p:''):''})}}else if(el)bk.v[q.k]=q.t==='agree'?(el.checked?'yes':''):el.value.trim()}
 function bkPkgs(){
   const ty=bk.v.event_type,pr=k=>k.n+(pkd.hide||!k.p?'':' · '+k.p),hr='Hourly rate'+(pkd.hide||!pkd.hr.p?'':' · '+pkd.hr.p);
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
@@ -216,7 +216,7 @@ function bkInner(){
   const A=bkAct();bk.step=Math.min(bk.step,A.length-1);
   const q=A[bk.step],v=bk.v[q.k]||'',n=A.length;let f;
   if(q.t==='choice')f=`<div>${(q.k==='package'?bkPkgs():q.o).map(x=>`<button class="dr ${v===x?'nx':''}" data-a="bkSet" data-v="${esc(x)}" style="min-height:0;padding:15px 16px"><span class="ck" style="width:26px;height:26px;font-size:14px;${v===x?'background:var(--ac);border-color:var(--ac)':''}">${v===x?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x)}</b></span></button>`).join('')}</div>`;
-  else if(q.t==='locs')f=bkLocs.map(([k,l],i)=>`<div class="f"><span class="l">${l}</span><input id="bkl${i}" maxlength="200" value="${esc(bk.v[k]||'')}" placeholder="${i?'':'Venue, street, town and postcode'}" autocomplete="street-address"></div>`).join('');
+  else if(q.t==='locs')f=bkLocs.map(([k,l],i)=>{const L=(bk.loc||[])[i]||{};return`<div class="lbl" style="margin:${i?20:0}px 0 10px;color:var(--ac)">${l}</div><div class="f"><span class="l">Address</span><input id="bkl${i}" maxlength="160" value="${esc(L.a||'')}" placeholder="${i?'':'Venue name, street and town'}" autocomplete="off"></div><div class="f"><span class="l">Postcode</span><input id="bkp${i}" maxlength="10" value="${esc(L.p||'')}" placeholder="${i?'':'SW1A 1AA'}" autocapitalize="characters" autocomplete="off" style="max-width:190px"></div>`}).join('');
   else if(q.t==='area')f=`<div class="f"><textarea id="bkf" rows="5" maxlength="1500">${esc(v)}</textarea></div>`;
   else if(q.t==='agree')f=`<div class="tc" style="max-height:220px;overflow:auto;border:1px solid var(--line);padding:14px 14px 0;border-radius:3px">${pkd.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div><label class="chk" style="margin-top:16px;color:var(--tx)"><input type="checkbox" id="bkf" ${v?'checked':''}> I have read and agree to the Terms &amp; Conditions</label>`;
   else f=`<div class="f"><input id="bkf" type="${q.t}" value="${esc(v)}" maxlength="200" ${q.t==='date'?'min="'+today()+'"':''} ${q.t==='tel'?'autocomplete="tel"':q.t==='email'?'autocomplete="email" autocapitalize="none"':q.k==='name'?'autocomplete="name"':''}></div>`;
@@ -229,10 +229,10 @@ async function bkNext(){
   const A=bkAct(),q=A[bk.step];
   bkRead(q);
   const v=bk.v[q.k]||'',err=m=>{$('#bkerr').textContent=m};
-  if(q.req&&!v)return err(q.t==='agree'?'Please tick the box to agree.':q.t==='choice'?'Please choose one.':q.t==='locs'?'Please fill in location one.':'Please fill this in.');
+  if(q.req&&!v)return err(q.t==='agree'?'Please tick the box to agree.':q.t==='choice'?'Please choose one.':q.t==='locs'?'Please add the address and postcode for location one.':'Please fill this in.');
   if(q.t==='email'&&v&&!/^\S+@\S+\.\S+$/.test(v))return err('That email doesn’t look right.');
   if(q.t==='tel'&&v.replace(/\D/g,'').length<7)return err('Please enter a full phone number.');
-  if(q.t==='locs'){const bad=bkLocs.find(([k])=>bk.v[k]&&!/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i.test(bk.v[k]));if(bad)return err('Please give the full address with postcode for '+bad[1].replace(' (optional)','').toLowerCase()+'.')}
+  if(q.t==='locs'){const PC=/^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/,ls=bk.loc||[];for(let i=0;i<3;i++){const L=ls[i]||{a:'',p:''},nm=bkLocs[i][1].replace(' (optional)','').toLowerCase();if(i===0||L.a||L.p){if(L.a.length<5)return err('Please add the address for '+nm+'.');if(!PC.test(L.p))return err('Please add a valid postcode for '+nm+'.')}}}
   if(bk.step<A.length-1){bk.step++;return bkDraw(1)}
   if(!String(bk.v.package||'').startsWith('Hourly rate'))delete bk.v.hours;
   const hp=$('#bkhp');
