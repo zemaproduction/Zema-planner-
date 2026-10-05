@@ -147,7 +147,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Delivery':'del'};
@@ -449,9 +449,10 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
   if(RVTOKEN){document.title='Zema Production · Review';return setApp(rvView())}
+  if(DTOKEN){document.title='Zema Production · Day';loadDay();setInterval(()=>{if(!document.hidden)loadDay()},20000);return}
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
@@ -549,6 +550,7 @@ const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+erro
 
 /* ---- Views ---- */
 function render(){
+  if(DTOKEN){if(wed)setApp(dayRO());return}
   if(RVTOKEN){setApp(rvView());return}
   if(EQPAGE){setApp(eqView());return}
   if(HTOKEN){if(hz)setApp(hirerView());return}
@@ -801,7 +803,8 @@ ${after?postCard():''}
 ${statusCard()}
 ${glance()}
 ${after?'':gaps()}
-<div class="cta"><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button>${isWed(wed)?'<button class="btn" data-a="copyF">Copy family &amp; friends link</button>':''}</div>`}
+<div class="cta"><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyD">Copy Day Mode link · read-only</button>${isWed(wed)?'<button class="btn" data-a="copyF">Copy family &amp; friends link</button>':''}</div>
+<p class="intro" style="margin:14px 0 0;font-size:13px">The Day Mode link is view-only, with no money, and closes at the end of the day after the event. <button class="lnk" style="font-size:13px" data-a="resetD">Reset the link</button></p>`}
 async function setW(o){
   const prev={};for(const k in o)prev[k]=wed[k];
   Object.assign(wed,o);render();
@@ -1214,7 +1217,7 @@ const clk=ms=>new Date(ms).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-
 const fmtDT=ms=>new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+', '+clk(ms);
 const tmBig=c=>c.state==='done'?hm(c.worked):c.left!=null?(c.over?hms(c.left)+' over':hms(c.left)):hms(c.worked);
 function timerCard(){
-  const ro=!!TOKEN,t=TM(),c=tmCalc(),bk=tmBooked();
+  const ro=!!(TOKEN||DTOKEN),t=TM(),c=tmCalc(),bk=tmBooked();
   if(!ro&&wed.tmErr)return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">The timer isn’t set up in Supabase yet. Run the timer SQL once, then refresh this page.</p></section>`;
   if(!c){if(ro)return'';ui.tmFlag='';
     return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">${bk!=null?'Booked for '+hm(bk*60000)+'. The timer will count down.':'No booked hours set, so the timer will count up.'} Start it when you begin. The client sees it live on their link.</p>
@@ -1222,9 +1225,9 @@ function timerCard(){
   ui.tmFlag=(c.soon?'s':'')+(c.over?'o':'');
   const lab=c.state==='done'?'Finished · time worked':c.state==='paused'?'Paused'+(c.left!=null?' · '+(c.over?'over the booked time':'time left'):''):c.left!=null?(c.over?'Over the booked time':'Time left'):'Time worked';
   const pl=Array.isArray(t.pauses)?t.pauses:[],rows=[['Started',fmtDT(c.s)],c.state==='done'?['Finished',fmtDT(c.e)]:c.eta?['Expected finish','<span id="tmeta">'+clk(c.eta)+'</span>']:null,c.state==='done'?null:['Time worked','<span id="tmw">'+hm(c.worked)+'</span>'],c.bk!=null?['Booked',hm(c.bk*60000)]:null,c.pz>=60000||pl.length?['Paused in total',hm(c.pz)]:null,c.state==='done'&&c.over?['Over the booked time',hm(c.left)]:null].filter(Boolean);
-  return`<section class="card ${c.soon||c.over||c.state==='run'?'ok':''}" style="margin-top:16px"><div class="lbl">${ro?'Your booking':'Timer'} · ${lab}</div>
+  return`<section class="card ${c.soon||c.over||c.state==='run'?'ok':''}" style="margin-top:16px"><div class="lbl">${TOKEN?'Your booking':'Timer'} · ${lab}</div>
 <div class="num" id="tmbig" style="margin-bottom:10px">${tmBig(c)}</div>
-${c.soon?`<p class="intro" style="margin:0 0 12px;color:var(--ac)">${ro?'Your booking is about to end. Message us if you’d like to extend.':'About to end. Let the client know.'}</p>`:''}
+${c.soon?`<p class="intro" style="margin:0 0 12px;color:var(--ac)">${TOKEN?'Your booking is about to end. Message us if you’d like to extend.':DTOKEN?'About to end.':'About to end. Let the client know.'}</p>`:''}
 ${rows.map(([a,b])=>`<div class="row2" style="margin-top:6px"><span>${a}</span><span>${b}</span></div>`).join('')}
 ${pl.map(p=>`<div class="row2" style="margin-top:6px"><span>Pause</span><span>${clk(Date.parse(p.from))} to ${clk(Date.parse(p.to))}</span></div>`).join('')}
 ${t.paused_at&&!t.ended_at?`<div class="row2" style="margin-top:6px"><span>Paused since</span><span>${clk(Date.parse(t.paused_at))}</span></div>`:''}
@@ -1750,6 +1753,30 @@ return`<h2 style="margin-bottom:4px">${esc(w.couple)}</h2><div class="sub" style
 ${al==='na'?'':`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]}</span></div></div>`}
 <div class="pg"><div class="row2"><span class="lbl">Cinema page</span><span>${!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published':'Added, not published'}</span></div></div>
 <div class="acts"><button data-a="openW" data-id="${w.id}">Open event</button><button data-a="postDel" data-id="${w.id}">Delivery tab</button></div></section>`}).join(''):'<p class="empty">Nothing in post-production. An event appears here when you set its status to Post-production, or while a client is choosing photos.</p>'}`}
+/* ---- Read-only Day Mode link (?d=): everything for the day and the live timer, no money ---- */
+const dayLink=w=>location.origin+location.pathname+'?d='+w.day_token;
+async function loadDay(){
+  const{data,error}=await sb.rpc('day_get',{p_token:DTOKEN});
+  if(error||!data){if(!wed)setApp('<div class="login"><div class="brand">ZEMA PRODUCTION</div><h2>This link isn’t working</h2><p class="meta">Please ask Zema Production for a new one.</p></div>');return}
+  if(data.expired){wed=null;ui.dayRaw='';return setApp('<div class="login"><div class="brand">ZEMA PRODUCTION</div><h2>This link has ended</h2><p class="meta">Day links close the day after the event. Ask Zema Production if you need it again.</p></div>')}
+  const ch=JSON.stringify(data)!==ui.dayRaw;ui.dayRaw=JSON.stringify(data);
+  wed={...data,bill:{},timer:data.timer||{}};
+  if(ch)setApp(dayRO());
+}
+function dayRO(){
+  const w=wed,tl=w.timeline||[],fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
+  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
+  const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')
+  :sec==='family'?`<div class="big">${fam.filter(g=>g.done).length} / ${fam.length} <small>completed</small></div>${fam.map((g,i)=>`<div class="fr ${g.done?'d':''}"><div class="nm">${i+1}. ${esc(g.name)}${g.done?' ✓':''}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px">${esc((Array.isArray(g.people)?g.people:[]).join(', '))}</div>${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}</div>`).join('')}`
+  :sec==='musts'?mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}${x.done?' ✓':''}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')
+  :sec==='people'?`<div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
+  :sec==='places'?`<div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
+  :sec==='notes'?`<section class="card"><div class="lbl">Note from the client</div><p class="ntx">${esc(w.client_note||'')}</p></section>`:'<p class="empty">Nothing has been added for this event yet.</p>';
+  return`<div class="brand">ZEMA PRODUCTION · ${isWed(w)?'WEDDING DAY':'EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${fmtD(w.wedding_date)}${w.city?' · '+esc(w.city):''}</div>
+${isWed(w)?'':timerCard()}
+${tabs.length>1?`<div class="tabs" style="margin-top:22px">${tabs.map(([k,l])=>`<button class="tab ${sec===k?'on':''}" data-a="dtab" data-k="${k}">${l}</button>`).join('')}</div>`:'<div style="height:22px"></div>'}
+${body}
+<footer><span>Read-only link · Zema Production · updates every 20 seconds</span></footer>`}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -2124,6 +2151,9 @@ document.addEventListener('click',async e=>{
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='resetD'&&!TOKEN)ask('Reset the Day Mode link? The current link stops working straight away, and you copy a new one to share.',async()=>{const tk=newTok(),{error}=await sb.from('weddings').update({day_token:tk}).eq('id',wed.id);if(error)return toast(/column|schema/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not reset: '+error.message);wed.day_token=tk;const d=weds.find(x=>x.id===wed.id);if(d)d.day_token=tk;toast('Link reset. Copy the new one to share it.')});
+  else if(a==='dtab'&&DTOKEN){ui.dsec=t.dataset.k;render()}
+  else if(a==='copyD'&&!TOKEN){if(!wed.day_token)return toast('Run the latest SQL in Supabase first, then refresh.');const u=dayLink(wed);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Day Mode link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='openDay'&&!TOKEN){await openWedding(id);ui.day=true;render();scrollTo(0,0)}
   else if(a==='iconV'&&!TOKEN)openIconForm();
   else if(a==='copyGo'&&!TOKEN){const u=location.origin+location.pathname+'?go='+t.dataset.k;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Open it in Safari, then Share, Add to Home Screen.'),()=>prompt('Copy this link:',u))}
@@ -2359,6 +2389,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
