@@ -478,7 +478,7 @@ async function loadDash(view){
   await refreshCrew();
   await refreshFree();
   await refreshEnq();
-  {const q=await sb.from('event_costs').select('wedding_id,amount,paid');costsAll=q.error?[]:(q.data||[])}
+  {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
@@ -526,7 +526,7 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
@@ -544,6 +544,7 @@ function render(){
   else if(ui.view==='cine')setApp(cineGrid());
   else if(ui.view==='free')setApp(freeView());
   else if(ui.view==='enq')setApp(enqView());
+  else if(ui.view==='due')setApp(dueView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
@@ -590,7 +591,7 @@ ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${mny(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(mny(owedSum),'Still to come','owed')}</div>
-<p style="display:flex;justify-content:space-between;gap:12px;margin:10px 0 0;font-size:13px;color:var(--mu)"><span>${(u=>u>0?'Costs still to pay: '+mny(u):'')(sum(costsAll.filter(c=>!c.paid)))}</span><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
+<p style="display:flex;justify-content:space-between;gap:12px;margin:10px 0 0;font-size:13px;color:var(--mu)"><span>${(u=>u>0?`<button class="lnk" style="font-size:13px" data-a="dueV">Costs still to pay: ${mny(u)}</button>`:'')(sum(costsAll.filter(c=>!c.paid)))}</span><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
 ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “New Event” to add one.</p>'}
 ${late.length?`<h2>Date passed</h2><p class="intro">These events have happened but are still marked Pending or Confirmed. Open each one and move it to Post-production or Delivered.</p>${late.map(evCard).join('')}`:''}
@@ -1459,6 +1460,15 @@ const K=()=>wed.costs||[];
 const sg=n=>(n<0?'−':'')+gbp(Math.abs(n));
 const wCost=id=>sum(costsAll.filter(c=>c.wedding_id===id));
 const profitIn=y=>doneIn(y).reduce((a,w)=>a+(wPrice(w)||0)-wCost(w.id),0);
+/* Every unpaid cost across all events, grouped by event */
+function dueView(){
+  const un=costsAll.filter(c=>!c.paid),ids=[...new Set(un.map(c=>c.wedding_id))],evs=ids.map(id=>weds.find(w=>w.id===id)).filter(Boolean).sort((a,b)=>String(a.wedding_date||'9999').localeCompare(String(b.wedding_date||'9999')));
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Costs to pay</h1><div class="meta">${un.length} payment${un.length==1?'':'s'} across ${evs.length} event${evs.length==1?'':'s'}</div>
+<section class="card" style="margin-top:24px"><div class="lbl">Total still to pay</div><div class="num" style="margin-bottom:0">${gbp(sum(un))}</div></section>
+${evs.length?evs.map(w=>{const l=un.filter(c=>c.wedding_id===w.id);return`<h2 style="margin-bottom:4px">${esc(w.couple)}</h2><div class="sub" style="margin:0 0 6px">${esc(etype(w))} · ${fmtD(w.wedding_date)} · ${gbp(sum(l))} to pay</div>
+<div>${l.map(c=>{const cr=c.crew_id&&crew.find(x=>x.id===c.crew_id);return`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(c.amount)}</div><div class="sub">${esc(c.label||c.category||'Cost')} · ${esc(c.category||'Other')}${c.hours&&c.rate?' · '+Number(c.hours)+' hours at '+gbp(c.rate):''}${cr&&cr.name!==c.label?' · '+esc(cr.name):''}</div>${cr&&cr.phone?`<a class="lnk" href="tel:${esc(tel(cr.phone))}">${esc(cr.phone)}</a>`:''}
+<div class="acts"><button data-a="duePaid" data-id="${c.id}">Mark as paid</button><button data-a="dueOpen" data-id="${w.id}">Open event</button></div></div></div>`}).join('')}</div>`}).join(''):'<p class="empty">Nothing to pay. Every cost you have added is marked as paid.</p>'}`}
 function costMain(){
   if(wed.costErr)return`<h2>Costs &amp; profit</h2><p class="empty">Costs aren’t set up in Supabase yet. Run the costs SQL once, then refresh this page.</p>`;
   const inc=tot(wed.bill),got=sum(Y()),cost=sum(K()),out=sum(K().filter(c=>c.paid)),profit=(inc||0)-cost,r=(a,b,x)=>`<div class="row2" style="margin-top:${x||6}px"><span>${a}</span><span style="color:var(--tx)">${b}</span></div>`;
@@ -2046,6 +2056,9 @@ document.addEventListener('click',async e=>{
   else if(a==='editTpl'&&!TOKEN)openTplForm(+t.dataset.i);
   else if(a==='saveTplF'&&!TOKEN){const n=$('#pn').value.trim();if(!n){$('#pn').classList.add('err');$('#pn').focus();return}const o={n,b:$('#pb').value.trim(),t:$('#pt').value.split('\n').map(x=>x.trim()).filter(Boolean)},i=ui.modal.i,old=ctpl;ctpl=[...ctpl];if(i!=null)ctpl[i]=o;else ctpl.push(o);closeM();if(!await saveTpl())ctpl=old;render()}
   else if(a==='delTpl'&&!TOKEN){const i=+t.dataset.i;ask('Delete this template? Lists already sent to crew are not affected.',async()=>{const old=ctpl;ctpl=ctpl.filter((_,j)=>j!==i);if(!await saveTpl())ctpl=old;render()})}
+  else if(a==='dueV'&&!TOKEN){ui.view='due';render();scrollTo(0,0)}
+  else if(a==='duePaid'&&!TOKEN){const c=costsAll.find(x=>x.id===id);if(c){c.paid=true;render();const{error}=await sb.from('event_costs').update({paid:true,paid_on:today()}).eq('id',id);if(error){c.paid=false;render();toast('Could not save: '+error.message)}}}
+  else if(a==='dueOpen'&&!TOKEN){await openWedding(id);ui.sec='cost';render()}
   else if(a==='addCost'&&!TOKEN)openCostForm();
   else if(a==='editCost'&&!TOKEN)openCostForm(id);
   else if(a==='saveCost'&&!TOKEN)saveCost();
