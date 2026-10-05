@@ -492,9 +492,10 @@ async function loadDash(view){
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
-  {const ids=data.filter(w=>w.wedding_date===today()).map(w=>w.id);if(ids.length){const q=await sb.from('event_timer').select('*').in('wedding_id',ids);dtimers=q.error?[]:(q.data||[])}else dtimers=[]}
+  {const ids=data.filter(w=>w.wedding_date===today()&&!w.is_demo).map(w=>w.id);if(ids.length){const q=await sb.from('event_timer').select('*').in('wedding_id',ids);dtimers=q.error?[]:(q.data||[])}else dtimers=[]}
   const g0=!ui.went&&QS.get('go');ui.went=1;
-  weds=data;wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
+  demoW=data.find(w=>w.is_demo)||null;
+  weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
   else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today());if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
@@ -1421,7 +1422,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -1777,6 +1778,38 @@ ${isWed(w)?'':timerCard()}
 ${tabs.length>1?`<div class="tabs" style="margin-top:22px">${tabs.map(([k,l])=>`<button class="tab ${sec===k?'on':''}" data-a="dtab" data-k="${k}">${l}</button>`).join('')}</div>`:'<div style="height:22px"></div>'}
 ${body}
 <footer><span>Read-only link · Zema Production · updates every 20 seconds</span></footer>`}
+/* ---- Demo event: a fully filled-in wedding to show prospects how planning works. Kept out of your figures ---- */
+let demoW=null;
+async function makeDemo(){
+  toast('Building the demo…');
+  await sb.from('weddings').delete().eq('is_demo',true);
+  const d0=new Date();d0.setMonth(d0.getMonth()+8);d0.setDate(d0.getDate()+((6-d0.getDay()+7)%7));
+  const p=n=>String(n).padStart(2,'0'),date=d0.getFullYear()+'-'+p(d0.getMonth()+1)+'-'+p(d0.getDate());
+  const{data:w,error}=await sb.from('weddings').insert({couple:'Amani & Daniel',wedding_date:date,city:'London',services:'Photo + Video',event_type:'Wedding',package:'Gold',stage:'confirmed',is_demo:true,approval_status:'approved',approved_at:new Date().toISOString(),approved_by:'Amani'}).select().single();
+  if(error)return toast(/column|schema/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not create the demo: '+error.message);
+  const id=w.id,W=o=>({wedding_id:id,...o});
+  await sb.from('photo_groups').insert(demoRows(id));
+  await sb.from('timeline_items').insert([['10:00','Bride getting ready','Bride’s family home','Details first: dress, shoes, rings and flowers.'],['11:30','Groom getting ready','Groom’s home',''],['13:00','Ceremony','The church',''],['14:15','Confetti and congratulations','Outside the church',''],['14:45','Family and friends photos','Church gardens','Following the photo list, about 30 minutes.'],['16:00','Couple portraits','Richmond Park','Just the two of you, around 40 minutes.'],['18:00','Reception entrance','The reception hall',''],['19:30','Speeches','',''],['20:15','Cake cutting','',''],['20:30','First dance','','']].map(([at_time,title,location,note])=>W({at_time,title,location,note})));
+  await sb.from('wedding_party').insert([['Sara','Maid of honour','07700 900101','Has the rings and knows the timeline.'],['Yonas','Best man','07700 900102',''],['Almaz','Mother of the bride','',''],['Hanna','Venue coordinator','07700 900103','Ask for her on arrival for parking.']].map(([name,role,phone,note])=>W({name,role,phone,note})));
+  await sb.from('must_haves').insert([['First look with dad','Before leaving for the church.'],['Close-up of the ring exchange',''],['Grandparents with the couple','They are travelling a long way to be here.'],['The coffee ceremony','After the meal.'],['Sparkler exit','Around 22:30, weather allowing.']].map(([title,note])=>W({title,note})));
+  await sb.from('wedding_locations').insert([['Bride’s family home','','10:00','Street parking outside.'],['The church','','12:30','Arrive 30 minutes before the ceremony.'],['Richmond Park','Richmond Park, London TW10 5HS','16:00','Portraits near Pembroke Lodge.'],['The reception hall','','17:30','Ask for Hanna on arrival.']].map(([name,address,arrive_time,note])=>W({name,address,arrive_time,note})));
+  await sb.from('wedding_notes').upsert(W({client_note:'We would love lots of natural, candid photos, especially of our grandparents. The coffee ceremony after the meal is very important to us. Please keep the group photos quick so our guests aren’t waiting long.',private_note:''}));
+  const price=pkPrice('Gold')??3400,iso=x=>x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate()),ago=n=>{const x=new Date();x.setDate(x.getDate()-n);return x},before=n=>{const x=new Date(date+'T00:00:00');x.setDate(x.getDate()-n);return iso(x)},plan=[25,25,50],plan_due=[iso(ago(20)),before(90),before(14)];
+  await sb.from('event_billing').upsert(W({price,plan,plan_due,bill_to:'Amani & Daniel'}));
+  await sb.from('payments').insert(W({amount:Math.round(price*25)/100,paid_on:iso(ago(20)),label:'Deposit',method:'Bank transfer'}));
+  await sb.from('event_agreement').upsert(W({requested_at:ago(21).toISOString(),signed_name:'Amani',signed_at:ago(20).toISOString(),snapshot:{couple:w.couple,event_type:'Wedding',wedding_date:date,package:'Gold',services:'Photo + Video',price,discount:0,extras:[],plan,plan_due,terms:pk&&pk.terms?pk.terms:TERMS}}));
+  demoW=w;toast('Demo event ready');openDemo();
+}
+function openDemo(){
+  ui.modal={type:'demo'};
+  const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Demo event</h3>
+<p class="intro">A made-up wedding, Amani &amp; Daniel, with everything filled in: timeline, family photo list, wedding party, must-have moments, locations, notes, a payment plan and a signed agreement. Send its link to someone thinking of booking, so they can see what planning with you looks like.</p>
+${demoW?`${r('demoCopy','Copy the demo link','What a client sees')}${r('demoWa','Share on WhatsApp','Pick a contact')}${r('demoOpen','Open the demo','Your side of it')}${r('demoMake','Rebuild the demo','Fresh copy, new link')}${r('demoDel','Delete the demo','Remove it completely')}`:'<div class="cta"><button class="btn fill" data-a="demoMake">Create the demo event</button></div>'}
+<p class="intro" style="margin-top:16px;font-size:13px">The demo never counts in your events, money, progress or phone calendar. Its plan is confirmed, so visitors can look but not rearrange it. If anyone does change something, Rebuild puts it back.</p>
+<div class="bt"><button class="btn" data-a="close">Close</button></div></div></div>`;
+}
+const demoLink=()=>location.origin+location.pathname+'?w='+demoW.share_token;
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -2151,6 +2184,12 @@ document.addEventListener('click',async e=>{
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='demoV'&&!TOKEN)openDemo();
+  else if(a==='demoMake'&&!TOKEN){closeM();if(demoW)ask('Rebuild the demo? The current demo and its link are replaced with a fresh copy.',makeDemo);else makeDemo()}
+  else if(a==='demoCopy'&&!TOKEN&&demoW){const u=demoLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Demo link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='demoWa'&&!TOKEN&&demoW)window.open('https://wa.me/?text='+encodeURIComponent(`Here is an example of the planning page every Zema Production client gets, using a made-up wedding. You can look through the timeline, photo list, locations and payments:\n${demoLink()}`),'_blank');
+  else if(a==='demoOpen'&&!TOKEN&&demoW){closeM();openWedding(demoW.id)}
+  else if(a==='demoDel'&&!TOKEN&&demoW){closeM();ask('Delete the demo event? Its link stops working.',async()=>{const{error}=await sb.from('weddings').delete().eq('is_demo',true);if(error)return toast('Could not delete: '+error.message);demoW=null;toast('Demo deleted')})}
   else if(a==='resetD'&&!TOKEN)ask('Reset the Day Mode link? The current link stops working straight away, and you copy a new one to share.',async()=>{const tk=newTok(),{error}=await sb.from('weddings').update({day_token:tk}).eq('id',wed.id);if(error)return toast(/column|schema/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not reset: '+error.message);wed.day_token=tk;const d=weds.find(x=>x.id===wed.id);if(d)d.day_token=tk;toast('Link reset. Copy the new one to share it.')});
   else if(a==='dtab'&&DTOKEN){ui.dsec=t.dataset.k;render()}
   else if(a==='copyD'&&!TOKEN){if(!wed.day_token)return toast('Run the latest SQL in Supabase first, then refresh.');const u=dayLink(wed);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Day Mode link copied'),()=>prompt('Copy this link:',u))}
