@@ -125,6 +125,7 @@ button.st{cursor:pointer}.st.sel,.st.yr{border-color:var(--ac)}.st.sel span,.st.
 .gcard{display:flex;align-items:flex-end;position:relative;aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border:1px solid var(--line);border-radius:4px;overflow:hidden;text-decoration:none;color:inherit;transition:.3s}
 .gcard:hover{border-color:var(--ac)}.gcard:before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,11,12,.92),rgba(11,11,12,.1) 70%)}
 .gcard span{position:relative;padding:16px 18px}.gcard small{display:block;color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+.up{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}.up .btn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;min-height:42px;padding:10px 16px}.upm{font-size:13px;color:var(--ac)}
 .th2{flex:none;width:96px;aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border-radius:3px;border:1px solid var(--line)}
 .pk{margin-bottom:16px}.pk .nm{font-size:32px}
 .prc{font:500 15px var(--sans);letter-spacing:.1em;color:var(--ac);margin:6px 0 14px}
@@ -1008,6 +1009,24 @@ async function setD(o){
   const i=dels.findIndex(x=>x.wedding_id===wed.id),row={wedding_id:wed.id,...wed.del};if(i>=0)dels[i]=row;else dels.push(row);
   return true;
 }
+/* Image upload: shrinks the photo on the device, stores it in Supabase Storage, fills in its link */
+const upBtn=t=>`<div class="up"><label class="btn">Upload image<input type="file" accept="image/*" data-up="${t}" style="display:none"></label><span class="upm" id="upm-${t}"></span></div>`;
+function shrink(file){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Could not read that image.')),'image/jpeg',.82)};
+  img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Could not read that image. Try a JPG or PNG.'))};img.src=u})}
+async function upImg(el){
+  const f=el.files&&el.files[0],t=el.dataset.up,m=$('#upm-'+t);if(!f||!wed)return;
+  m.textContent='Uploading…';
+  try{
+    const blob=await shrink(f),path=wed.id+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
+    const{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
+    if(error)throw error;
+    $('#'+t).value=sb.storage.from('covers').getPublicUrl(path).data.publicUrl;
+    m.textContent='Uploaded · '+Math.round(blob.size/1024)+' KB. Tap Save to keep it.';
+  }catch(e){const msg=String((e&&e.message)||e);m.textContent=/bucket|not found|row-level|policy|unauthor/i.test(msg)?'Uploads aren’t set up yet. Run the upload SQL in Supabase first.':'Upload failed: '+msg}
+  el.value='';
+}
+document.addEventListener('change',e=>{if(e.target&&e.target.dataset&&e.target.dataset.up&&!TOKEN)upImg(e.target)});
 function openFilmForm(i){
   const x=i!=null?delOf(wed.del).films[i]:null,d=x||{title:'',url:'',desc:'',dur:'',cover:''};
   ui.modal={type:'film',i};
@@ -1016,7 +1035,7 @@ function openFilmForm(i){
 <div class="f"><span class="l">YouTube link (unlisted)</span><input id="zu" inputmode="url" autocapitalize="none" maxlength="300" placeholder="https://youtu.be/…" value="${esc(d.url||'')}"></div>
 <div class="f"><span class="l">Short description (optional)</span><textarea id="zd" rows="2" maxlength="300">${esc(d.desc||'')}</textarea></div>
 <div class="f"><span class="l">Length (optional)</span><input id="zl" maxlength="20" placeholder="e.g. 6 min" value="${esc(d.dur||'')}"></div>
-<div class="f"><span class="l">Custom thumbnail image link (optional)</span><input id="zc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Leave empty to use YouTube’s thumbnail" value="${esc(d.cover||'')}"></div>
+<div class="f"><span class="l">Thumbnail (optional)</span><input id="zc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Leave empty to use YouTube’s thumbnail" value="${esc(d.cover||'')}">${upBtn('zc')}</div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveFilm">Save film</button></div></div></div>`;
 }
 function openGalForm(i){
@@ -1025,14 +1044,14 @@ function openGalForm(i){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit gallery':'Add gallery'}</h3>
 <div class="f"><span class="l">Title</span><input id="gt" maxlength="80" value="${esc(d.title||'')}"></div>
 <div class="f"><span class="l">Gallery link</span><input id="gu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…pixieset.com/…" value="${esc(d.url||'')}"></div>
-<div class="f"><span class="l">Cover image link (optional)</span><input id="gc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="A link to one photo, starting with https://" value="${esc(d.cover||'')}"></div>
+<div class="f"><span class="l">Cover image (optional)</span><input id="gc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc(d.cover||'')}">${upBtn('gc')}</div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveGal">Save gallery</button></div></div></div>`;
 }
 function openHeroForm(){
   ui.modal={type:'hero'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Cover image</h3>
 <p class="intro">The large image at the top of the cinema page and on the card in your Cinema view. Leave empty to use the first film’s thumbnail.</p>
-<div class="f"><span class="l">Image link</span><input id="hu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…" value="${esc((wed.del&&wed.del.hero)||'')}"></div>
+<div class="f"><span class="l">Image</span><input id="hu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc((wed.del&&wed.del.hero)||'')}">${upBtn('hu')}</div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveHero">Save</button></div></div></div>`;
 }
 function famMain(){
