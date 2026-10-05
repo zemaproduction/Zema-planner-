@@ -447,7 +447,7 @@ async function init(){
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
-  if(TOKEN){ui.sec=QS.get('s')||'overview';return loadShared()}
+  if(TOKEN){ui.sec=QS.get('s')||'overview';setInterval(async()=>{if(document.hidden||!wed||isWed(wed))return;const r=await sb.rpc('shared_timer_get',{p_token:TOKEN});if(r.error)return;const ch=JSON.stringify(r.data)!==JSON.stringify(wed.timer),was=secOff('overview');wed.timer=r.data;if(ch&&!ui.modal&&ui.play==null&&(was||SK_OK(ui.sec)==='overview'))render()},20000);return loadShared()}
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
   sb.auth.onAuthStateChange((_e,s)=>{const u=s?s.user:null;if((u&&u.id)!==(user&&user.id)){user=u;wed=null;ui.view='dash';boot()}});
   boot();
@@ -492,7 +492,8 @@ async function loadWedding(id){
   const bl=await sb.from('event_billing').select('*').eq('wedding_id',id).maybeSingle();
   const ec=await sb.from('event_crew').select('*, crew(name,phone)').eq('wedding_id',id).order('created_at');
   const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
-  wed={...w,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
+  wed={...w,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -506,9 +507,10 @@ async function loadShared(){
   const mt=await sb.rpc('shared_meta_get',{p_token:TOKEN});
   const mn=await sb.rpc('shared_money_get',{p_token:TOKEN});
   const dv=await sb.rpc('shared_delivery_get',{p_token:TOKEN}),dl=dv.error?null:dv.data;
+  const tr=await sb.rpc('shared_timer_get',{p_token:TOKEN});
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -534,7 +536,7 @@ function render(){
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
 function famTl(){
@@ -726,6 +728,7 @@ function ovMain(){
   const after=['post','delivered'].includes(stg(wed));
   return`<h2>Overview</h2>
 ${statusCard()}
+${isWed(wed)?'':timerCard()}
 ${after?postCard():''}
 ${glance()}
 ${secRows()}
@@ -753,7 +756,7 @@ ${(s=>s.an||s.sc||s.acn?`<section class="card" style="margin-bottom:16px"><div c
 function clOv(){
   const p=wed.prog,al=p&&p.album_status;
   const line=(label,v,del)=>`<div class="pg"><div class="row2"><span class="lbl">${label}</span><span>${del?'Delivered':(v||0)+'%'}</span></div><div class="bar" style="margin:12px 0 0"><i style="width:${del?100:(v||0)}%"></i></div></div>`;
-  return clMoney()+(p?`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
+  return(isWed(wed)?'':timerCard())+clMoney()+(p?`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
 <p class="intro" style="margin-top:16px">Your photographer updates this as your photos and film are edited.</p>`:'')}
 /* ---- Payments and invoice (photographer only; never sent to client or family links) ---- */
 function payMain(){
@@ -1074,6 +1077,68 @@ function openHeroForm(){
 <div class="f"><span class="l">Image</span><input id="hu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc((wed.del&&wed.del.hero)||'')}">${upBtn('hu')}</div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveHero">Save</button></div></div></div>`;
 }
+/* ---- Live timer for small events, photoshoots and freelance jobs. Saved as a record both sides can see ---- */
+const TM=()=>wed.timer||{};
+const tmBooked=()=>{const t=TM();return t.booked_minutes!=null?Number(t.booked_minutes):(wed.bill&&wed.bill.hours?Math.round(Number(wed.bill.hours)*60):null)};
+function tmCalc(){
+  const t=TM();if(!t.started_at)return null;
+  const now=Date.now(),s=Date.parse(t.started_at),e=t.ended_at?Date.parse(t.ended_at):now,pz=Number(t.paused_ms||0)+(t.paused_at&&!t.ended_at?Math.max(0,now-Date.parse(t.paused_at)):0);
+  const worked=Math.max(0,e-s-pz),bk=tmBooked(),left=bk!=null?bk*60000-worked:null,state=t.ended_at?'done':t.paused_at?'paused':'run';
+  return{s,e,pz,worked,bk,left,state,eta:bk!=null&&state!=='done'?now+Math.max(0,left):null,soon:state!=='done'&&left!=null&&left>0&&left<=9e5,over:left!=null&&left<0};
+}
+const hm=ms=>{const m=Math.floor(Math.abs(ms)/60000),h=Math.floor(m/60);return(h?h+' h ':'')+(m%60)+' min'};
+const hms=ms=>{const s=Math.floor(Math.abs(ms)/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+':'+String(m).padStart(2,'0'):String(m))+':'+String(s%60).padStart(2,'0')};
+const clk=ms=>new Date(ms).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+const fmtDT=ms=>new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+', '+clk(ms);
+const tmBig=c=>c.state==='done'?hm(c.worked):c.left!=null?(c.over?hms(c.left)+' over':hms(c.left)):hms(c.worked);
+function timerCard(){
+  const ro=!!TOKEN,t=TM(),c=tmCalc(),bk=tmBooked();
+  if(!ro&&wed.tmErr)return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">The timer isn’t set up in Supabase yet. Run the timer SQL once, then refresh this page.</p></section>`;
+  if(!c){if(ro)return'';ui.tmFlag='';
+    return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">${bk!=null?'Booked for '+hm(bk*60000)+'. The timer will count down.':'No booked hours set, so the timer will count up.'} Start it when you begin. The client sees it live on their link.</p>
+<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="tmStart">Start event</button><button class="btn" data-a="tmHours">Booked hours</button></div></section>`}
+  ui.tmFlag=(c.soon?'s':'')+(c.over?'o':'');
+  const lab=c.state==='done'?'Finished · time worked':c.state==='paused'?'Paused'+(c.left!=null?' · '+(c.over?'over the booked time':'time left'):''):c.left!=null?(c.over?'Over the booked time':'Time left'):'Time worked';
+  const pl=Array.isArray(t.pauses)?t.pauses:[],rows=[['Started',fmtDT(c.s)],c.state==='done'?['Finished',fmtDT(c.e)]:c.eta?['Expected finish','<span id="tmeta">'+clk(c.eta)+'</span>']:null,c.state==='done'?null:['Time worked','<span id="tmw">'+hm(c.worked)+'</span>'],c.bk!=null?['Booked',hm(c.bk*60000)]:null,c.pz>=60000||pl.length?['Paused in total',hm(c.pz)]:null,c.state==='done'&&c.over?['Over the booked time',hm(c.left)]:null].filter(Boolean);
+  return`<section class="card ${c.soon||c.over||c.state==='run'?'ok':''}" style="margin-top:16px"><div class="lbl">${ro?'Your booking':'Timer'} · ${lab}</div>
+<div class="num" id="tmbig" style="margin-bottom:10px">${tmBig(c)}</div>
+${c.soon?`<p class="intro" style="margin:0 0 12px;color:var(--ac)">${ro?'Your booking is about to end. Message us if you’d like to extend.':'About to end. Let the client know.'}</p>`:''}
+${rows.map(([a,b])=>`<div class="row2" style="margin-top:6px"><span>${a}</span><span>${b}</span></div>`).join('')}
+${pl.map(p=>`<div class="row2" style="margin-top:6px"><span>Pause</span><span>${clk(Date.parse(p.from))} to ${clk(Date.parse(p.to))}</span></div>`).join('')}
+${t.paused_at&&!t.ended_at?`<div class="row2" style="margin-top:6px"><span>Paused since</span><span>${clk(Date.parse(t.paused_at))}</span></div>`:''}
+${t.edited?'<div class="row2" style="margin-top:6px"><span>Record edited by Zema Production</span><span></span></div>':''}
+${ro?'':`<div class="cta" style="margin-bottom:0">${c.state==='run'?'<button class="btn" data-a="tmPause">Pause</button><button class="btn fill" data-a="tmFinish">Finish event</button>':c.state==='paused'?'<button class="btn fill" data-a="tmResume">Resume</button><button class="btn" data-a="tmFinish">Finish event</button>':'<button class="btn" data-a="tmEdit">Correct the record</button><button class="btn" data-a="tmReset">Reset timer</button>'}${c.state!=='done'&&(c.soon||c.over)?'<button class="btn pri" data-a="tmWa">Tell the client on WhatsApp</button>':''}</div>${c.state!=='done'?'<div class="acts"><button data-a="tmHours">Booked hours</button></div>':''}`}
+</section>`}
+async function setT(o){
+  const prev={...(wed.timer||{})};wed.timer={...prev,...o};render();
+  const{error}=await sb.from('event_timer').upsert({wedding_id:wed.id,...o,updated_at:new Date().toISOString()});
+  if(error){wed.timer=prev;render();toast(/relation|schema|find the table|column/i.test(error.message)?'Run the timer SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  return true;
+}
+const toLocal=iso=>{if(!iso)return'';const d=new Date(iso),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())};
+function openTmHours(){
+  const bk=tmBooked();ui.modal={type:'tmh'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Booked hours</h3>
+<p class="intro">How long the client has booked you for. The timer counts down from this. Leave empty to count up instead.</p>
+<div class="f"><span class="l">Hours</span><input id="th" type="number" inputmode="decimal" min="0" step="0.25" value="${bk!=null?bk/60:''}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveTmHours">Save</button></div></div></div>`;
+}
+function openTmEdit(){
+  const t=TM();ui.modal={type:'tme'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Correct the record</h3>
+<p class="intro">For when Start or Finish was pressed late. The record will show that it was edited.</p>
+<div class="f"><span class="l">Started</span><input id="ts" type="datetime-local" value="${toLocal(t.started_at)}"></div>
+<div class="f"><span class="l">Finished</span><input id="te" type="datetime-local" value="${toLocal(t.ended_at)}"></div>
+<div class="f"><span class="l">Total paused, in minutes</span><input id="tp" type="number" inputmode="numeric" min="0" step="1" value="${Math.round(Number(t.paused_ms||0)/60000)}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveTmEdit">Save</button></div></div></div>`;
+}
+setInterval(()=>{
+  const el=$('#tmbig');if(!el||!wed)return;
+  const c=tmCalc();if(!c||c.state==='done')return;
+  if((c.soon?'s':'')+(c.over?'o':'')!==ui.tmFlag){if(!ui.modal&&ui.play==null)render();return}
+  if(c.state==='run'){el.textContent=tmBig(c);const w=$('#tmw');if(w)w.textContent=hm(c.worked)}
+  const e=$('#tmeta');if(e&&c.eta)e.textContent=clk(c.eta);
+},1000);
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1172,6 +1237,7 @@ function dayView(){
   const w=wed,sec=SK_OK(ui.sec)==='overview'?'timeline':SK_OK(ui.sec);
   return`<div class="top">${isWed(w)?'<button class="btn" data-a="copyF">Family &amp; friends link</button>':''}<button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">${isWed(w)?'ZEMA WEDDING DAY':'ZEMA EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
+${isWed(w)?'':timerCard()}
 <div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People'],['places','Places'],['notes','Notes']].filter(([k])=>secsFor(wed).some(x=>SK[x]===k)).map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
 ${sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():sec==='notes'?dayNt():dayFam()}`}
 function copyLink(token,key){
@@ -1568,6 +1634,16 @@ document.addEventListener('click',async e=>{
   else if(a==='saveHero'&&!TOKEN){const v=$('#hu').value.trim();if(v&&!safeU(v)){$('#hu').classList.add('err');return toast('The image link must start with https://')}closeM();setD({hero:safeU(v)})}
   else if(a==='copyCine'&&!TOKEN){const u=cineLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Cinema link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='waCine'&&!TOKEN){if(!delOf(wed.del).published)return toast('Publish the cinema page first, so the link works for the client.');const ph=waNum(wed.bill&&wed.bill.client_phone);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hello, your films and photos from Zema Production are ready. You can watch and view them here:\n${cineLink()}`),'_blank')}
+  else if(a==='tmStart'&&!TOKEN)setT({started_at:new Date().toISOString(),ended_at:null,paused_at:null,paused_ms:0,pauses:[],edited:false,booked_minutes:tmBooked()});
+  else if(a==='tmPause'&&!TOKEN)setT({paused_at:new Date().toISOString()});
+  else if(a==='tmResume'&&!TOKEN){const tm=TM(),now=new Date().toISOString();setT({paused_at:null,paused_ms:Number(tm.paused_ms||0)+Math.max(0,Date.now()-Date.parse(tm.paused_at)),pauses:[...(Array.isArray(tm.pauses)?tm.pauses:[]),{from:tm.paused_at,to:now}]})}
+  else if(a==='tmFinish'&&!TOKEN)ask('Finish the event? This stops the timer and saves the record.',()=>{const tm=TM(),now=new Date().toISOString(),o={ended_at:now};if(tm.paused_at){o.paused_at=null;o.paused_ms=Number(tm.paused_ms||0)+Math.max(0,Date.now()-Date.parse(tm.paused_at));o.pauses=[...(Array.isArray(tm.pauses)?tm.pauses:[]),{from:tm.paused_at,to:now}]}setT(o)});
+  else if(a==='tmReset'&&!TOKEN)ask('Reset the timer? The saved record for this event is cleared.',()=>setT({started_at:null,ended_at:null,paused_at:null,paused_ms:0,pauses:[],edited:false}));
+  else if(a==='tmHours'&&!TOKEN)openTmHours();
+  else if(a==='saveTmHours'&&!TOKEN){const h=parseFloat($('#th').value);closeM();setT({booked_minutes:h>0?Math.round(h*60):null})}
+  else if(a==='tmEdit'&&!TOKEN)openTmEdit();
+  else if(a==='saveTmEdit'&&!TOKEN){const s1=$('#ts').value,e1=$('#te').value;if(!s1||!e1||new Date(e1)<=new Date(s1)){toast('The finish time must be after the start time.');return}const pm=Math.max(0,parseInt($('#tp').value)||0);closeM();setT({started_at:new Date(s1).toISOString(),ended_at:new Date(e1).toISOString(),paused_at:null,paused_ms:pm*60000,edited:true})}
+  else if(a==='tmWa'&&!TOKEN){const c=tmCalc(),ph=waNum(wed.bill&&wed.bill.client_phone);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(c&&c.over?'Your booking with Zema Production has reached its booked time. Let me know if you’d like to extend.':`Your booking with Zema Production is due to end at ${c&&c.eta?clk(c.eta):'the booked time'}. Let me know if you’d like to extend.`),'_blank')}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
