@@ -575,7 +575,7 @@ function dashView(){
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
   const fl=STG[ui.flt]?W.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${W.length} event${W.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button class="btn pri" data-a="cineV">Cinema</button></div>
+<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button class="btn pri" data-a="cineV">Cinema</button><button class="btn" data-a="calV">Phone calendar</button></div>
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
@@ -583,7 +583,7 @@ ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “N
 ${late.length?`<h2>Date passed</h2><p class="intro">These events have happened but are still marked Pending or Confirmed. Open each one and move it to Post-production or Delivered.</p>${late.map(evCard).join('')}`:''}
 ${post.length?`<h2>In post-production</h2>${post.map(evCard).join('')}`:''}
 ${del.length?`<h2>Delivered</h2>${ui.showDel?del.map(evCard).join(''):`<div class="cta"><button class="btn" data-a="showDel">Show ${del.length} delivered event${del.length==1?'':'s'}</button></div>`}`:''}`}
-<footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="invSet">Invoice settings</button><button data-a="out">Sign out</button></span></footer>`}
+<footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="calV">Phone calendar</button><button data-a="invSet">Invoice settings</button><button data-a="out">Sign out</button></span></footer>`}
 /* ---- Progress: events done and money received per year ---- */
 function yearView(){
   const cy=new Date().getFullYear(),py=weds.flatMap(w=>(w.payments||[]).map(p=>+String(p.paid_on||'').slice(0,4))).filter(Boolean);
@@ -1244,6 +1244,21 @@ async function hjSend(){
   hzSent=['Freelance booking for Zema Production from '+(hz.name||''),'',p.title,'Date: '+fmtD(p.job_date),'Start: '+p.start_time,p.hours&&('Hours: '+p.hours),'Where: '+[p.venue,p.address,p.postcode].filter(Boolean).join(', '),p.notes&&('Note: '+p.notes)].filter(x=>x!==''&&x!==false&&x!==undefined||x==='').join('\n');
   await loadHirer();scrollTo(0,0);
 }
+/* ---- Calendar feed: one private link the phone's calendar subscribes to ---- */
+let cal=null;
+const calUrl=()=>SB_URL+'/rest/v1/rpc/calendar_feed?k='+encodeURIComponent(cal.token)+'&apikey='+encodeURIComponent(SB_KEY);
+const newTok=()=>Array.from(crypto.getRandomValues(new Uint8Array(24)),b=>b.toString(16).padStart(2,'0')).join('');
+async function openCal(){
+  if(!cal){const q=await sb.from('app_content').select('data').eq('key','calendar').maybeSingle();cal=q.data&&q.data.data&&q.data.data.token?q.data.data:null}
+  if(!cal){const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'calendar',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not set up the calendar link: '+error.message);cal=c}
+  ui.modal={type:'cal'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Phone calendar</h3>
+<p class="intro">Subscribe once, and every event, booking request and freelance request appears in your phone’s calendar with its status, client details, locations and timeline. It updates by itself when things change.</p>
+<div class="cta" style="margin-top:0"><a class="btn fill" href="${esc(calUrl().replace(/^https:/,'webcal:'))}">Add to this phone’s calendar</a><button class="btn" data-a="copyCal">Copy calendar link</button></div>
+<p class="intro" style="font-size:13px"><b style="color:var(--tx);font-weight:500">iPhone:</b> tap the first button and choose Subscribe. <b style="color:var(--tx);font-weight:500">Google Calendar:</b> copy the link, then on a computer open Google Calendar, Other calendars, From URL, and paste it.</p>
+<p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
+<div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1763,6 +1778,9 @@ document.addEventListener('click',async e=>{
   else if(a==='newFree'&&!TOKEN)openWForm(null,false,FREE);
   else if(a==='hjSend'&&HTOKEN)hjSend();
   else if(a==='tmBill'&&!TOKEN){const c=tmCalc(),r=Number(wed.bill.hourly_rate);if(!c||!(r>0))return toast('Set an hourly rate on the Payments tab first.');const h=Math.max(.25,Math.round(c.worked/900000)/4);if(await setB({hours:h,price:Math.round(h*r*100)/100}))toast(h+' hours at '+gbp(r)+' added to the invoice')}
+  else if(a==='calV'&&!TOKEN)openCal();
+  else if(a==='copyCal'&&!TOKEN&&cal){const u=calUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Calendar link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='resetCal'&&!TOKEN)ask('Reset the calendar link? The old one stops working and you will need to subscribe again.',async()=>{const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'calendar',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not reset: '+error.message);cal=c;openCal()});
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
