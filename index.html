@@ -143,7 +143,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew','Delivery':'del'};
@@ -443,7 +443,8 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
@@ -472,6 +473,7 @@ async function loadDash(view){
   if(error)return failView(error);
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
   await refreshCrew();
+  await refreshFree();
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
@@ -518,12 +520,13 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
 function render(){
+  if(HTOKEN){if(hz)setApp(hirerView());return}
   if(CTOKEN){if(cw)setApp(crewView());return}
   if(FTOKEN){if(wed)setApp(familyView())}
   else if(TOKEN){if(wed)setApp(ui.inv&&wed.money?invView():clientView())}
@@ -532,6 +535,7 @@ function render(){
   else if(ui.view==='year')setApp(yearView());
   else if(ui.view==='crew')setApp(crewListView());
   else if(ui.view==='cine')setApp(cineGrid());
+  else if(ui.view==='free')setApp(freeView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
@@ -564,13 +568,14 @@ function evCard(w){
 <div class="row2" style="margin-top:14px"><span>${cd}</span><span>${right}</span></div>${wPrice(w)==null?'':`<div class="row2" style="margin-top:6px"><span>Paid ${gbp(wPaid(w))} of ${gbp(wPrice(w))}</span><span>${wLeft(w)?gbp(wLeft(w))+' left':'Paid in full'}</span></div>`}
 <div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button>${isWed(w)?`<button data-a="copyFW" data-id="${w.id}">Family &amp; friends link</button>`:''}</div></div>`}
 function dashView(){
-  const act=weds.filter(w=>['pending','confirmed'].includes(stg(w))),late=act.filter(w=>w.wedding_date&&w.wedding_date<today()),up=act.filter(w=>!late.includes(w));
-  const post=weds.filter(w=>stg(w)==='post'),del=weds.filter(w=>stg(w)==='delivered').reverse(),cy=new Date().getFullYear();
+  const W=weds.filter(w=>!isFree(w)),fr=weds.filter(w=>isFree(w)&&['pending','confirmed'].includes(stg(w))).length,frNew=fjobs.filter(j=>j.status==='new').length;
+  const act=W.filter(w=>['pending','confirmed'].includes(stg(w))),late=act.filter(w=>w.wedding_date&&w.wedding_date<today()),up=act.filter(w=>!late.includes(w));
+  const post=W.filter(w=>stg(w)==='post'),del=W.filter(w=>stg(w)==='delivered').reverse(),cy=new Date().getFullYear();
   const owed=weds.filter(w=>stg(w)!=='pending'&&wLeft(w)>0),owedSum=owed.reduce((a,w)=>a+wLeft(w),0);
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
-  const fl=STG[ui.flt]?weds.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
-  return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${weds.length} event${weds.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="cineV">Cinema</button></div>
+  const fl=STG[ui.flt]?W.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${W.length} event${W.length==1?'':'s'}</div>
+<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button class="btn pri" data-a="cineV">Cinema</button></div>
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
@@ -1107,7 +1112,7 @@ ${rows.map(([a,b])=>`<div class="row2" style="margin-top:6px"><span>${a}</span><
 ${pl.map(p=>`<div class="row2" style="margin-top:6px"><span>Pause</span><span>${clk(Date.parse(p.from))} to ${clk(Date.parse(p.to))}</span></div>`).join('')}
 ${t.paused_at&&!t.ended_at?`<div class="row2" style="margin-top:6px"><span>Paused since</span><span>${clk(Date.parse(t.paused_at))}</span></div>`:''}
 ${t.edited?'<div class="row2" style="margin-top:6px"><span>Record edited by Zema Production</span><span></span></div>':''}
-${ro?'':`<div class="cta" style="margin-bottom:0">${c.state==='run'?'<button class="btn" data-a="tmPause">Pause</button><button class="btn fill" data-a="tmFinish">Finish event</button>':c.state==='paused'?'<button class="btn fill" data-a="tmResume">Resume</button><button class="btn" data-a="tmFinish">Finish event</button>':'<button class="btn fill" data-a="tmWaDone">Tell the client it’s finished</button><button class="btn" data-a="tmEdit">Correct the record</button><button class="btn" data-a="tmReset">Reset timer</button>'}${c.state!=='done'&&(c.soon||c.over)?'<button class="btn pri" data-a="tmWa">Tell the client on WhatsApp</button>':''}</div>${c.state!=='done'?'<div class="acts"><button data-a="tmWaStart">Tell the client it’s started</button><button data-a="tmHours">Booked hours</button></div>':''}`}
+${ro?'':`<div class="cta" style="margin-bottom:0">${c.state==='run'?'<button class="btn" data-a="tmPause">Pause</button><button class="btn fill" data-a="tmFinish">Finish event</button>':c.state==='paused'?'<button class="btn fill" data-a="tmResume">Resume</button><button class="btn" data-a="tmFinish">Finish event</button>':(wed.bill&&Number(wed.bill.hourly_rate)>0?'<button class="btn pri" data-a="tmBill">Use this time on the invoice</button>':'')+'<button class="btn fill" data-a="tmWaDone">Tell the client it’s finished</button><button class="btn" data-a="tmEdit">Correct the record</button><button class="btn" data-a="tmReset">Reset timer</button>'}${c.state!=='done'&&(c.soon||c.over)?'<button class="btn pri" data-a="tmWa">Tell the client on WhatsApp</button>':''}</div>${c.state!=='done'?'<div class="acts"><button data-a="tmWaStart">Tell the client it’s started</button><button data-a="tmHours">Booked hours</button></div>':''}`}
 </section>`}
 async function setT(o){
   const prev={...(wed.timer||{})};wed.timer={...prev,...o};render();
@@ -1139,6 +1144,106 @@ setInterval(()=>{
   if(c.state==='run'){el.textContent=tmBig(c);const w=$('#tmw');if(w)w.textContent=hm(c.worked)}
   const e=$('#tmeta');if(e&&c.eta)e.textContent=clk(c.eta);
 },1000);
+/* ---- Freelance: people who hire you as a second shooter. Each has a private link (?h=) to send you jobs ---- */
+let fcl=[],fjobs=[],freeErr=false,hz=null,hzSent='';
+const FREE='Freelance / Second Shooting';
+const isFree=w=>etype(w)===FREE;
+const hLink=c=>location.origin+location.pathname+'?h='+c.token;
+async function refreshFree(){
+  const a=await sb.from('freelance_clients').select('*').order('name'),b=await sb.from('freelance_jobs').select('*').neq('status','declined').order('job_date');
+  fcl=a.error?[]:(a.data||[]);fjobs=b.error?[]:(b.data||[]);freeErr=!!(a.error||b.error);
+}
+function fjCard(j){
+  const c=fcl.find(x=>x.id===j.client_id)||{};
+  return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(j.title)}</div><div class="sub">${esc(c.name||'Freelance')} · ${fmtD(j.job_date)}${j.start_time?' · starts '+esc(j.start_time):''}</div>
+<div><span class="tag approved">New request</span>${j.hours?`<span class="tag">${esc(j.hours)} hours</span>`:''}</div>
+<div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px;margin-top:10px">${esc([j.venue,j.address,j.postcode].filter(Boolean).join(', '))}</div>
+${j.notes?`<p class="ntx" style="font-size:14px;color:#bdb8b0">${esc(j.notes)}</p>`:''}
+<div class="acts"><button data-a="fjAccept" data-id="${j.id}">Accept · create job</button><button data-a="fjDecline" data-id="${j.id}">Decline</button></div></div>`}
+function freeView(){
+  const nw=fjobs.filter(j=>j.status==='new'),ev=weds.filter(isFree),up=ev.filter(w=>['pending','confirmed'].includes(stg(w))),past=ev.filter(w=>!up.includes(w)).reverse();
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Freelance</h1><div class="meta">Second shooting and hired work</div>
+${freeErr?'<p class="intro" style="margin-top:16px">Freelance isn’t set up yet. Run the freelance SQL in Supabase once, then refresh this page.</p>':''}
+${nw.length?`<h2>New requests · ${nw.length}</h2>${nw.map(fjCard).join('')}`:''}
+<h2>Upcoming jobs</h2>
+${up.length?up.map(evCard).join(''):'<p class="empty">No upcoming freelance jobs.</p>'}
+<div class="cta"><button class="btn" data-a="newFree">+ Add a job yourself</button></div>
+${past.length?`<h2>Past jobs</h2>${past.map(evCard).join('')}`:''}
+<h2>Who you work for</h2>
+<p class="intro">Each person gets their own booking link. They fill in the event, date, start time and address, and it arrives here as a new request.</p>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFc">+ Add a person</button></div>
+<div>${fcl.length?fcl.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div><div class="sub">${c.hourly_rate!=null?gbp(c.hourly_rate)+' per hour':'No hourly rate set'}${c.phone?' · '+esc(c.phone):''}</div>${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="copyFc" data-id="${c.id}">Copy booking link</button><button data-a="waFc" data-id="${c.id}">Send link on WhatsApp</button><button data-a="editFc" data-id="${c.id}">Edit</button><button data-a="delFc" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No one added yet.</p>'}</div>`}
+function openFcForm(id){
+  const c=id?fcl.find(x=>x.id===id):null,d=c||{name:'',phone:'',hourly_rate:'',note:''};
+  ui.modal={type:'fc',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${c?'Edit '+esc(c.name):'Add a person you work for'}</h3>
+<div class="f"><span class="l">Name or business</span><input id="fcn" maxlength="120" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">WhatsApp or phone number</span><input id="fcp" type="tel" maxlength="40" placeholder="07…" value="${esc(d.phone||'')}"></div>
+<div class="f"><span class="l">Your hourly rate for them, in £</span><input id="fcr" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.hourly_rate??'')}"></div>
+<div class="f"><span class="l">Private note (optional)</span><textarea id="fco" rows="2" maxlength="300">${esc(d.note||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveFc">Save</button></div></div></div>`;
+}
+async function saveFc(){
+  const name=$('#fcn').value.trim();
+  if(!name){$('#fcn').classList.add('err');$('#fcn').focus();return}
+  const r=parseFloat($('#fcr').value),o={name,phone:$('#fcp').value.trim(),hourly_rate:r>=0?r:null,note:$('#fco').value.trim()},id=ui.modal.id;
+  const{error}=id?await sb.from('freelance_clients').update(o).eq('id',id):await sb.from('freelance_clients').insert(o);
+  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the freelance SQL in Supabase first, then refresh.':'Could not save: '+error.message);
+  closeM();await refreshFree();render();
+}
+async function acceptFj(id){
+  const j=fjobs.find(x=>x.id===id);if(!j)return;
+  const c=fcl.find(x=>x.id===j.client_id)||{};
+  const{data,error}=await sb.from('weddings').insert({couple:(c.name?c.name+' · ':'')+j.title,wedding_date:j.job_date||null,city:j.postcode||null,services:'Second shooter',event_type:FREE,stage:'confirmed'}).select().single();
+  if(error)return toast('Could not create the job: '+error.message);
+  const addr=[j.address,j.postcode].filter(Boolean).join(', ');
+  if(addr||j.venue)await sb.from('wedding_locations').insert({wedding_id:data.id,name:j.venue||'Location',address:addr,arrive_time:j.start_time||''});
+  if(j.start_time)await sb.from('timeline_items').insert({wedding_id:data.id,at_time:j.start_time,title:'Start',location:j.venue||''});
+  const hrs=parseFloat(j.hours),rate=c.hourly_rate!=null?Number(c.hourly_rate):null;
+  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:c.name||'',client_phone:c.phone||'',...(rate!=null?{hourly_rate:rate}:{}),...(hrs>0?{hours:hrs}:{}),...(hrs>0&&rate!=null?{price:Math.round(hrs*rate*100)/100}:{})});
+  if(j.notes)await sb.from('wedding_notes').upsert({wedding_id:data.id,private_note:'From '+(c.name||'the booking link')+':\n'+j.notes});
+  await sb.from('freelance_jobs').update({status:'accepted',wedding_id:data.id}).eq('id',id);
+  j.status='accepted';toast('Job created');openWedding(data.id);
+}
+/* The page a hirer sees at ?h=: add a job, see the jobs already sent */
+async function loadHirer(){
+  const{data,error}=await sb.rpc('hirer_get',{p_token:HTOKEN});
+  if(error||!data){if(!hz)setApp('<div class="login"><div class="brand">ZEMA PRODUCTION</div><h2>This link isn’t working</h2><p class="meta">Please ask Zema Production for a new one.</p></div>');return}
+  hz=data;setApp(hirerView());
+}
+function hirerView(){
+  const j=hz.jobs||[],F=(l,id,type,ph,x)=>`<div class="f"><span class="l">${l}</span><input id="${id}" type="${type}" maxlength="160" placeholder="${ph||''}" ${x||''}></div>`;
+  const stat=x=>x.status==='new'?'Sent · waiting for confirmation':x.stage==='delivered'?'Completed':x.stage==='post'?'Shoot done':'Confirmed';
+  return`<div class="brand">ZEMA PRODUCTION · FREELANCE</div><h1>Book a shoot</h1><div class="meta">${esc(hz.name||'')}</div>
+${hzSent?`<section class="card ok" style="margin-top:24px"><div class="lbl">Booking sent</div><p class="intro" style="margin:10px 0 16px">Thank you. It isn’t confirmed until Zema Production accepts it. To make sure it’s seen straight away, send the same details on WhatsApp.</p><a class="btn fill" style="width:100%" href="${esc(waLink(hzSent))}" target="_blank" rel="noopener">Send on WhatsApp</a></section>`:''}
+<h2>New booking</h2>
+<section class="card">
+${F('What is the event?','hjt','text','e.g. Smith wedding, second shooter')}
+${F('Date','hjd','date','','min="'+today()+'"')}
+${F('Start time','hjs','time')}
+${F('How many hours, if you know','hjh','number','','inputmode="decimal" min="0" step="0.5"')}
+${F('Venue name','hjv','text','e.g. St Mary’s Church')}
+${F('Address','hja','text','Street and town')}
+${F('Postcode','hjp','text','SW1A 1AA','autocapitalize="characters" style="max-width:190px"')}
+<div class="f"><span class="l">Anything else (optional)</span><textarea id="hjn" rows="3" maxlength="1000" placeholder="Dress code, parking, what you need covered."></textarea></div>
+<div class="bad" id="hjerr"></div><button class="btn fill" style="width:100%" data-a="hjSend">Send booking</button></section>
+<h2>Your bookings</h2>
+${j.length?j.map(x=>`<div class="g"><div class="tm" style="width:auto;min-width:54px">${esc(x.start_time||'—')}</div><div class="bd"><div class="nm">${esc(x.title)}</div><div class="sub">${fmtD(x.job_date)} · ${stat(x)}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:13px">${esc([x.venue,x.address,x.postcode].filter(Boolean).join(', '))}</div>${x.link?`<a class="lnk" href="${esc(location.pathname+'?w='+x.link+'&s=overview')}">Open booking · timer and invoice</a>`:''}</div></div>`).join(''):'<p class="empty">Nothing sent yet.</p>'}
+<footer><span>Private booking link · Zema Production</span></footer>`}
+async function hjSend(){
+  const v=id=>$('#'+id).value.trim(),err=m=>{$('#hjerr').textContent=m},p={title:v('hjt'),job_date:v('hjd'),start_time:v('hjs').slice(0,5),hours:v('hjh'),venue:v('hjv'),address:v('hja'),postcode:v('hjp').toUpperCase().replace(/\s+/g,' '),notes:v('hjn')};
+  if(!p.title)return err('Please say what the event is.');
+  if(!p.job_date)return err('Please add the date.');
+  if(!p.start_time)return err('Please add the start time.');
+  if(p.address.length<5)return err('Please add the address.');
+  if(!/^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/.test(p.postcode))return err('Please add a valid postcode.');
+  err('Sending…');
+  const{error}=await sb.rpc('hirer_add_job',{p_token:HTOKEN,p});
+  if(error)return err(error.message||'Could not send. Please try again.');
+  hzSent=['Freelance booking for Zema Production from '+(hz.name||''),'',p.title,'Date: '+fmtD(p.job_date),'Start: '+p.start_time,p.hours&&('Hours: '+p.hours),'Where: '+[p.venue,p.address,p.postcode].filter(Boolean).join(', '),p.notes&&('Note: '+p.notes)].filter(x=>x!==''&&x!==false&&x!==undefined||x==='').join('\n');
+  await loadHirer();scrollTo(0,0);
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1262,8 +1367,8 @@ async function doApprove(){
 }
 
 /* ---- Wedding form (new / edit) ---- */
-function openWForm(id,past){
-  const w=id?(wed&&wed.id===id?wed:weds.find(x=>x.id===id)):null,d=w||{couple:'',wedding_date:'',city:'London',services:'Photo + Video',event_type:'Wedding'};
+function openWForm(id,past,ty){
+  const w=id?(wed&&wed.id===id?wed:weds.find(x=>x.id===id)):null,d=w||{couple:'',wedding_date:'',city:'London',services:ty?'Second shooter':'Photo + Video',event_type:ty||'Wedding'};
   ui.modal={type:'wform',id,past:!!past};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${w?'Edit event':past?'Add a past event':'New event'}</h3>
 ${past?'<p class="intro">For events you have already completed. It is saved as Delivered and counts in your yearly totals.</p>':''}
@@ -1646,6 +1751,18 @@ document.addEventListener('click',async e=>{
   else if(a==='tmWaStart'&&!TOKEN){const c=tmCalc();if(!c)return;const ph=waNum(wed.bill&&wed.bill.client_phone),lines=['Your booking with Zema Production has started.','','Started: '+clk(c.s),c.bk!=null?'Booked: '+hm(c.bk*60000):null,c.eta?'Expected finish: '+clk(c.eta):null,'','You can follow your booking live here:',location.origin+location.pathname+'?w='+wed.share_token+'&s=overview'].filter(x=>x!==null);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(lines.join('\n')),'_blank')}
   else if(a==='tmWaDone'&&!TOKEN){const c=tmCalc();if(!c)return;const ph=waNum(wed.bill&&wed.bill.client_phone),lines=['Your booking with Zema Production is now finished. Thank you!','','Started: '+fmtDT(c.s),'Finished: '+fmtDT(c.e),'Time worked: '+hm(c.worked),c.bk!=null?'Booked: '+hm(c.bk*60000):null,c.pz>=60000?'Paused in total: '+hm(c.pz):null,c.over?'Over the booked time: '+hm(c.left):null,'','You can see the full record here:',location.origin+location.pathname+'?w='+wed.share_token+'&s=overview'].filter(x=>x!==null);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(lines.join('\n')),'_blank')}
   else if(a==='tmWa'&&!TOKEN){const c=tmCalc(),ph=waNum(wed.bill&&wed.bill.client_phone);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(c&&c.over?'Your booking with Zema Production has reached its booked time. Let me know if you’d like to extend.':`Your booking with Zema Production is due to end at ${c&&c.eta?clk(c.eta):'the booked time'}. Let me know if you’d like to extend.`),'_blank')}
+  else if(a==='freeV'&&!TOKEN){ui.view='free';render();scrollTo(0,0)}
+  else if(a==='addFc'&&!TOKEN)openFcForm();
+  else if(a==='editFc'&&!TOKEN)openFcForm(id);
+  else if(a==='saveFc'&&!TOKEN)saveFc();
+  else if(a==='delFc'&&!TOKEN)ask('Delete this person? Their booking link stops working. Jobs you already accepted stay as events.',async()=>{const{error}=await sb.from('freelance_clients').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);await refreshFree();render()});
+  else if(a==='copyFc'&&!TOKEN){const u=hLink(fcl.find(x=>x.id===id));(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Booking link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='waFc'&&!TOKEN){const c=fcl.find(x=>x.id===id);window.open('https://wa.me/'+waNum(c.phone)+'?text='+encodeURIComponent(`Hi ${c.name}, here is your booking link for Zema Production. Add each job there with the date, start time and address:\n${hLink(c)}`),'_blank')}
+  else if(a==='fjAccept'&&!TOKEN)acceptFj(id);
+  else if(a==='fjDecline'&&!TOKEN)ask('Decline this request?',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render()});
+  else if(a==='newFree'&&!TOKEN)openWForm(null,false,FREE);
+  else if(a==='hjSend'&&HTOKEN)hjSend();
+  else if(a==='tmBill'&&!TOKEN){const c=tmCalc(),r=Number(wed.bill.hourly_rate);if(!c||!(r>0))return toast('Set an hourly rate on the Payments tab first.');const h=Math.max(.25,Math.round(c.worked/900000)/4);if(await setB({hours:h,price:Math.round(h*r*100)/100}))toast(h+' hours at '+gbp(r)+' added to the invoice')}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
