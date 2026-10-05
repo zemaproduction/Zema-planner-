@@ -1099,7 +1099,7 @@ function cineBody(){
 <div style="margin-top:14px"><div class="brand">Now playing</div><div class="nm" style="font-size:28px;margin-top:6px">${esc(cur.title||'Film')}</div>${cur.desc?`<p class="intro" style="margin:6px 0 0">${esc(cur.desc)}</p>`:''}<p style="margin:10px 0 0"><button class="lnk" data-a="cstop">Close player</button></p></div>`
 :`<div class="hero" style="${bgi(hero)}"><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${d.expires_on?`<div class="sub" style="margin-top:8px;color:var(--ac)">Available until ${fmtD(d.expires_on)}</div>`:''}${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">▶ Play ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
 ${f.length?`<h2>Films</h2><div class="rowx">${f.map((x,i)=>`<button class="fc ${pi===i?'on':''}" data-a="cplay" data-i="${i}"><div class="th" style="${bgi(fThumb(x))}"></div><b>${esc(x.title||'Film')}</b><small>${esc([x.dur,pi===i?'Now playing':''].filter(Boolean).join(' · '))}</small></button>`).join('')}</div>`:''}
-${g.length?`<h2>Photos</h2><div class="cgrid">${g.filter(x=>safeU(x.url)).map(x=>`<a class="gcard" href="${esc(safeU(x.url))}" target="_blank" rel="noopener" style="${bgi(safeU(x.cover))}"><span><b class="nm">${esc(x.title||'Photo gallery')}</b><small>Open gallery</small></span></a>`).join('')}</div>`:''}
+${g.length?`<h2>Photos</h2><div class="cgrid">${g.filter(x=>safeU(x.url)).map(x=>`<a class="gcard" href="${esc(safeU(x.url))}" target="_blank" rel="noopener" style="${bgi(safeU(x.cover))}"><span><b class="nm">${esc(x.title||'Photo gallery')}</b><small>Open gallery</small></span></a>`).join('')}</div>${g.filter(x=>x.pw&&safeU(x.url)).map(x=>pwLine('Password for '+esc(x.title||'the gallery'),x.pw)).join('')}`:''}
 ${!f.length&&!g.length?'<p class="empty">Nothing has been added yet.</p>':''}`}
 function cineView(){return`<div class="top2 noprint"><button class="btn" data-a="cineBack">← Back</button> <button class="btn" data-a="cineEdit">Edit delivery</button></div>${cineBody()}`}
 function cineGrid(){
@@ -1136,7 +1136,7 @@ ${selCard()}
 <div>${d.films.length?d.films.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(fThumb(x))}"></div><div class="bd"><div class="nm">${esc(x.title||'Film')}</div><div class="sub">${esc(x.dur||'')}${ytId(x.url)?'':' YouTube link not recognised'}</div>${x.desc?`<div class="note fam" style="font-style:normal">${esc(x.desc)}</div>`:''}<div class="acts">${mv('Film',i)}</div></div></div>`).join(''):'<p class="empty">No films. Leave this empty for a photo-only delivery.</p>'}</div>
 <h2>Photo galleries</h2>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addGal">+ Add gallery</button></div>
-<div>${d.galleries.length?d.galleries.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(safeU(x.cover))}"></div><div class="bd"><div class="nm">${esc(x.title||'Photo gallery')}</div><div class="sub" style="text-transform:none;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.url||'')}</div><div class="acts">${mv('Gal',i)}</div></div></div>`).join(''):'<p class="empty">No galleries. Leave this empty for a video-only delivery.</p>'}</div>`}
+<div>${d.galleries.length?d.galleries.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(safeU(x.cover))}"></div><div class="bd"><div class="nm">${esc(x.title||'Photo gallery')}</div><div class="sub" style="text-transform:none;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.url||'')}</div>${x.pw?`<div class="sub">Password: ${esc(x.pw)}</div>`:''}<div class="acts">${mv('Gal',i)}</div></div></div>`).join(''):'<p class="empty">No galleries. Leave this empty for a video-only delivery.</p>'}</div>`}
 async function setD(o){
   const prev={...(wed.del||{})};wed.del={...prev,...o};render();
   const{error}=await sb.from('event_delivery').upsert({wedding_id:wed.id,...o,updated_at:new Date().toISOString()});
@@ -1179,6 +1179,7 @@ function openGalForm(i){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit gallery':'Add gallery'}</h3>
 <div class="f"><span class="l">Title</span><input id="gt" maxlength="80" value="${esc(d.title||'')}"></div>
 <div class="f"><span class="l">Gallery link</span><input id="gu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…pixieset.com/…" value="${esc(d.url||'')}"></div>
+<div class="f"><span class="l">Gallery password, if it has one</span><input id="gw" maxlength="80" autocapitalize="none" autocomplete="off" value="${esc(d.pw||'')}"></div>
 <div class="f"><span class="l">Cover image (optional)</span><input id="gc" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc(d.cover||'')}">${upBtn('gc')}</div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveGal">Save gallery</button></div></div></div>`;
 }
@@ -1638,11 +1639,13 @@ const selLink=w=>location.origin+location.pathname+'?w='+w.share_token+'&s=overv
 const selAskMsg=(w,s)=>`Hello, your photos from ${w.couple} are uploaded and ready to view. Please choose your ${s.pick_count||200} favourites${s.purpose?' for '+s.purpose:''}${s.deadline?' by '+fmtD(s.deadline):''}.\n\nOpen your page to view the gallery, and tap “I’ve finished choosing” when you’re done:\n${selLink(w)}`;
 const selRemMsg=(w,s)=>`Hello, a gentle reminder to choose your ${s.pick_count||200} favourite photos${s.purpose?' for '+s.purpose:''}${s.deadline?(s.deadline<today()?'. The date we agreed was ':' by ')+fmtD(s.deadline):''}.\n\nYou can find the gallery here, and tap “I’ve finished choosing” when you’re done:\n${selLink(w)}`;
 const selTxt=s=>{const st=selState(s);return st==='done'?'Finished on '+fmtD(String(s.done_at).slice(0,10)):st==='wait'?'Waiting for the client · asked '+(d=>d<=0?'today':d+' day'+(d==1?'':'s')+' ago')(-daysTo(String(s.asked_at).slice(0,10)))+(s.deadline?(s.deadline<today()?' · overdue since ':' · due ')+fmtD(s.deadline):''):s&&s.gallery_url?'Set up, not sent yet':'Not set up'};
+const pwLine=(L,P)=>P?`<p class="intro" style="margin:12px 0 0;font-size:14px">${L}: <b style="color:var(--tx);font-weight:500;letter-spacing:.04em">${esc(P)}</b> <button class="lnk" style="font-size:13px;margin-left:8px" data-a="cpy" data-v="${esc(P)}">Copy</button></p>`:'';
 function selCard(){
   if(wed.selErr)return'';
   const s=wed.sel,st=selState(s);
   return`<h2>Photo selection</h2><section class="card ${st==='wait'?'ok':''}"><div class="lbl">${st==='done'?'Finished':st==='wait'?'Waiting for the client':'Client chooses their favourites'}</div>
 <p class="intro" style="margin:10px 0 0">${s&&s.gallery_url?esc(selTxt(s))+'. '+(s.pick_count||200)+' photos'+(s.purpose?' for '+esc(s.purpose):'')+'.':'Add the gallery link and how many photos the client should pick. They get a card on their link with the gallery and an “I’ve finished choosing” button.'}</p>
+${s&&s.gallery_password?pwLine('Gallery password',s.gallery_password):''}
 ${st==='done'&&s.client_note?`<p class="ntx" style="font-size:14px"><span class="lbl" style="display:block;margin-bottom:4px">Note from the client</span>${esc(s.client_note)}</p>`:''}
 <div class="cta" style="margin-bottom:0">${!s||!s.gallery_url?'<button class="btn fill" data-a="selEdit">Set up photo selection</button>':st==='none'?'<button class="btn fill" data-a="selAsk">Ask the client on WhatsApp</button>':st==='wait'?'<button class="btn fill" data-a="selRem">Remind on WhatsApp</button>':`<a class="btn fill" href="${esc(safeU(s.gallery_url))}" target="_blank" rel="noopener">Open the gallery</a>`}</div>
 ${s&&s.gallery_url?`<div class="acts"><button data-a="selEdit">Edit</button>${st==='wait'?'<button data-a="selDone">Mark as finished</button><button data-a="selAsk">Send the request again</button>':''}${st==='done'?'<button data-a="selReopen">Reopen</button>':''}<button data-a="selClear">Remove</button></div>`:''}</section>`}
@@ -1651,6 +1654,7 @@ function openSelForm(){
   ui.modal={type:'sel'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Photo selection</h3>
 <div class="f"><span class="l">Gallery link</span><input id="sgu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…pixieset.com/…" value="${esc(s.gallery_url||'')}"></div>
+<div class="f"><span class="l">Gallery password, if it has one</span><input id="sgw" maxlength="80" autocapitalize="none" autocomplete="off" value="${esc(s.gallery_password||'')}"></div>
 <div class="f"><span class="l">How many photos should they pick</span><input id="sgn" type="number" inputmode="numeric" min="1" step="1" value="${esc(s.pick_count||200)}"></div>
 <div class="f"><span class="l">What the picks are for</span><input id="sgp" maxlength="60" placeholder="your album" value="${esc(s.purpose??'your album')}"></div>
 <div class="f"><span class="l">Deadline (optional)</span><input id="sgd" type="date" value="${esc(s.deadline||'')}"></div>
@@ -1668,7 +1672,7 @@ function clSel(){
   return`<section class="card ok" style="margin-bottom:16px"><div class="lbl">${done?'Photo selection · finished':'Choose your photos'}</div>
 <div class="nm" style="font-size:24px;margin-top:10px">${done?'Thank you, your choices are in':'Pick your '+(s.pick_count||200)+' favourites'}</div>
 <p class="intro" style="margin:8px 0 16px">${done?'You told us you finished on '+fmtD(String(s.done_at).slice(0,10))+'. If you need to change anything, message us.':'Your photos are ready. Open the gallery and mark your '+(s.pick_count||200)+' favourite photos'+(s.purpose?' for '+esc(s.purpose):'')+(s.deadline?', by '+fmtD(s.deadline):'')+'. When you’re done, come back here and tell us.'}</p>
-${safeU(s.gallery_url)?`<a class="btn ${done?'':'fill'}" style="width:100%" href="${esc(safeU(s.gallery_url))}" target="_blank" rel="noopener">Open the gallery</a>`:''}
+${safeU(s.gallery_url)?`<a class="btn ${done?'':'fill'}" style="width:100%" href="${esc(safeU(s.gallery_url))}" target="_blank" rel="noopener">Open the gallery</a>`:''}${pwLine('Gallery password',s.gallery_password)}
 ${done?(s.client_note?`<p class="ntx" style="font-size:14px"><span class="lbl" style="display:block;margin-bottom:4px">Your note</span>${esc(s.client_note)}</p>`:''):`<div class="f" style="margin-top:18px"><span class="l">Anything to tell us about your choices (optional)</span><textarea id="csn" rows="2" maxlength="600" placeholder="e.g. Please use photo 143 for the cover."></textarea></div><button class="btn pri" style="width:100%" data-a="cSelDone">I’ve finished choosing</button>`}</section>`}
 /* ---- Post-production page: every event being edited, in one place ---- */
 function postView(){
@@ -2056,6 +2060,7 @@ document.addEventListener('click',async e=>{
   if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
+  else if(a==='cpy'){const v=t.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Password copied'),()=>prompt('Copy this:',v))}
   else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else loadDash(BACKN[ui.from]?ui.from:'dash')}
   else if(a==='togHideMoney'){hideMoney=!hideMoney;try{localStorage.setItem('zemaHideMoney',hideMoney?'1':'0')}catch(_){}render()}
   else if(a==='out')await sb.auth.signOut();
@@ -2178,7 +2183,7 @@ document.addEventListener('click',async e=>{
   else if((a==='FilmUp'||a==='FilmDown'||a==='GalUp'||a==='GalDown')&&!TOKEN){const k=a.startsWith('Film')?'films':'galleries',l=[...delOf(wed.del)[k]],i=+t.dataset.i,j=i+(a.endsWith('Up')?-1:1);if(l[j]){[l[i],l[j]]=[l[j],l[i]];setD({[k]:l})}}
   else if(a==='addGal'&&!TOKEN)openGalForm();
   else if(a==='editGal'&&!TOKEN)openGalForm(+t.dataset.i);
-  else if(a==='saveGal'&&!TOKEN){const o={title:$('#gt').value.trim()||'Photo gallery',url:safeU($('#gu').value),cover:safeU($('#gc').value)};if(!o.url){$('#gu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const l=[...delOf(wed.del).galleries],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({galleries:l})}
+  else if(a==='saveGal'&&!TOKEN){const o={title:$('#gt').value.trim()||'Photo gallery',url:safeU($('#gu').value),pw:$('#gw').value.trim(),cover:safeU($('#gc').value)};if(!o.url){$('#gu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const l=[...delOf(wed.del).galleries],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({galleries:l})}
   else if(a==='delGal'&&!TOKEN){const i=+t.dataset.i;ask('Remove this gallery from the delivery?',()=>setD({galleries:delOf(wed.del).galleries.filter((_,j)=>j!==i)}))}
   else if(a==='editHero'&&!TOKEN)openHeroForm();
   else if(a==='saveHero'&&!TOKEN){const v=$('#hu').value.trim();if(v&&!safeU(v)){$('#hu').classList.add('err');return toast('The image link must start with https://')}closeM();setD({hero:safeU(v)})}
@@ -2265,7 +2270,7 @@ document.addEventListener('click',async e=>{
   else if(a==='postV'&&!TOKEN){ui.view='post';render();scrollTo(0,0)}
   else if(a==='postDel'&&!TOKEN){await openWedding(id);ui.sec='del';render()}
   else if(a==='selEdit'&&!TOKEN)openSelForm();
-  else if(a==='selSave'&&!TOKEN){const u=safeU($('#sgu').value);if(!u){$('#sgu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const o={gallery_url:u,pick_count:Math.max(1,parseInt($('#sgn').value)||200),purpose:$('#sgp').value.trim(),deadline:$('#sgd').value||null};closeM();setSel(o)}
+  else if(a==='selSave'&&!TOKEN){const u=safeU($('#sgu').value);if(!u){$('#sgu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const o={gallery_url:u,gallery_password:$('#sgw').value.trim(),pick_count:Math.max(1,parseInt($('#sgn').value)||200),purpose:$('#sgp').value.trim(),deadline:$('#sgd').value||null};closeM();setSel(o)}
   else if(a==='selAsk'&&!TOKEN){const s=wed.sel;window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true})}
   else if(a==='selRem'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selRemMsg(wed,wed.sel)),'_blank');
   else if(a==='selRemW'&&!TOKEN){const w=weds.find(x=>x.id===id),s=sels.find(x=>x.wedding_id===id);if(w&&s)window.open('https://wa.me/'+waNum(B(w).client_phone)+'?text='+encodeURIComponent(selRemMsg(w,s)),'_blank')}
