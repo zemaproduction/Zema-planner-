@@ -575,7 +575,9 @@ function dashView(){
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
   const fl=STG[ui.flt]?W.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${W.length} event${W.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="copyBk">Copy booking form link</button><button class="btn" data-a="crewV">Crew</button><button class="btn pri" data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button class="btn pri" data-a="cineV">Cinema</button><button class="btn" data-a="calV">Phone calendar</button></div>
+<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
+<nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
+<div style="height:20px"></div>
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
@@ -583,7 +585,7 @@ ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “N
 ${late.length?`<h2>Date passed</h2><p class="intro">These events have happened but are still marked Pending or Confirmed. Open each one and move it to Post-production or Delivered.</p>${late.map(evCard).join('')}`:''}
 ${post.length?`<h2>In post-production</h2>${post.map(evCard).join('')}`:''}
 ${del.length?`<h2>Delivered</h2>${ui.showDel?del.map(evCard).join(''):`<div class="cta"><button class="btn" data-a="showDel">Show ${del.length} delivered event${del.length==1?'':'s'}</button></div>`}`:''}`}
-<footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="calV">Phone calendar</button><button data-a="invSet">Invoice settings</button><button data-a="out">Sign out</button></span></footer>`}
+<footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="out">Sign out</button></span></footer>`}
 /* ---- Progress: events done and money received per year ---- */
 function yearView(){
   const cy=new Date().getFullYear(),py=weds.flatMap(w=>(w.payments||[]).map(p=>+String(p.paid_on||'').slice(0,4))).filter(Boolean);
@@ -1259,6 +1261,17 @@ async function openCal(){
 <p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
 <div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
 }
+/* Dashboard menu: the less-used tools, kept off the home screen */
+function openMenu(){
+  ui.modal={type:'menu'};
+  const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Menu</h3>
+<div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
+${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}
+<div class="lbl" style="margin:26px 0 8px">Settings</div>
+${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+<div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1627,7 +1640,9 @@ document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-a]');
   if(!t){if(e.target.classList.contains('ov'))closeM();return}
   const a=t.dataset.a,id=t.dataset.id,g=id&&wed&&wed.groups&&G().find(x=>x.id===id),ti=id&&wed&&wed.timeline&&T().find(x=>x.id===id),mi=id&&wed&&wed.musts&&M().find(x=>x.id===id),pi=id&&wed&&wed.party&&P().find(x=>x.id===id),li=id&&wed&&wed.places&&L().find(x=>x.id===id);
+  if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
+  else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='out')await sb.auth.signOut();
   else if(a==='retry')reload();
   else if(a==='newW')openWForm();
