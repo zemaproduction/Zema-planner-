@@ -491,6 +491,7 @@ async function loadDash(view){
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
+  {const ids=data.filter(w=>w.wedding_date===today()).map(w=>w.id);if(ids.length){const q=await sb.from('event_timer').select('*').in('wedding_id',ids);dtimers=q.error?[]:(q.data||[])}else dtimers=[]}
   const g0=!ui.went&&QS.get('go');ui.went=1;
   weds=data;wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
@@ -608,6 +609,7 @@ function dashView(){
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
 <nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="postV">Post-production${(n=>n?' · '+n:'')(weds.filter(w=>stg(w)==='post').length)}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
+${todayBlock()}
 ${(d=>d.length?`<h2>Client payments due · ${d.length}</h2>${d.map(({w,r})=>`<div class="g"><div class="bd"><div class="nm">${esc(w.couple)}</div><div class="sub">${r.label} · ${hideMoney?'£ ••••':gbp(r.left)} · <span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'overdue since ':'due '}${fmtD(r.due)}</span></div><div class="acts"><button data-a="payRem" data-id="${w.id}" data-l="${esc(r.label)}" data-v="${r.left}" data-d="${r.due}">Remind on WhatsApp</button><button data-a="openW" data-id="${w.id}">Open</button></div></div></div>`).join('')}<div style="height:14px"></div>`:'')(payDues())}
 ${(d=>d.length?`<h2>Photo selections finished</h2>${d.map(x=>{const w=weds.find(q=>q.id===x.wedding_id);return w?`<button class="or" data-a="selNote" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">Finished choosing</span></button>`:''}).join('')}<div style="height:14px"></div>`:'')(sels.filter(x=>x.done_at&&x.seen===false))}
 ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')}<div style="height:14px"></div>`:''}
@@ -1592,6 +1594,20 @@ async function saveCost(){
   if(id)Object.assign(old,r.data);else wed.costs=[...K(),r.data];
   closeM();render();
 }
+/* ---- Today on the home page: today's events with the live timer ---- */
+let dtimers=[];
+function dcalc(t){
+  if(!t||!t.started_at)return null;
+  const now=Date.now(),s=Date.parse(t.started_at),e=t.ended_at?Date.parse(t.ended_at):now,pz=Number(t.paused_ms||0)+(t.paused_at&&!t.ended_at?Math.max(0,now-Date.parse(t.paused_at)):0),worked=Math.max(0,e-s-pz),bk=t.booked_minutes!=null?Number(t.booked_minutes):null,left=bk!=null?bk*60000-worked:null;
+  return{s,worked,left,bk,state:t.ended_at?'done':t.paused_at?'paused':'run',over:left!=null&&left<0};
+}
+function todayBlock(){
+  const td=weds.filter(w=>w.wedding_date===today());if(!td.length)return'';
+  return`<h2>Today</h2>${td.map(w=>{const c=dcalc(dtimers.find(x=>x.wedding_id===w.id));
+    return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(w.couple)}</div><div class="sub">${esc(etype(w))} · ${STG[stg(w)]}${w.city?' · '+esc(w.city):''}</div>
+${c?`<div class="lbl" style="margin-top:14px">${c.state==='done'?'Finished · time worked':c.state==='paused'?'Timer paused':c.left!=null?(c.over?'Over the booked time':'Time left'):'Time worked'} · started ${clk(c.s)}</div><div class="num" data-tmh="${w.id}" style="margin:6px 0 4px">${tmBig(c)}</div>`:isWed(w)?'':'<div class="sub" style="margin-top:10px">Timer not started yet</div>'}
+<div class="cta" style="margin:14px 0 0"><button class="btn fill" data-a="openDay" data-id="${w.id}">${isWed(w)?'Open Wedding Day Mode':c&&c.state!=='done'?'Open the timer':'Open Day Mode'}</button><button class="btn" data-a="openW" data-id="${w.id}">Open event</button></div></div>`}).join('')}<div style="height:14px"></div>`}
+setInterval(()=>{document.querySelectorAll('[data-tmh]').forEach(el=>{const c=dcalc(dtimers.find(x=>x.wedding_id===el.dataset.tmh));if(c&&c.state==='run')el.textContent=tmBig(c)})},1000);
 /* ---- Client payments due (from payment-plan due dates) ---- */
 function payDues(){
   const lim=addDays(today(),7),out=[];
@@ -2108,6 +2124,7 @@ document.addEventListener('click',async e=>{
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='openDay'&&!TOKEN){await openWedding(id);ui.day=true;render();scrollTo(0,0)}
   else if(a==='iconV'&&!TOKEN)openIconForm();
   else if(a==='copyGo'&&!TOKEN){const u=location.origin+location.pathname+'?go='+t.dataset.k;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Open it in Safari, then Share, Add to Home Screen.'),()=>prompt('Copy this link:',u))}
   else if(a==='cpy'){const v=t.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Password copied'),()=>prompt('Copy this:',v))}
