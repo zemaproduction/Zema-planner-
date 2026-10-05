@@ -940,7 +940,8 @@ function crewListView(){
 <div class="brand">ZEMA PRODUCTION</div><h1>Crew</h1><div class="meta">Second shooters and helpers</div>
 ${crewErr?'<p class="intro" style="margin-top:16px">Crew isn’t set up yet. Run the crew SQL in Supabase once, then refresh this page.</p>':''}
 <div class="cta"><button class="btn fill" data-a="addCrew">+ Add crew member</button></div>
-<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>`}
+<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>
+${tplSection()}`}
 function openCrewForm(id){
   const c=id?crew.find(x=>x.id===id):null,d=c||{name:'',phone:'',role:'Second shooter',note:''};
   ui.modal={type:'crew',id};
@@ -951,7 +952,7 @@ function openCrewForm(id){
 <div class="f"><span class="l">Private note (optional)</span><textarea id="ko" rows="2" maxlength="300" placeholder="e.g. Day rate, own equipment.">${esc(d.note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveCrew">Save</button></div></div></div>`;
 }
-async function refreshCrew(){const q=await sb.from('crew').select('*').order('name');crew=q.error?[]:(q.data||[]);crewErr=!!q.error;const n=await sb.from('event_crew').select('id,status,wedding_id,crew(name)').eq('seen',false);cnotes=n.error?[]:(n.data||[])}
+async function refreshCrew(){const q=await sb.from('crew').select('*').order('name');crew=q.error?[]:(q.data||[]);crewErr=!!q.error;const n=await sb.from('event_crew').select('id,status,wedding_id,crew(name)').eq('seen',false);cnotes=n.error?[]:(n.data||[]);const tq=await sb.from('app_content').select('data').eq('key','crew_templates').maybeSingle();if(tq.data&&tq.data.data&&Array.isArray(tq.data.data.list))ctpl=tq.data.data.list}
 async function saveCrew(){
   const name=$('#kn').value.trim();
   if(!name){$('#kn').classList.add('err');$('#kn').focus();return}
@@ -962,6 +963,32 @@ async function saveCrew(){
 }
 const ecStat=x=>x.status==='invited'?'Asked · waiting for an answer':x.status==='declined'?'Declined':'Accepted';
 const askMsg=x=>{const c0=(wed.city||'').trim(),area=/^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i.test(c0)?c0.toUpperCase().replace(/\s*[0-9][A-Z]{2}$/,''):c0;return`Hi ${cName(x)}, are you available for a job with Zema Production?\n\n${etype(wed)} · ${fmtD(wed.wedding_date)}${x.call_time?'\nCall time: '+x.call_time:''}${area?'\nArea: '+area:''}${x.role?'\nRole: '+x.role:''}${x.brief?'\n\n'+x.brief:''}\n\nPlease accept or decline here:\n${cLink(x)}`};
+/* ---- Crew to-do templates: saved lists you pick when adding or asking crew, then edit before sending ---- */
+const CTDEF=[
+{n:'Second shooter · wedding',b:'Smart black outfit. Please arrive 15 minutes before the call time.',t:['Groom getting ready','Guests arriving','Second angle for the ceremony','Reactions during the vows','Wide shot of the confetti exit','Candid guests during the reception','Details: tables, cake and decor','Reactions during the speeches','Second angle for the first dance']},
+{n:'Second videographer',b:'Smart black outfit. Bring spare batteries and cards.',t:['Static wide shot of the ceremony','Audio recorder set and checked before the ceremony','Venue and detail shots','Guests arriving','Second angle for the speeches','Wide shot of the first dance']},
+{n:'Assistant',b:'',t:['Carry and set up the lights','Hold the reflector for portraits','Help gather the family groups','Keep batteries charged and cards labelled','Pack down at the end']}];
+let ctpl=CTDEF;
+async function saveTpl(){const{error}=await sb.from('app_content').upsert({key:'crew_templates',data:{list:ctpl},updated_at:new Date().toISOString()});if(error)toast('Could not save: '+error.message);return!error}
+function tplSection(){return`<h2>To-do templates</h2>
+<p class="intro">Ready-made to-do lists. Pick one when you add or ask crew, then change anything before you send it.</p>
+<div class="cta" style="margin-top:0"><button class="btn" data-a="addTpl">+ Add template</button></div>
+<div>${ctpl.length?ctpl.map((x,i)=>`<div class="g"><div class="bd"><div class="nm">${esc(x.n)}</div><div class="sub">${x.t.length} task${x.t.length==1?'':'s'}</div>${x.b?`<div class="note fam" style="font-style:normal">${esc(x.b)}</div>`:''}<div class="acts"><button data-a="editTpl" data-i="${i}">Edit</button><button data-a="delTpl" data-i="${i}">Delete</button></div></div></div>`).join(''):'<p class="empty">No templates yet.</p>'}</div>`}
+function openTplForm(i){
+  const x=i!=null?ctpl[i]:null,d=x||{n:'',b:'',t:[]};
+  ui.modal={type:'tpl',i};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit template':'Add template'}</h3>
+<div class="f"><span class="l">Template name</span><input id="pn" maxlength="80" placeholder="e.g. Second shooter · christening" value="${esc(d.n)}"></div>
+<div class="f"><span class="l">Note for the crew (optional)</span><textarea id="pb" rows="2" maxlength="600" placeholder="e.g. Dress code, what to bring.">${esc(d.b||'')}</textarea></div>
+<div class="f"><span class="l">To-do list · one task per line</span><textarea id="pt" rows="9" maxlength="2000">${esc(d.t.join('\n'))}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveTplF">Save template</button></div></div></div>`;
+}
+document.addEventListener('change',e=>{
+  if(!e.target||e.target.id!=='etp')return;
+  const x=ctpl[+e.target.value];if(!x)return;
+  $('#ek').value=x.t.join('\n');
+  if(x.b&&!$('#eb').value.trim())$('#eb').value=x.b;
+});
 function crMain(){
   if(wed.ecErr)return`<h2>Crew</h2><p class="empty">Crew isn’t set up in Supabase yet. Run the crew SQL once, then refresh this page.</p>`;
   return`<h2>Crew</h2>
@@ -984,6 +1011,7 @@ ${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
+${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
 <div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
 }
@@ -1968,6 +1996,10 @@ document.addEventListener('click',async e=>{
   else if(a==='cAccept'&&CTOKEN){const{error}=await sb.rpc('crew_respond',{p_token:CTOKEN,p_accept:true});if(error)return toast('Could not save. Check your connection and try again.');await loadCrewPage();scrollTo(0,0)}
   else if(a==='cDecline'&&CTOKEN)ask('Decline this job?',async()=>{const{error}=await sb.rpc('crew_respond',{p_token:CTOKEN,p_accept:false});if(error)return toast('Could not save. Check your connection and try again.');loadCrewPage()});
   else if(a==='crewNote'&&!TOKEN){await sb.from('event_crew').update({seen:true}).eq('wedding_id',id).eq('seen',false);cnotes=cnotes.filter(n=>n.wedding_id!==id);await openWedding(id);ui.sec='crew';render()}
+  else if(a==='addTpl'&&!TOKEN)openTplForm();
+  else if(a==='editTpl'&&!TOKEN)openTplForm(+t.dataset.i);
+  else if(a==='saveTplF'&&!TOKEN){const n=$('#pn').value.trim();if(!n){$('#pn').classList.add('err');$('#pn').focus();return}const o={n,b:$('#pb').value.trim(),t:$('#pt').value.split('\n').map(x=>x.trim()).filter(Boolean)},i=ui.modal.i,old=ctpl;ctpl=[...ctpl];if(i!=null)ctpl[i]=o;else ctpl.push(o);closeM();if(!await saveTpl())ctpl=old;render()}
+  else if(a==='delTpl'&&!TOKEN){const i=+t.dataset.i;ask('Delete this template? Lists already sent to crew are not affected.',async()=>{const old=ctpl;ctpl=ctpl.filter((_,j)=>j!==i);if(!await saveTpl())ctpl=old;render()})}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
