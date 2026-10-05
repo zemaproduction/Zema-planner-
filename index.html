@@ -149,7 +149,7 @@ const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Equipment','Delivery'];
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Crew','Equipment','Payments','Costs','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
@@ -385,7 +385,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Costs','Crew','Equipment','Delivery'];
+const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Crew','Equipment','Payments','Costs','Delivery'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
