@@ -472,7 +472,7 @@ async function loadDash(view){
   if(error)return failView(error);
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
   await refreshCrew();
-  {const q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
+  {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
   weds=data;wed=null;ui.view=view||'dash';ui.day=false;render();
@@ -972,14 +972,18 @@ let dels=[];
 const safeU=u=>/^https:\/\//i.test(String(u||'').trim())?String(u).trim():'';
 const ytId=u=>{const m=String(u||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);return m?m[1]:''};
 const fThumb=f=>safeU(f.cover)||(ytId(f.url)?'https://i.ytimg.com/vi/'+ytId(f.url)+'/hqdefault.jpg':'');
-const delOf=d=>({published:!!(d&&d.published),hero:safeU(d&&d.hero),films:Array.isArray(d&&d.films)?d.films:[],galleries:Array.isArray(d&&d.galleries)?d.galleries:[]});
+const addMonths=(d,n)=>{const x=new Date(d+'T00:00:00'),day=x.getDate();x.setMonth(x.getMonth()+n);if(x.getDate()<day)x.setDate(0);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const delOf=d=>({expires_on:(d&&d.expires_on)||null,expired:!!(d&&d.expired),published:!!(d&&d.published),hero:safeU(d&&d.hero),films:Array.isArray(d&&d.films)?d.films:[],galleries:Array.isArray(d&&d.galleries)?d.galleries:[]});
 const bgi=u=>u?`background-image:url('${esc(u)}')`:'';
 const cineLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=del';
 function cineBody(){
+  if(wed.del&&wed.del.expired)return`<section class="card ok" style="margin-top:8px"><div class="brand">ZEMA CINEMA</div><div class="nm" style="font-size:30px;margin-top:10px">Your access has ended</div>
+<p class="intro" style="margin:10px 0 18px">Your films and photos were available on this page until ${fmtD(wed.del.expires_on)}. To have them back here, get in touch and we’ll arrange it.</p>
+<a class="btn fill" style="width:100%" href="${esc(waLink('Hello Zema Production, I’d like to extend access to the films and photos for '+wed.couple+'.'))}" target="_blank" rel="noopener">Ask about extending</a></section>`;
   const w=wed,d=delOf(w.del),f=d.films,g=d.galleries,pi=ui.play,cur=pi!=null?f[pi]:null,hero=d.hero||(f[0]&&fThumb(f[0]))||(g[0]&&safeU(g[0].cover))||'';
   return`${cur&&ytId(cur.url)?`<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(cur.url)}?autoplay=1&rel=0&playsinline=1" title="${esc(cur.title||'Film')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
 <div style="margin-top:14px"><div class="brand">Now playing</div><div class="nm" style="font-size:28px;margin-top:6px">${esc(cur.title||'Film')}</div>${cur.desc?`<p class="intro" style="margin:6px 0 0">${esc(cur.desc)}</p>`:''}<p style="margin:10px 0 0"><button class="lnk" data-a="cstop">Close player</button></p></div>`
-:`<div class="hero" style="${bgi(hero)}"><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">▶ Play ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
+:`<div class="hero" style="${bgi(hero)}"><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${d.expires_on?`<div class="sub" style="margin-top:8px;color:var(--ac)">Available until ${fmtD(d.expires_on)}</div>`:''}${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">▶ Play ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
 ${f.length?`<h2>Films</h2><div class="rowx">${f.map((x,i)=>`<button class="fc ${pi===i?'on':''}" data-a="cplay" data-i="${i}"><div class="th" style="${bgi(fThumb(x))}"></div><b>${esc(x.title||'Film')}</b><small>${esc([x.dur,pi===i?'Now playing':''].filter(Boolean).join(' · '))}</small></button>`).join('')}</div>`:''}
 ${g.length?`<h2>Photos</h2><div class="cgrid">${g.filter(x=>safeU(x.url)).map(x=>`<a class="gcard" href="${esc(safeU(x.url))}" target="_blank" rel="noopener" style="${bgi(safeU(x.cover))}"><span><b class="nm">${esc(x.title||'Photo gallery')}</b><small>Open gallery</small></span></a>`).join('')}</div>`:''}
 ${!f.length&&!g.length?'<p class="empty">Nothing has been added yet.</p>':''}`}
@@ -988,7 +992,22 @@ function cineGrid(){
   const items=dels.map(d=>({d:delOf(d),w:weds.find(w=>w.id===d.wedding_id)})).filter(x=>x.w&&(x.d.films.length||x.d.galleries.length)).sort((a,b)=>String(b.w.wedding_date||'').localeCompare(String(a.w.wedding_date||'')));
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA CINEMA</div><h1>Cinema</h1><div class="meta">${items.length} collection${items.length==1?'':'s'}</div>
-${items.length?`<div class="cgrid" style="margin-top:26px">${items.map(({d,w})=>{const th=d.hero||(d.films[0]&&fThumb(d.films[0]))||(d.galleries[0]&&safeU(d.galleries[0].cover))||'';return`<button class="fc" style="width:100%" data-a="openCine" data-id="${w.id}"><div class="th" style="${bgi(th)}"></div><b>${esc(w.couple)}</b><small>${esc(etype(w))} · ${fmtD(w.wedding_date)} · ${[d.films.length?d.films.length+' film'+(d.films.length==1?'':'s'):'',d.galleries.length?'photos':''].filter(Boolean).join(' + ')}${d.published?'':' · not published'}</small></button>`}).join('')}</div>`:'<p class="empty">No films or galleries yet. Open an event, go to its Delivery tab and add them.</p>'}`}
+${items.length?`<div class="cgrid" style="margin-top:26px">${items.map(({d,w})=>{const th=d.hero||(d.films[0]&&fThumb(d.films[0]))||(d.galleries[0]&&safeU(d.galleries[0].cover))||'';return`<button class="fc" style="width:100%" data-a="openCine" data-id="${w.id}"><div class="th" style="${bgi(th)}"></div><b>${esc(w.couple)}</b><small>${esc(etype(w))} · ${fmtD(w.wedding_date)} · ${[d.films.length?d.films.length+' film'+(d.films.length==1?'':'s'):'',d.galleries.length?'photos':''].filter(Boolean).join(' + ')}${d.published?'':' · not published'}${d.expires_on?(daysTo(d.expires_on)<0?' · access ended':daysTo(d.expires_on)<=14?' · access ends in '+daysTo(d.expires_on)+' day'+(daysTo(d.expires_on)==1?'':'s'):''):''}</small></button>`}).join('')}</div>`:'<p class="empty">No films or galleries yet. Open an event, go to its Delivery tab and add them.</p>'}`}
+function accessCard(){
+  const raw=wed.del||{},e=raw.expires_on,m=raw.access_months,n=e?daysTo(e):null;
+  return`<section class="card" style="margin-top:16px"><div class="lbl">Access for the client</div>
+<div class="num" style="font-size:24px;margin-bottom:4px">${e?(n<0?'Ended '+fmtD(e):'Until '+fmtD(e)):m?m+' month'+(m==1?'':'s')+' from publishing':'No time limit'}</div>
+${e&&n>=0?`<div class="sub" style="margin:0">${n} day${n==1?'':'s'} left</div>`:''}
+<div class="lbl" style="margin-top:18px">${e?'Extend by':'Set access to'}</div>
+<div class="chipsel">${[1,6,12].map(k=>`<button class="tab" data-a="accSet" data-k="${k}">${e?'+ ':''}${k} month${k==1?'':'s'}</button>`).join('')}<button class="tab" data-a="accDate">Pick a date</button>${e||m?'<button class="tab" data-a="accSet" data-k="0">No time limit</button>':''}</div>
+<p class="intro" style="margin:14px 0 0;font-size:13px">The client sees the end date on their page. After it, the films and photos are replaced by a message with a button to contact you. This locks the page only: the YouTube and gallery links themselves keep working for anyone who saved them.</p></section>`}
+function openAccForm(){
+  ui.modal={type:'acc'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Access end date</h3>
+<p class="intro">The last day the client can open their films and photos on this page.</p>
+<div class="f"><span class="l">Last day of access</span><input id="xd" type="date" min="${today()}" value="${esc((wed.del&&wed.del.expires_on)||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveAcc">Save</button></div></div></div>`;
+}
 function delMain(){
   if(wed.delErr)return`<h2>Delivery</h2><p class="empty">Delivery isn’t set up in Supabase yet. Run the delivery SQL once, then refresh this page.</p>`;
   const d=delOf(wed.del),mv=(a,i)=>`<button data-a="${a}Up" data-i="${i}" aria-label="Move up">↑</button><button data-a="${a}Down" data-i="${i}" aria-label="Move down">↓</button><button data-a="edit${a}" data-i="${i}">Edit</button><button data-a="del${a}" data-i="${i}">Delete</button>`;
@@ -996,6 +1015,7 @@ function delMain(){
 <section class="card"><div class="lbl">The client’s cinema page</div><button class="tab ${d.published?'on':''}" style="margin-top:12px" data-a="togPub">${d.published?'✓ Published · the client can see it':'Not published · tap to publish'}</button>
 <p class="intro" style="margin:12px 0 0;font-size:13px">Add films, photo galleries, or both. The page only shows what you add, so photo-only and video-only events work too.</p>
 <div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="editHero">Cover image</button></div></section>
+${accessCard()}
 <h2>Films</h2>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFilm">+ Add film</button></div>
 <div>${d.films.length?d.films.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(fThumb(x))}"></div><div class="bd"><div class="nm">${esc(x.title||'Film')}</div><div class="sub">${esc(x.dur||'')}${ytId(x.url)?'':' YouTube link not recognised'}</div>${x.desc?`<div class="note fam" style="font-style:normal">${esc(x.desc)}</div>`:''}<div class="acts">${mv('Film',i)}</div></div></div>`).join(''):'<p class="empty">No films. Leave this empty for a photo-only delivery.</p>'}</div>
@@ -1531,7 +1551,10 @@ document.addEventListener('click',async e=>{
   else if(a==='cineOpen'&&!TOKEN){ui.fromCine=false;ui.cine=true;ui.play=null;render();scrollTo(0,0)}
   else if(a==='cineBack'){ui.cine=false;ui.play=null;if(ui.fromCine){ui.fromCine=false;ui.view='cine';wed=null}render()}
   else if(a==='cineEdit'&&!TOKEN){ui.cine=false;ui.play=null;ui.fromCine=false;ui.sec='del';render()}
-  else if(a==='togPub'&&!TOKEN)setD({published:!delOf(wed.del).published});
+  else if(a==='togPub'&&!TOKEN){const r=wed.del||{},on=!r.published,o={published:on};if(on&&r.access_months&&!r.expires_on)o.expires_on=addMonths(today(),r.access_months);setD(o)}
+  else if(a==='accSet'&&!TOKEN){const k=+t.dataset.k,r=wed.del||{};if(!k)setD({expires_on:null,access_months:null});else if(r.expires_on)setD({expires_on:addMonths(daysTo(r.expires_on)>=0?r.expires_on:today(),k)});else if(r.published)setD({expires_on:addMonths(today(),k),access_months:k});else setD({access_months:k})}
+  else if(a==='accDate'&&!TOKEN)openAccForm();
+  else if(a==='saveAcc'&&!TOKEN){const v=$('#xd').value;closeM();setD({expires_on:v||null})}
   else if(a==='addFilm'&&!TOKEN)openFilmForm();
   else if(a==='editFilm'&&!TOKEN)openFilmForm(+t.dataset.i);
   else if(a==='saveFilm'&&!TOKEN){const o={title:$('#zt').value.trim()||'Film',url:$('#zu').value.trim(),desc:$('#zd').value.trim(),dur:$('#zl').value.trim(),cover:safeU($('#zc').value)};if(!ytId(o.url)){$('#zu').classList.add('err');return toast('That doesn’t look like a YouTube link. Paste the link from YouTube’s Share button.')}const l=[...delOf(wed.del).films],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({films:l})}
