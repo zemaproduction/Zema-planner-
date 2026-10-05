@@ -384,6 +384,8 @@ const isWed=w=>etype(w)==='Wedding';
 const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Crew','Delivery'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
+let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
+const mny=n=>hideMoney?'£ ••••':gbp(n);
 const gbp=n=>'£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:Number(n||0)%1?2:0,maximumFractionDigits:2});
 const sum=a=>a.reduce((x,p)=>x+Number(p.amount||0),0);
 const B=w=>{const b=w.event_billing;return(Array.isArray(b)?b[0]:b)||{}};
@@ -565,7 +567,7 @@ function evCard(w){
   const cd=dd===null?'No date yet':dd>0?dd+' day'+(dd==1?'':'s')+' to go':dd===0?'Today':(-dd)+' day'+(dd==-1?'':'s')+' ago';
   const right=s==='post'?`Photos ${w.photo_progress||0}% · Video ${w.video_progress||0}%`:isWed(w)&&w.photo_groups?w.photo_groups.length+' photo group'+(w.photo_groups.length==1?'':'s'):'';
   return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${esc(etype(w))} · ${dm(w)}</div>${tagHtml(w)}
-<div class="row2" style="margin-top:14px"><span>${cd}</span><span>${right}</span></div>${wPrice(w)==null?'':`<div class="row2" style="margin-top:6px"><span>Paid ${gbp(wPaid(w))} of ${gbp(wPrice(w))}</span><span>${wLeft(w)?gbp(wLeft(w))+' left':'Paid in full'}</span></div>`}
+<div class="row2" style="margin-top:14px"><span>${cd}</span><span>${right}</span></div>${wPrice(w)==null||hideMoney?'':`<div class="row2" style="margin-top:6px"><span>Paid ${gbp(wPaid(w))} of ${gbp(wPrice(w))}</span><span>${wLeft(w)?gbp(wLeft(w))+' left':'Paid in full'}</span></div>`}
 <div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button>${isWed(w)?`<button data-a="copyFW" data-id="${w.id}">Family &amp; friends link</button>`:''}</div></div>`}
 function dashView(){
   const W=weds.filter(w=>!isFree(w)),fr=weds.filter(w=>isFree(w)&&['pending','confirmed'].includes(stg(w))).length,frNew=fjobs.filter(j=>j.status==='new').length;
@@ -579,7 +581,8 @@ function dashView(){
 <nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
-<div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
+<div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${mny(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(mny(owedSum),'Still to come','owed')}</div>
+<p style="text-align:right;margin:10px 0 0"><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
 ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “New Event” to add one.</p>'}
 ${late.length?`<h2>Date passed</h2><p class="intro">These events have happened but are still marked Pending or Confirmed. Open each one and move it to Post-production or Delivered.</p>${late.map(evCard).join('')}`:''}
@@ -596,11 +599,11 @@ function yearView(){
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Progress</h1><div class="meta">Events and income, year by year</div>
 <div class="tabs" style="margin-top:22px">${ys.map(v=>`<button class="tab ${v===y?'on':''}" data-a="year" data-k="${v}">${v}</button>`).join('')}</div>
-<div class="stats" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="st"><b>${list.length}</b><span>Events done in ${y}</span></div><div class="st"><b>${gbp(recvIn(y))}</b><span>Received in ${y}</span></div></div>
+<div class="stats" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="st"><b>${list.length}</b><span>Events done in ${y}</span></div><div class="st"><b>${mny(recvIn(y))}</b><span>Received in ${y}</span></div></div>
 <section class="card" style="margin-top:12px"><div class="lbl" style="margin-bottom:16px">By category in ${y}</div>
 ${cats.length?cats.map(([k,n])=>`<div class="pg"><div class="row2"><span class="lbl">${esc(k)}</span><span>${n}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/list.length*100)}%"></i></div></div>`).join(''):'<p class="intro" style="margin:0">No completed events in this year yet.</p>'}</section>
 <h2>Year by year</h2>
-<section class="card">${ys.map(v=>{const n=doneIn(v).length;return`<div class="pg"><div class="row2"><span class="lbl">${v}</span><span>${n} event${n==1?'':'s'} · ${gbp(recvIn(v))}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/mx*100)}%"></i></div></div>`}).join('')}</section>
+<section class="card">${ys.map(v=>{const n=doneIn(v).length;return`<div class="pg"><div class="row2"><span class="lbl">${v}</span><span>${n} event${n==1?'':'s'} · ${mny(recvIn(v))}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/mx*100)}%"></i></div></div>`}).join('')}</section>
 <p class="intro" style="margin-top:16px">An event counts as done once its date has passed and it is Confirmed, in Post-production or Delivered. Income is the total of payments you have recorded, by the date each was paid.</p>
 <div class="cta"><button class="btn" data-a="newPast">+ Add a past event</button></div>
 ${list.length?`<h2>Events in ${y}</h2>${list.map(w=>`<button class="or" data-a="openW" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">${esc(etype(w))} · ${fmtD(w.wedding_date)}</span></button>`).join('')}`:''}`}
@@ -1643,6 +1646,7 @@ document.addEventListener('click',async e=>{
   if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
+  else if(a==='togHideMoney'){hideMoney=!hideMoney;try{localStorage.setItem('zemaHideMoney',hideMoney?'1':'0')}catch(_){}render()}
   else if(a==='out')await sb.auth.signOut();
   else if(a==='retry')reload();
   else if(a==='newW')openWForm();
