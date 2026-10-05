@@ -487,7 +487,9 @@ async function loadDash(view){
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
-  weds=data;wed=null;ui.view=view||'dash';ui.day=false;render();
+  const g0=!ui.went&&QS.get('go');ui.went=1;
+  weds=data;wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
+  if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
 }
 const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
 async function loadWedding(id){
@@ -1367,6 +1369,16 @@ async function openCal(){
 <p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
 <div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
 }
+/* Direct links (?go=…) so a home-screen icon or shortcut can open straight to one place */
+const GOV={enq:'enq',addenq:'enq',post:'post',free:'free',cine:'cine',due:'due',crew:'crew',year:'year'};
+const GOL=[['addenq','Add an enquiry','Opens the new enquiry form'],['enq','Enquiries','Follow-ups and open enquiries'],['post','Post-production','Everything being edited'],['free','Freelance','Jobs and new requests'],['due','Costs to pay','What you owe crew and suppliers'],['cine','Cinema','Delivered films and photos'],['new','New event','Opens the new event form']];
+function openGoLinks(){
+  ui.modal={type:'go'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Quick links</h3>
+<p class="intro">Each link opens the planner straight at one place. Tap one to copy it, open it in Safari, then tap Share and Add to Home Screen to make an icon for it.</p>
+${GOL.map(([k,t,d])=>`<button class="or" data-a="copyGo" data-k="${k}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`).join('')}
+<div class="bt" style="margin-top:20px"><button class="btn" data-a="close">Close</button></div></div></div>`;
+}
 /* Dashboard menu: the less-used tools, kept off the home screen */
 function openMenu(){
   ui.modal={type:'menu'};
@@ -1375,7 +1387,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('goV','Quick links','For home screen icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -2066,6 +2078,8 @@ document.addEventListener('click',async e=>{
   if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
+  else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='copyGo'&&!TOKEN){const u=location.origin+location.pathname+'?go='+t.dataset.k;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Open it in Safari, then Share, Add to Home Screen.'),()=>prompt('Copy this link:',u))}
   else if(a==='cpy'){const v=t.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Password copied'),()=>prompt('Copy this:',v))}
   else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else loadDash(BACKN[ui.from]?ui.from:'dash')}
   else if(a==='togHideMoney'){hideMoney=!hideMoney;try{localStorage.setItem('zemaHideMoney',hideMoney?'1':'0')}catch(_){}render()}
