@@ -133,6 +133,7 @@ button.st{cursor:pointer}.st.sel,.st.yr{border-color:var(--ac)}.st.sel span,.st.
 .fl li:before{content:"";position:absolute;left:2px;top:20px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
 a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}.pk a.btn{width:100%}
 .tc p{color:var(--mu);font-size:14px;margin:0 0 14px}
+.stand .or{padding:14px 0;align-items:center}.stand .or:first-of-type{border-top:0;padding-top:0}.stand .or:last-of-type{padding-bottom:0}
 .gp{padding:6px 0;color:#bdb8b0}.gp:before{content:"·";color:var(--ac);margin-right:10px}
 .dr.nx{border-color:var(--ac)}a.dr{text-decoration:none;color:inherit}a.lnk{display:inline-block;margin-top:8px}.dt .live{color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 </style></head>
@@ -591,6 +592,8 @@ function dashView(){
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
   const fl=STG[ui.flt]?W.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${W.length} event${W.length==1?'':'s'}</div>
+<div class="f" style="margin:22px 0 14px"><input id="sq" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search a name, date or type of event" value="${esc(ui.q||'')}"></div>
+<div id="sres">${searchHtml()}</div>
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
 <nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
@@ -751,15 +754,38 @@ ${line('photo','Photo editing','photos_delivered','Photos delivered')}
 ${line('video','Video editing','film_delivered','Film delivered')}
 <div class="pg"><div class="lbl">Album</div><div class="chipsel">${Object.entries(ALB).map(([k,v])=>`<button class="tab ${al===k?'on':''}" data-a="setAlbum" data-k="${k}">${v}</button>`).join('')}</div></div>
 <div class="pg"><div class="lbl">Client link</div><button class="tab ${w.share_progress?'on':''}" data-a="togW" data-k="share_progress">${w.share_progress?'✓ The couple can see this progress':'Hidden from the couple · tap to share'}</button></div></section>`}
+/* ---- Overview: where the job stands, one line per area, each opening its tab ---- */
+function standCard(){
+  const w=wed,b=w.bill,t=tot(b),paid=sum(Y()),a=w.agr,ec=EC(),acc=ec.filter(x=>(x.status||'accepted')==='accepted').length,wait=ec.filter(x=>x.status==='invited').length,dec=ec.filter(x=>x.status==='declined').length,cost=sum(K()),d=delOf(w.del),nx=t==null?null:planRows(b,paid).find(r=>r.left>0&&r.due);
+  const row=(k,label,text,ok)=>`<button class="or" data-a="sec" data-k="${k}"><span style="min-width:0"><span class="lbl" style="display:block;margin-bottom:4px">${label}</span><span style="font-size:15px;color:var(--tx)">${text}</span></span><span style="flex:none;font-size:16px;color:${ok?'var(--ac)':'#5d5b58'}">${ok?'✓':'›'}</span></button>`;
+  return`<section class="card stand">
+${row('pay','Agreement',!a?'Not requested yet':a.signed_at?'Signed by '+esc(a.signed_name)+' on '+fmtD(String(a.signed_at).slice(0,10)):'Sent · waiting for the client to sign',!!(a&&a.signed_at))}
+${row('pay','Payment',t==null?'No price set':paid>=t-0.005?'Paid in full · '+gbp(t):gbp(paid)+' of '+gbp(t)+' paid'+(nx?(nx.due<today()?' · overdue since ':' · next due ')+fmtD(nx.due):''),t!=null&&paid>=t-0.005)}
+${row(isWed(w)?'family':'timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by '+esc(w.approved_by||'the client'):'Not confirmed by the client yet',w.approval_status==='approved')}
+${row('crew','Crew',!ec.length?'No crew added':[acc?acc+' accepted':'',wait?wait+' waiting':'',dec?dec+' declined':''].filter(Boolean).join(' · '),ec.length>0&&!wait&&!dec)}
+${row('cost','Costs and profit',t==null?(cost?gbp(cost)+' in costs':'No costs added'):'Profit '+sg(t-cost)+(cost?' after '+gbp(cost)+' in costs':' · no costs added'),false)}
+${row('del','Delivery',!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published'+(d.expires_on?' · access until '+fmtD(d.expires_on):''):'Added but not published',d.published)}
+</section>`}
+/* ---- Home page search across events, enquiries and booking requests ---- */
+function searchHtml(){
+  const q=(ui.q||'').trim().toLowerCase();if(q.length<2)return'';
+  const ws=q.split(/\s+/),hit=h=>ws.every(x=>h.includes(x)),dt=d=>d?fmtD(d)+' '+d+' '+d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4):'';
+  const ev=weds.filter(w=>hit([w.couple,etype(w),dt(w.wedding_date),w.city,w.package,w.services,STG[stg(w)],B(w).bill_to].join(' ').toLowerCase())).slice(0,15);
+  const en=enqs.filter(e=>hit([e.name,e.event_type,dt(e.event_date),e.phone,e.note,'enquiry'].join(' ').toLowerCase())).slice(0,8);
+  const bk=bks.filter(b=>hit([b.name,b.event_type,dt(b.event_date),b.phone,b.email,b.package,'booking request'].join(' ').toLowerCase())).slice(0,8);
+  const n=ev.length+en.length+bk.length;
+  return`<div class="lbl" style="margin:4px 0 14px">${n?n+' result'+(n==1?'':'s'):'Nothing found'} for “${esc(ui.q.trim())}”</div>${ev.map(evCard).join('')}${bk.map(bkCard).join('')}${en.map(enqCard).join('')}<div style="height:10px;border-bottom:1px solid var(--line);margin-bottom:24px"></div>`}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='sq'){ui.q=e.target.value;const r=$('#sres');if(r)r.innerHTML=searchHtml()}});
 function ovMain(){
   const after=['post','delivered'].includes(stg(wed));
-  return`<h2>Overview</h2>
-${statusCard()}
+  return`<h2>Where this job stands</h2>
+${standCard()}
 ${isWed(wed)?'':timerCard()}
 ${after?postCard():''}
+<h2>Status and package</h2>
+${statusCard()}
 ${glance()}
-${secRows()}
-${after?'':gaps()+postCard()}
+${after?'':gaps()}
 <div class="cta"><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button>${isWed(wed)?'<button class="btn" data-a="copyF">Copy family &amp; friends link</button>':''}</div>`}
 async function setW(o){
   const prev={};for(const k in o)prev[k]=wed[k];
