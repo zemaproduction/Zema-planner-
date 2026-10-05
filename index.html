@@ -149,8 +149,8 @@ const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Delivery'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Delivery':'del'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Equipment','Delivery'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -385,7 +385,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Costs','Crew','Delivery'];
+const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Costs','Crew','Equipment','Delivery'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
@@ -487,6 +487,7 @@ async function loadDash(view){
   await refreshFree();
   await refreshEnq();
   await refreshRev();
+  {const g=await sb.from('app_content').select('data').eq('key','gear').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)gearTpl=g.data.data.text}
   {const q=await sb.from('event_selection').select('*');sels=q.error?[]:(q.data||[]);const g=await sb.from('app_content').select('data').eq('key','sel_guide').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)selGuide=g.data.data.text}
   {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
@@ -517,8 +518,11 @@ async function loadWedding(id){
   const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
   const aq=await sb.from('event_agreement').select('*').eq('wedding_id',id).maybeSingle();
   const sq=await sb.from('event_selection').select('*').eq('wedding_id',id).maybeSingle();
+  const gq=await sb.from('event_gear').select('items').eq('wedding_id',id).maybeSingle();
+  let gear0=gq.data&&Array.isArray(gq.data.items)?gq.data.items:null;
+  if(!gq.error&&!gear0){gear0=gearParse(gearTpl);sb.from('event_gear').insert({wedding_id:id,items:gear0}).then(()=>{})}
   const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
-  wed={...w,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...w,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -572,7 +576,7 @@ function render(){
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'||k==='gear'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}</nav>`;
 function famTl(){
@@ -993,6 +997,7 @@ ${tl.length?`<h2>Timeline</h2>${tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><
 ${pl.length?`<h2>Locations</h2><div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
 ${pp.length?`<h2>Key people</h2><div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
 ${mh.length?`<h2>Must-have shots</h2>${mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')}`:''}
+${Array.isArray(d.gear)&&d.gear.length?`<h2>Equipment</h2>${gearBlock(d.gear,true)}`:''}
 <footer><span>Private crew link · Zema Production · updates every minute</span></footer>`}
 function crewListView(){
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
@@ -1679,7 +1684,7 @@ function rvView(){
 <div class="bad" id="rwerr"></div><button class="btn fill" style="width:100%" data-a="rvSend">Send review</button></section>
 <footer><span>Zema Production · London</span></footer>`}
 /* ---- Backup: every table saved to one file on this device ---- */
-const BKT=['event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
+const BKT=['event_gear','event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
 async function doBackup(){
   toast('Preparing your backup…');
   const out={app:'Zema Planner',made:new Date().toISOString(),tables:{},missing:[]};
@@ -1766,12 +1771,13 @@ async function loadDay(){
 }
 function dayRO(){
   const w=wed,tl=w.timeline||[],fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
-  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
+  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0],['gear','Equipment',Array.isArray(w.gear)?w.gear.length:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
   const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')
   :sec==='family'?`<div class="big">${fam.filter(g=>g.done).length} / ${fam.length} <small>completed</small></div>${fam.map((g,i)=>`<div class="fr ${g.done?'d':''}"><div class="nm">${i+1}. ${esc(g.name)}${g.done?' ✓':''}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px">${esc((Array.isArray(g.people)?g.people:[]).join(', '))}</div>${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}</div>`).join('')}`
   :sec==='musts'?mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}${x.done?' ✓':''}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')
   :sec==='people'?`<div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
   :sec==='places'?`<div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
+  :sec==='gear'?gearBlock(w.gear,true)
   :sec==='notes'?`<section class="card"><div class="lbl">Note from the client</div><p class="ntx">${esc(w.client_note||'')}</p></section>`:'<p class="empty">Nothing has been added for this event yet.</p>';
   return`<div class="brand">ZEMA PRODUCTION · ${isWed(w)?'WEDDING DAY':'EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${fmtD(w.wedding_date)}${w.city?' · '+esc(w.city):''}</div>
 ${isWed(w)?'':timerCard()}
@@ -1810,6 +1816,38 @@ ${demoW?`${r('demoCopy','Copy the demo link','What a client sees')}${r('demoWa',
 <div class="bt"><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 const demoLink=()=>location.origin+location.pathname+'?w='+demoW.share_token;
+/* ---- Equipment checklist: tick before the event and again when packing up. Crew and day links see it read-only ---- */
+const GEARDEF='Photography\nSD cards, formatted\nCamera bodies\nCamera batteries, charged\nSpare batteries and charger\nLenses\nFlash\nFlash batteries\nLight stand\nTripod\nLens cloth\n\nVideography\nSD cards, formatted\nCamera bodies\nCamera batteries, charged\nLenses\nGimbal and its batteries\nMicrophones and recorder\nSound batteries\nVideo light\nLight stand and tripod\n\nGeneral\nPhone charger and power bank\nExtension lead\nGaffer tape\nRain cover and umbrella\nHard drive for backing up\nWater and a snack';
+let gearTpl=GEARDEF;
+const gearParse=(txt,old)=>{const out=[];String(txt||'').split(/\n\s*\n/).forEach(bl=>{const ls=bl.split('\n').map(x=>x.trim()).filter(Boolean);if(!ls.length)return;const s=ls.length>1?ls[0]:'General';(ls.length>1?ls.slice(1):ls).forEach(t=>{const o=(old||[]).find(x=>x.s===s&&x.t===t)||{};out.push({s,t,pre:!!o.pre,post:!!o.post})})});return out};
+const gearText=it=>[...new Set(it.map(x=>x.s))].map(s=>[s,...it.filter(x=>x.s===s).map(x=>x.t)].join('\n')).join('\n\n');
+const GI=()=>Array.isArray(wed.gear)?wed.gear:gearParse(gearTpl);
+function gearList(it,m,ro){
+  return[...new Set(it.map(x=>x.s))].map(s=>`<div class="lbl" style="margin:22px 0 10px;color:var(--ac)">${esc(s)} · ${it.filter(x=>x.s===s&&x[m]).length} / ${it.filter(x=>x.s===s).length}</div>${it.map((x,i)=>{if(x.s!==s)return'';const b=`<span class="ck" style="width:28px;height:28px;font-size:15px">${x[m]?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x.t)}</b></span>`;return ro?`<div class="dr ${x[m]?'done':''}" style="cursor:default;min-height:0;padding:13px 16px">${b}</div>`:`<button class="dr ${x[m]?'done':''}" data-a="gearTog" data-i="${i}" style="min-height:0;padding:13px 16px">${b}</button>`}).join('')}`).join('')}
+function gearBlock(it,ro){
+  const m=ui.gm==='post'?'post':'pre',n=it.filter(x=>x[m]).length;
+  return`<div class="tabs"><button class="tab ${m==='pre'?'on':''}" data-a="gearMode" data-k="pre">Before the event</button><button class="tab ${m==='post'?'on':''}" data-a="gearMode" data-k="post">Packing up</button></div>
+<div class="big" style="margin-top:18px">${n} / ${it.length} <small>${m==='pre'?'packed and ready':'back in the bag'}</small></div><div class="bar"><i style="width:${it.length?Math.round(n/it.length*100):0}%"></i></div>
+${it.length&&n===it.length?`<p class="fin">${m==='pre'?'Everything is packed and ready.':'Everything is accounted for.'}</p>`:''}
+<div>${gearList(it,m,ro)}</div>`}
+function gearMain(){
+  if(wed.gearErr)return`<h2>Equipment</h2><p class="empty">The equipment checklist isn’t set up in Supabase yet. Run the latest SQL once, then refresh this page.</p>`;
+  return`<h2>Equipment</h2>
+<p class="intro">Tick each item when it’s packed before the event, then switch to Packing up at the end and tick it again as it goes back in the bag. Crew on this event can see the list.</p>
+${gearBlock(GI(),false)}
+<div class="cta"><button class="btn" data-a="gearEdit">Edit this event’s list</button><button class="btn" data-a="gearClear">Untick all</button><button class="btn" data-a="gearTplE">Edit my standard list</button></div>`}
+async function setGear(it){
+  const prev=wed.gear;wed.gear=it;render();
+  const{error}=await sb.from('event_gear').upsert({wedding_id:wed.id,items:it,updated_at:new Date().toISOString()});
+  if(error){wed.gear=prev;render();toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+error.message)}
+}
+function openGearForm(tpl){
+  ui.modal={type:'gear',tpl:!!tpl};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${tpl?'My standard equipment list':'This event’s equipment'}</h3>
+<p class="intro">${tpl?'The list every new event starts with. Events you have already opened keep their own list.':'Change the list for this event only. Ticks stay on items you keep.'} Put a section name on its own line with its items underneath, one per line, and leave an empty line between sections.</p>
+<div class="f"><textarea id="gx" rows="16" maxlength="4000" style="font-size:15px;line-height:1.5">${esc(tpl?gearTpl:gearText(GI()))}</textarea></div>
+<div class="bt">${tpl?'':'<button class="btn" data-a="gearFromTpl">Use my standard list</button>'}<button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="gearSave">Save</button></div></div></div>`;
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1828,7 +1866,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='gear'?gearMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -1911,8 +1949,8 @@ function dayView(){
   return`<div class="top">${isWed(w)?'<button class="btn" data-a="copyF">Family &amp; friends link</button>':''}<button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">${isWed(w)?'ZEMA WEDDING DAY':'ZEMA EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
 ${isWed(w)?'':timerCard()}
-<div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People'],['places','Places'],['notes','Notes']].filter(([k])=>secsFor(wed).some(x=>SK[x]===k)).map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
-${sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():sec==='notes'?dayNt():dayFam()}`}
+<div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People'],['places','Places'],['notes','Notes'],['gear','Equipment']].filter(([k])=>secsFor(wed).some(x=>SK[x]===k)).map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
+${sec==='gear'?gearMain():sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():sec==='notes'?dayNt():dayFam()}`}
 function copyLink(token,key){
   const u=location.origin+location.pathname+'?'+(key||'w')+'='+token;
   (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast(key==='f'?'Family & friends link copied':key==='p'?'Packages link copied':'Client link copied'),()=>prompt('Copy this link:',u));
@@ -2184,6 +2222,13 @@ document.addEventListener('click',async e=>{
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='gearMode'){ui.gm=t.dataset.k;render()}
+  else if(a==='gearTog'&&user&&wed){const it=GI().map(x=>({...x})),m=ui.gm==='post'?'post':'pre',x=it[+t.dataset.i];if(x){x[m]=!x[m];setGear(it)}}
+  else if(a==='gearClear'&&user&&wed){const m=ui.gm==='post'?'post':'pre';ask(m==='pre'?'Untick everything under Before the event?':'Untick everything under Packing up?',()=>setGear(GI().map(x=>({...x,[m]:false}))))}
+  else if(a==='gearEdit'&&user)openGearForm();
+  else if(a==='gearTplE'&&user)openGearForm(1);
+  else if(a==='gearFromTpl'&&user){$('#gx').value=gearTpl}
+  else if(a==='gearSave'&&user){const v=$('#gx').value.trim(),tpl=ui.modal.tpl;if(!v)return toast('Add at least one item.');closeM();if(tpl){gearTpl=v;const{error}=await sb.from('app_content').upsert({key:'gear',data:{text:v},updated_at:new Date().toISOString()});toast(error?'Could not save: '+error.message:'Standard list saved. New events will start with it.')}else setGear(gearParse(v,GI()))}
   else if(a==='demoV'&&!TOKEN)openDemo();
   else if(a==='demoMake'&&!TOKEN){closeM();if(demoW)ask('Rebuild the demo? The current demo and its link are replaced with a fresh copy.',makeDemo);else makeDemo()}
   else if(a==='demoCopy'&&!TOKEN&&demoW){const u=demoLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Demo link copied'),()=>prompt('Copy this link:',u))}
