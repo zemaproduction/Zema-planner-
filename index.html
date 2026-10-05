@@ -190,27 +190,33 @@ let pkd=null,bk={step:0,v:{},done:false,fail:false},bks=[],bkErr=false;
 const BKQ=[
 {k:'event_type',q:'What are you booking?',t:'choice',req:1,o:['Pre-Wedding Shoot','Wedding','Christening','Birthday Party','Other Small Event','Photoshoot']},
 {k:'package',q:'Which package are you interested in?',t:'choice'},
+{k:'hours',q:'How many hours would you like to book?',sub:'The minimum booking is 3 hours.',t:'choice',req:1,o:['3 hours','4 hours','5 hours','6 hours','7 hours','8 hours','More than 8 hours'],when:v=>String(v.package||'').startsWith('Hourly rate')},
 {k:'name',q:'Your name',sub:'For weddings, both names please.',t:'text',req:1},
 {k:'phone',q:'Phone or WhatsApp number',t:'tel',req:1},
 {k:'email',q:'Email address',sub:'Optional.',t:'email'},
 {k:'event_date',q:'Date of the event',t:'date',req:1},
-{k:'location',q:'Where is it?',sub:'Venue name and area, if you know it yet.',t:'text'},
+{k:'location',q:'Where is it?',sub:'Please give the full address with postcode. Locations two and three are optional, for events in more than one place.',t:'locs',req:1},
 {k:'services',q:'What would you like?',t:'choice',o:['Photography','Videography','Photography & Videography']},
 {k:'message',q:'Anything else we should know?',sub:'Timings, number of guests, special requests. Optional.',t:'area'},
 {k:'source',q:'How did you hear about us?',t:'choice',o:['Instagram','Recommendation','Google','An event we covered','Other']},
 {k:'agree',q:'Terms & Conditions',t:'agree',req:1}];
+const bkAct=()=>BKQ.filter(q=>!q.when||q.when(bk.v));
+const bkLocs=[['location','Location one'],['location2','Location two (optional)'],['location3','Location three (optional)']];
+function bkRead(q){const el=$('#bkf');if(q.t==='locs')bkLocs.forEach(([k],i)=>{const e=$('#bkl'+i);if(e)bk.v[k]=e.value.trim()});else if(el)bk.v[q.k]=q.t==='agree'?(el.checked?'yes':''):el.value.trim()}
 function bkPkgs(){
   const ty=bk.v.event_type,pr=k=>k.n+(pkd.hide||!k.p?'':' · '+k.p),hr='Hourly rate'+(pkd.hide||!pkd.hr.p?'':' · '+pkd.hr.p);
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
   return[...o,'Not sure yet'];
 }
-function bkSummary(){const v=bk.v;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location: '+v.location),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
+function bkSummary(){const v=bk.v;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
 function bkInner(){
   if(bk.done)return`<div class="lbl">${bk.fail?'Almost there':'Request sent'}</div><div class="nm" style="font-size:28px;margin-top:10px">${bk.fail?'We couldn’t send the form':'Thank you, '+esc((bk.v.name||'').split(/[ ,&]/)[0])}</div>
 <p class="intro" style="margin:12px 0 20px">${bk.fail?'Your answers are saved in the message below. Please send it to us on WhatsApp and we’ll take it from there.':'We’ve received your booking request and will be in touch soon. Your date is not secured until we confirm it. To reach us straight away, send the same details on WhatsApp.'}</p>
 <a class="btn fill" style="width:100%" href="${esc(waLink(bkSummary()))}" target="_blank" rel="noopener">Send on WhatsApp</a>`;
-  const q=BKQ[bk.step],v=bk.v[q.k]||'',n=BKQ.length;let f;
+  const A=bkAct();bk.step=Math.min(bk.step,A.length-1);
+  const q=A[bk.step],v=bk.v[q.k]||'',n=A.length;let f;
   if(q.t==='choice')f=`<div>${(q.k==='package'?bkPkgs():q.o).map(x=>`<button class="dr ${v===x?'nx':''}" data-a="bkSet" data-v="${esc(x)}" style="min-height:0;padding:15px 16px"><span class="ck" style="width:26px;height:26px;font-size:14px;${v===x?'background:var(--ac);border-color:var(--ac)':''}">${v===x?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x)}</b></span></button>`).join('')}</div>`;
+  else if(q.t==='locs')f=bkLocs.map(([k,l],i)=>`<div class="f"><span class="l">${l}</span><input id="bkl${i}" maxlength="200" value="${esc(bk.v[k]||'')}" placeholder="${i?'':'Venue, street, town and postcode'}" autocomplete="street-address"></div>`).join('');
   else if(q.t==='area')f=`<div class="f"><textarea id="bkf" rows="5" maxlength="1500">${esc(v)}</textarea></div>`;
   else if(q.t==='agree')f=`<div class="tc" style="max-height:220px;overflow:auto;border:1px solid var(--line);padding:14px 14px 0;border-radius:3px">${pkd.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div><label class="chk" style="margin-top:16px;color:var(--tx)"><input type="checkbox" id="bkf" ${v?'checked':''}> I have read and agree to the Terms &amp; Conditions</label>`;
   else f=`<div class="f"><input id="bkf" type="${q.t}" value="${esc(v)}" maxlength="200" ${q.t==='date'?'min="'+today()+'"':''} ${q.t==='tel'?'autocomplete="tel"':q.t==='email'?'autocomplete="email" autocapitalize="none"':q.k==='name'?'autocomplete="name"':''}></div>`;
@@ -220,13 +226,15 @@ function bkInner(){
 <div class="bt" style="justify-content:space-between">${bk.step?'<button class="btn" data-a="bkBack">Back</button>':'<span></span>'}<button class="btn fill" data-a="bkNext">${bk.step===n-1?'Send booking request':'Next'}</button></div>`}
 function bkDraw(scroll){const el=$('#bkbox');if(!el)return;el.innerHTML=bkInner();if(scroll)$('#book').scrollIntoView({behavior:'smooth',block:'start'})}
 async function bkNext(){
-  const q=BKQ[bk.step],el=$('#bkf');
-  if(el)bk.v[q.k]=q.t==='agree'?(el.checked?'yes':''):el.value.trim();
+  const A=bkAct(),q=A[bk.step];
+  bkRead(q);
   const v=bk.v[q.k]||'',err=m=>{$('#bkerr').textContent=m};
-  if(q.req&&!v)return err(q.t==='agree'?'Please tick the box to agree.':q.t==='choice'?'Please choose one.':'Please fill this in.');
+  if(q.req&&!v)return err(q.t==='agree'?'Please tick the box to agree.':q.t==='choice'?'Please choose one.':q.t==='locs'?'Please fill in location one.':'Please fill this in.');
   if(q.t==='email'&&v&&!/^\S+@\S+\.\S+$/.test(v))return err('That email doesn’t look right.');
   if(q.t==='tel'&&v.replace(/\D/g,'').length<7)return err('Please enter a full phone number.');
-  if(bk.step<BKQ.length-1){bk.step++;return bkDraw(1)}
+  if(q.t==='locs'){const bad=bkLocs.find(([k])=>bk.v[k]&&!/[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}/i.test(bk.v[k]));if(bad)return err('Please give the full address with postcode for '+bad[1].replace(' (optional)','').toLowerCase()+'.')}
+  if(bk.step<A.length-1){bk.step++;return bkDraw(1)}
+  if(!String(bk.v.package||'').startsWith('Hourly rate'))delete bk.v.hours;
   const hp=$('#bkhp');
   if(hp&&hp.value){bk.done=true;return bkDraw(1)}
   err('Sending…');
@@ -235,8 +243,9 @@ async function bkNext(){
   bk.done=true;bk.fail=fail;bkDraw(1);
 }
 /* ---- Bookings on the photographer's dashboard ---- */
-function bkCard(b){return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(b.name)}</div><div class="sub">${esc(b.event_type||'Booking')} · ${fmtD(b.event_date)}${b.location?' · '+esc(b.location):''}</div>
-<div><span class="tag approved">New request</span>${b.package?`<span class="tag">${esc(b.package)}</span>`:''}${b.services?`<span class="tag">${esc(b.services)}</span>`:''}</div>
+function bkCard(b){return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(b.name)}</div><div class="sub">${esc(b.event_type||'Booking')} · ${fmtD(b.event_date)}</div>
+${[b.location,b.location2,b.location3].filter(Boolean).map((x,i)=>`<div class="sub">Location ${i+1} · ${esc(x)}</div>`).join('')}
+<div><span class="tag approved">New request</span>${b.package?`<span class="tag">${esc(b.package)}</span>`:''}${b.hours?`<span class="tag">${esc(b.hours)}</span>`:''}${b.services?`<span class="tag">${esc(b.services)}</span>`:''}</div>
 ${b.message?`<p class="ntx" style="font-size:14px;color:#bdb8b0">${esc(b.message)}</p>`:''}
 <div class="row2" style="margin-top:12px"><span>${esc([b.phone,b.email].filter(Boolean).join(' · '))}</span><span>${b.source?'Via '+esc(b.source):''}</span></div>
 <div class="acts"><button data-a="bkAccept" data-id="${b.id}">Accept · create event</button>${b.phone?`<button data-a="bkWa" data-id="${b.id}">WhatsApp</button>`:''}<button data-a="bkDecline" data-id="${b.id}">Decline</button></div></div>`}
@@ -246,9 +255,11 @@ async function acceptBk(id){
   const{data,error}=await sb.from('weddings').insert({couple:b.name,wedding_date:b.event_date||null,city:b.location||null,services:b.services||null,event_type:ty,package:known?pn:''}).select().single();
   if(error)return toast('Could not create the event: '+error.message);
   if(ty==='Wedding')await sb.from('photo_groups').insert(demoRows(data.id));
-  const pr=known?pkPrice(pn):null;
-  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(pr!=null?{price:pr}:{})});
-  const note=['From the booking form, '+fmtD(String(b.created_at||'').slice(0,10)),b.phone&&('Phone: '+b.phone),b.email&&('Email: '+b.email),b.package&&('Package asked for: '+b.package),b.source&&('Heard about us: '+b.source),b.message&&('Message: '+b.message)].filter(Boolean).join('\n');
+  const pr=known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
+  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{})});
+  const locs=[b.location,b.location2,b.location3].filter(Boolean);
+  if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
+  const note=['From the booking form, '+fmtD(String(b.created_at||'').slice(0,10)),b.phone&&('Phone: '+b.phone),b.email&&('Email: '+b.email),b.package&&('Package asked for: '+b.package),b.hours&&('Hours asked for: '+b.hours),b.source&&('Heard about us: '+b.source),b.message&&('Message: '+b.message)].filter(Boolean).join('\n');
   await sb.from('wedding_notes').upsert({wedding_id:data.id,private_note:note});
   await sb.from('bookings').update({status:'accepted',wedding_id:data.id}).eq('id',id);
   bks=bks.filter(x=>x.id!==id);toast('Event created from the booking');openWedding(data.id);
@@ -983,12 +994,12 @@ ${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location<
 ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
-  const H={overview:'Your Overview',timeline:'Your Wedding Day Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
-  const I={timeline:'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.',
+  const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
+  const I={timeline:isWed(w)?'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.':'Add the key moments of your event with their times, such as when guests arrive, the cake and any speeches. They sort themselves by time.',
 family:'Add the groups you’d like photographed, and put them in the order you’d like. Your photographer will work through this list on the day.',
 musts:'Tell your photographer the moments and shots you don’t want missed: a detail, a person, a surprise. Family and friends can’t see this list.',
 party:'Add the key people of your day with their role and a phone number, such as your Maid of Honour, Best Man, parents and coordinator. Your photographer uses this to know who’s who and who to call. Family and friends can’t see this list.',
-places:'Add each place your photographer needs to be: where you’re getting ready, the ceremony, the reception and any photo spots. Include the full address with postcode, the time to arrive, and anything useful about parking or access. Family and friends can’t see this list.',
+places:isWed(w)?'Add each place your photographer needs to be: where you’re getting ready, the ceremony, the reception and any photo spots. Include the full address with postcode, the time to arrive, and anything useful about parking or access. Family and friends can’t see this list.':'Add each place your photographer needs to be for your event. Include the full address with postcode, the time to arrive, and anything useful about parking or access.',
 notes:'Tell your photographer anything that doesn’t fit elsewhere: traditions or cultural moments, family sensitivities, surprises, things you love or want to avoid. Family and friends can’t see this.'};
   return`<div class="brand">${brand(w)}</div>
 <h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>
@@ -1398,9 +1409,9 @@ document.addEventListener('click',async e=>{
   else if(a==='waEc'&&!TOKEN){const x=EC().find(y=>y.id===id),ph=waNum(x.crew&&x.crew.phone);if(!ph)return toast('Add a phone number for this person in your crew list first.');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hi ${cName(x)}, here are your details for ${wed.couple} on ${fmtD(wed.wedding_date)}: timeline, locations and your to-do list.\n${cLink(x)}`),'_blank')}
   else if(a==='ctask'&&CTOKEN&&cw){const i=+t.dataset.i,k=cw.tasks[i];if(k){k.done=!k.done;setApp(crewView());const{error}=await sb.rpc('crew_task_set',{p_token:CTOKEN,p_index:i,p_done:k.done});if(error){k.done=!k.done;setApp(crewView());toast('Could not save. Check your connection.')}}}
   else if(a==='bkPick'){bk.done=false;bk.fail=false;if(t.dataset.t)bk.v.event_type=t.dataset.t;bk.step=bk.v.event_type?1:0;if(bk.v.event_type){const o=bkPkgs().find(x=>x.split(' · ')[0]===t.dataset.p);if(o){bk.v.package=o;bk.step=2}}else bk.want=t.dataset.p;bkDraw(1)}
-  else if(a==='bkSet'){const q=BKQ[bk.step];bk.v[q.k]=t.dataset.v;if(q.k==='event_type'){const o=bk.want&&bkPkgs().find(x=>x.split(' · ')[0]===bk.want);bk.v.package=o||'';bk.want=null}bkNext()}
+  else if(a==='bkSet'){const q=bkAct()[bk.step];bk.v[q.k]=t.dataset.v;if(q.k==='event_type'){const o=bk.want&&bkPkgs().find(x=>x.split(' · ')[0]===bk.want);bk.v.package=o||'';bk.want=null}bkNext()}
   else if(a==='bkNext')bkNext();
-  else if(a==='bkBack'){const el=$('#bkf'),q=BKQ[bk.step];if(el&&q.t!=='agree')bk.v[q.k]=el.value.trim();bk.step=Math.max(0,bk.step-1);bkDraw(1)}
+  else if(a==='bkBack'){bkRead(bkAct()[bk.step]);bk.step=Math.max(0,bk.step-1);bkDraw(1)}
   else if(a==='bkAccept'&&!TOKEN)acceptBk(id);
   else if(a==='bkWa'&&!TOKEN){const b=bks.find(x=>x.id===id);window.open('https://wa.me/'+waNum(b.phone)+'?text='+encodeURIComponent(`Hello ${b.name}, thank you for your booking request with Zema Production for ${fmtD(b.event_date)}.`),'_blank')}
   else if(a==='bkDecline'&&!TOKEN)ask('Decline this booking request? It is removed from your dashboard.',async()=>{const{error}=await sb.from('bookings').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);bks=bks.filter(x=>x.id!==id);render()});
