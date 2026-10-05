@@ -476,6 +476,7 @@ async function loadDash(view){
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
   await refreshCrew();
   await refreshFree();
+  await refreshEnq();
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
@@ -522,7 +523,7 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
@@ -538,6 +539,7 @@ function render(){
   else if(ui.view==='crew')setApp(crewListView());
   else if(ui.view==='cine')setApp(cineGrid());
   else if(ui.view==='free')setApp(freeView());
+  else if(ui.view==='enq')setApp(enqView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
@@ -578,8 +580,9 @@ function dashView(){
   const fl=STG[ui.flt]?W.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${W.length} event${W.length==1?'':'s'}</div>
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
-<nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
+<nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
+${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${mny(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(mny(owedSum),'Still to come','owed')}</div>
 <p style="text-align:right;margin:10px 0 0"><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
@@ -1275,6 +1278,98 @@ ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages li
 ${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
+/* ---- Enquiries and follow-ups ---- */
+let enqs=[],enqErr=false;
+const ENQ={new:'New',replied:'Replied',waiting:'Waiting on them',booked:'Booked',lost:'Not going ahead'};
+const enqOpen=e=>['new','replied','waiting'].includes(e.status);
+const enqDue=e=>enqOpen(e)&&!!e.follow_on&&e.follow_on<=today();
+const addDays=(d,n)=>{const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const busyOn=d=>!d?[]:[...weds.filter(w=>w.wedding_date===d).map(w=>w.couple+' ('+STG[stg(w)]+')'),...bks.filter(b=>b.event_date===d).map(b=>b.name+' (new booking request)'),...fjobs.filter(j=>j.status==='new'&&j.job_date===d).map(j=>j.title+' (freelance request)')];
+const availTxt=d=>{if(!d)return'';const b=busyOn(d);return b.length?'You already have something that day: '+b.join(', ')+'.':'You are free on '+fmtD(d)+'.'};
+async function refreshEnq(){const q=await sb.from('enquiries').select('*').order('created_at',{ascending:false});enqs=q.error?[]:(q.data||[]);enqErr=!!q.error}
+function enqCard(e){
+  const op=enqOpen(e),b=op?busyOn(e.event_date):[],due=enqDue(e),od=due&&e.follow_on<today();
+  return`<div class="wc" style="cursor:default${due?';border-color:var(--ac)':''}"><div class="nm">${esc(e.name)}</div>
+<div class="sub">${esc(e.event_type||'Enquiry')}${e.event_date?' · '+fmtD(e.event_date):''}${e.source?' · via '+esc(e.source):''}</div>
+<div><span class="tag ${op?'approved':''}">${ENQ[e.status]||'New'}</span>${op&&e.event_date?`<span class="tag">${b.length?'Date busy':'Date free'}</span>`:''}${op&&e.follow_on?`<span class="tag ${due?'approved':''}">${od?'Overdue · ':''}Follow up ${e.follow_on===today()?'today':fmtD(e.follow_on)}</span>`:op?'<span class="tag">No follow-up set</span>':''}</div>
+${b.length?`<div class="note fam" style="font-style:normal">That day: ${esc(b.join(', '))}</div>`:''}
+${e.note?`<p class="ntx" style="font-size:14px;color:#bdb8b0">${esc(e.note)}</p>`:''}
+<div class="row2" style="margin-top:12px"><span>${esc(e.phone||'')}</span><span>${e.last_contact?'Last contacted '+fmtD(e.last_contact):'Added '+fmtD(String(e.created_at||'').slice(0,10))}</span></div>
+<div class="acts">${op?`<button data-a="enqWa" data-id="${e.id}">Message</button><button data-a="enqFollow" data-id="${e.id}">Set follow-up</button><button data-a="enqBook" data-id="${e.id}">Booked · create event</button><button data-a="enqLost" data-id="${e.id}">Not going ahead</button>`:`<button data-a="enqReopen" data-id="${e.id}">Reopen</button>`}<button data-a="enqEdit" data-id="${e.id}">Edit</button><button data-a="enqDel" data-id="${e.id}">Delete</button></div></div>`}
+function enqView(){
+  const op=enqs.filter(enqOpen),due=op.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)),rest=op.filter(e=>!enqDue(e)).sort((a,b)=>String(a.follow_on||'9999').localeCompare(String(b.follow_on||'9999'))),cl=enqs.filter(e=>!enqOpen(e));
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Enquiries</h1><div class="meta">${op.length} open · ${due.length} to follow up</div>
+${enqErr?'<p class="intro" style="margin-top:16px">Enquiries aren’t set up yet. Run the enquiries SQL in Supabase once, then refresh this page.</p>':''}
+<div class="cta"><button class="btn fill" data-a="enqAdd">+ Add enquiry</button></div>
+${due.length?`<h2>Follow up now · ${due.length}</h2>${due.map(enqCard).join('')}`:''}
+<h2>Open enquiries</h2>
+${rest.length?rest.map(enqCard).join(''):`<p class="empty">${due.length?'Nothing else open.':'No open enquiries. Add one as soon as a message comes in.'}</p>`}
+${cl.length?`<h2>Closed</h2>${ui.showEnqCl?cl.map(enqCard).join(''):`<div class="cta"><button class="btn" data-a="enqShowCl">Show ${cl.length} closed</button></div>`}`:''}`}
+function openEnqForm(id){
+  const e=id?enqs.find(x=>x.id===id):null,d=e||{name:'',phone:'',event_type:'',event_date:'',source:'WhatsApp',note:'',status:'new',follow_on:addDays(today(),1)};
+  ui.modal={type:'enq',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${e?'Edit enquiry':'Add enquiry'}</h3>
+<div class="f"><span class="l">Name</span><input id="qn" maxlength="120" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">WhatsApp or phone number</span><input id="qp" type="tel" maxlength="40" placeholder="07…" value="${esc(d.phone||'')}"></div>
+<div class="f"><span class="l">Type of event</span><select id="qt"><option value="">Not sure yet</option>${ETYPES.filter(x=>x!==FREE).map(x=>`<option ${x===d.event_type?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Date they asked about</span><input id="qd" type="date" value="${esc(d.event_date||'')}"><div class="note fam" id="qav" style="font-style:normal">${esc(availTxt(d.event_date))}</div></div>
+<div class="f"><span class="l">Where it came from</span><select id="qs">${['WhatsApp','Instagram','Phone call','Recommendation','Website','Other'].map(x=>`<option ${x===d.source?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Note</span><textarea id="qo" rows="3" maxlength="1000" placeholder="What they asked, budget, anything to remember.">${esc(d.note||'')}</textarea></div>
+<div class="f"><span class="l">Follow up on</span><input id="qf" type="date" value="${esc(d.follow_on||'')}"></div>
+${e?`<div class="f"><span class="l">Status</span><select id="qz">${Object.entries(ENQ).map(([k,v])=>`<option value="${k}" ${k===d.status?'selected':''}>${v}</option>`).join('')}</select></div>`:''}
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="enqSave">Save</button></div></div></div>`;
+}
+async function saveEnq(){
+  const name=$('#qn').value.trim();
+  if(!name){$('#qn').classList.add('err');$('#qn').focus();return}
+  const id=ui.modal.id,o={name,phone:$('#qp').value.trim(),event_type:$('#qt').value,event_date:$('#qd').value||null,source:$('#qs').value,note:$('#qo').value.trim(),follow_on:$('#qf').value||null};
+  if($('#qz'))o.status=$('#qz').value;
+  const{error}=id?await sb.from('enquiries').update(o).eq('id',id):await sb.from('enquiries').insert(o);
+  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the enquiries SQL in Supabase first, then refresh.':'Could not save: '+error.message);
+  closeM();await refreshEnq();render();
+}
+async function setE(id,o){
+  const e=enqs.find(x=>x.id===id);if(!e)return;const prev={...e};Object.assign(e,o);render();
+  const{error}=await sb.from('enquiries').update(o).eq('id',id);
+  if(error){Object.assign(e,prev);render();toast('Could not save: '+error.message)}
+}
+function openEnqWa(id){
+  const e=enqs.find(x=>x.id===id);if(!e)return;
+  const ph=waNum(e.phone),first=(e.name||'').split(/[ ,&]/)[0],dt=e.event_date?fmtD(e.event_date):'your date',ty=e.event_type?e.event_type.toLowerCase():'event',pkl=location.origin+location.pathname+'?p=1';
+  const M=[['Available · send packages',`Hi ${first}, thank you for your enquiry. Yes, ${dt} is currently available. You can see my packages and book here:\n${pkl}\n\nLet me know if you have any questions.`],
+['Not available that day',`Hi ${first}, thank you for your enquiry. Unfortunately I’m already booked on ${dt}. If your date is flexible, let me know and I’ll check for you.`],
+['Are you still interested?',`Hi ${first}, just checking in about your ${ty}${e.event_date?' on '+dt:''}. Are you still interested in going ahead? Happy to answer any questions.`],
+['Open the chat, no message','']];
+  ui.modal={type:'enqwa',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Message ${esc(first)}</h3>
+<p class="intro">${ph?'Pick a message. WhatsApp opens with it written, and you can edit it before sending.':'No phone number saved for this enquiry. Add one with Edit first.'}</p>
+${e.event_date?`<p class="intro" style="color:var(--ac)">${esc(availTxt(e.event_date))}</p>`:''}
+${ph?M.map(([l,m],i)=>`<a class="or" style="text-decoration:none;color:inherit" href="https://wa.me/${ph}${m?'?text='+encodeURIComponent(m):''}" target="_blank" rel="noopener" data-a="enqSent" data-id="${e.id}"><span class="nm">${l}</span><span class="sub">WhatsApp</span></a>`).join(''):''}
+<div class="bt" style="margin-top:20px"><button class="btn" data-a="close">Close</button></div></div></div>`;
+}
+function openEnqFollow(id,after){
+  const e=enqs.find(x=>x.id===id);if(!e)return;
+  ui.modal={type:'enqf',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${after?'When should you follow up?':'Set follow-up'}</h3>
+<p class="intro">${after?'Message noted. ':''}Pick when to check in with ${esc(e.name)} again. It shows on your home page that day, and in your phone calendar.</p>
+<div class="chipsel">${[[1,'Tomorrow'],[3,'In 3 days'],[7,'In a week'],[14,'In 2 weeks']].map(([n,l])=>`<button class="tab" data-a="enqFSet" data-id="${e.id}" data-v="${addDays(today(),n)}">${l}</button>`).join('')}<button class="tab" data-a="enqFSet" data-id="${e.id}" data-v="">No follow-up</button></div>
+<div class="f" style="margin-top:18px"><span class="l">Or pick a date</span><input id="qfd" type="date" min="${today()}" value="${esc(e.follow_on||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="enqFDate" data-id="${e.id}">Save date</button></div></div></div>`;
+}
+async function bookEnq(id){
+  const e=enqs.find(x=>x.id===id);if(!e)return;
+  const ty=ETYPES.includes(e.event_type)?e.event_type:'Wedding';
+  const{data,error}=await sb.from('weddings').insert({couple:e.name,wedding_date:e.event_date||null,event_type:ty,services:'Photo + Video'}).select().single();
+  if(error)return toast('Could not create the event: '+error.message);
+  if(ty==='Wedding')await sb.from('photo_groups').insert(demoRows(data.id));
+  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:e.name,client_phone:e.phone||''});
+  const note=['From an enquiry'+(e.source?' via '+e.source:'')+', added '+fmtD(String(e.created_at||'').slice(0,10)),e.phone&&('Phone: '+e.phone),e.note&&('Note: '+e.note)].filter(Boolean).join('\n');
+  await sb.from('wedding_notes').upsert({wedding_id:data.id,private_note:note});
+  await sb.from('enquiries').update({status:'booked',follow_on:null,wedding_id:data.id}).eq('id',id);
+  Object.assign(e,{status:'booked',follow_on:null,wedding_id:data.id});toast('Event created from the enquiry');openWedding(data.id);
+}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qd'){const el=$('#qav');if(el)el.textContent=availTxt(ev.target.value)}});
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1800,6 +1895,19 @@ document.addEventListener('click',async e=>{
   else if(a==='calV'&&!TOKEN)openCal();
   else if(a==='copyCal'&&!TOKEN&&cal){const u=calUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Calendar link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='resetCal'&&!TOKEN)ask('Reset the calendar link? The old one stops working and you will need to subscribe again.',async()=>{const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'calendar',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not reset: '+error.message);cal=c;openCal()});
+  else if(a==='enqV'&&!TOKEN){ui.view='enq';render();scrollTo(0,0)}
+  else if(a==='enqAdd'&&!TOKEN)openEnqForm();
+  else if(a==='enqEdit'&&!TOKEN)openEnqForm(id);
+  else if(a==='enqSave'&&!TOKEN)saveEnq();
+  else if(a==='enqWa'&&!TOKEN)openEnqWa(id);
+  else if(a==='enqSent'&&!TOKEN){const en=enqs.find(x=>x.id===id);if(en){await setE(id,{last_contact:today(),status:en.status==='new'?'replied':en.status});openEnqFollow(id,1)}}
+  else if(a==='enqFollow'&&!TOKEN)openEnqFollow(id);
+  else if((a==='enqFSet'||a==='enqFDate')&&!TOKEN){const v=a==='enqFSet'?t.dataset.v:$('#qfd').value,en=enqs.find(x=>x.id===id);closeM();if(en)setE(id,{follow_on:v||null,status:v&&en.status==='replied'?'waiting':en.status})}
+  else if(a==='enqLost'&&!TOKEN)ask('Mark this enquiry as not going ahead? It moves to Closed.',()=>setE(id,{status:'lost',follow_on:null}));
+  else if(a==='enqReopen'&&!TOKEN)setE(id,{status:'waiting',follow_on:addDays(today(),1)});
+  else if(a==='enqBook'&&!TOKEN)ask('Create an event from this enquiry?',()=>bookEnq(id));
+  else if(a==='enqDel'&&!TOKEN)ask('Delete this enquiry?',async()=>{const{error}=await sb.from('enquiries').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);enqs=enqs.filter(x=>x.id!==id);render()});
+  else if(a==='enqShowCl'){ui.showEnqCl=true;render()}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
