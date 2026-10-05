@@ -481,6 +481,7 @@ async function loadDash(view){
   const{data,error}=r;
   if(error)return failView(error);
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
+  if(!ui.iconSet){ui.iconSet=1;const q=await sb.from('app_content').select('data').eq('key','app_icon').maybeSingle();if(q.data&&q.data.data)setIcon(q.data.data.url)}
   await refreshCrew();
   await refreshFree();
   await refreshEnq();
@@ -1382,6 +1383,30 @@ function openGoLinks(){
 ${GOL.map(([k,t,d])=>`<button class="or" data-a="copyGo" data-k="${k}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`).join('')}
 <div class="bt" style="margin-top:20px"><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
+/* App icon: upload a logo from the phone; home screen icons made afterwards use it */
+const setIcon=u=>{if(u)document.querySelectorAll('link[rel="apple-touch-icon"],link[rel="icon"]').forEach(l=>{l.href=u})};
+function openIconForm(){
+  ui.modal={type:'icon'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>App icon</h3>
+<p class="intro">Upload your logo and the planner uses it for home screen icons. It is cropped to a square from the middle, so a square logo on a solid background works best.</p>
+<div class="up"><label class="btn fill">Choose logo<input type="file" accept="image/*" id="icf" style="display:none"></label><span class="upm" id="icm"></span></div>
+<p class="intro" style="margin-top:16px;font-size:13px">After it says saved: delete your existing home screen icons, open the planner or a quick link in Safari, and add them to the home screen again. Icons keep the picture they were made with.</p>
+<div class="bt"><button class="btn" data-a="close">Close</button></div></div></div>`;
+}
+async function upIcon(el){
+  const f=el.files&&el.files[0],m=$('#icm');if(!f)return;
+  m.textContent='Uploading…';
+  try{
+    const blob=await new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const k=Math.min(img.width,img.height),c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#0B0B0C';x.fillRect(0,0,512,512);x.drawImage(img,(img.width-k)/2,(img.height-k)/2,k,k,0,0,512,512);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Could not read that image.')),'image/png')};img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Could not read that image. Try a JPG or PNG.'))};img.src=u});
+    const path='app/icon-'+Date.now()+'.png',{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/png',cacheControl:'31536000'});
+    if(error)throw error;
+    const url=sb.storage.from('covers').getPublicUrl(path).data.publicUrl,r=await sb.from('app_content').upsert({key:'app_icon',data:{url},updated_at:new Date().toISOString()});
+    if(r.error)throw r.error;
+    setIcon(url);m.textContent='Saved. Now remove your home screen icons and add them again.';
+  }catch(e){m.textContent='Upload failed: '+String((e&&e.message)||e)}
+  el.value='';
+}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='icf'&&!TOKEN)upIcon(e.target)});
 /* Dashboard menu: the less-used tools, kept off the home screen */
 function openMenu(){
   ui.modal={type:'menu'};
@@ -1390,7 +1415,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('goV','Quick links','For home screen icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -2082,6 +2107,7 @@ document.addEventListener('click',async e=>{
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
+  else if(a==='iconV'&&!TOKEN)openIconForm();
   else if(a==='copyGo'&&!TOKEN){const u=location.origin+location.pathname+'?go='+t.dataset.k;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied. Open it in Safari, then Share, Add to Home Screen.'),()=>prompt('Copy this link:',u))}
   else if(a==='cpy'){const v=t.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Password copied'),()=>prompt('Copy this:',v))}
   else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else loadDash(BACKN[ui.from]?ui.from:'dash')}
