@@ -488,7 +488,7 @@ async function loadDash(view){
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
   weds=data;wed=null;ui.view=view||'dash';ui.day=false;render();
 }
-const openWedding=(id,c)=>{ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
+const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
 async function loadWedding(id){
   const{data:w,error}=await sb.from('weddings').select('*').eq('id',id).single();
   if(error)return failView(error);
@@ -761,7 +761,7 @@ function standCard(){
   return`<section class="card stand">
 ${row('pay','Agreement',!a?'Not requested yet':a.signed_at?'Signed by '+esc(a.signed_name)+' on '+fmtD(String(a.signed_at).slice(0,10)):'Sent · waiting for the client to sign',!!(a&&a.signed_at))}
 ${row('pay','Payment',t==null?'No price set':paid>=t-0.005?'Paid in full · '+gbp(t):gbp(paid)+' of '+gbp(t)+' paid'+(nx?(nx.due<today()?' · overdue since ':' · next due ')+fmtD(nx.due):''),t!=null&&paid>=t-0.005)}
-${row(isWed(w)?'family':'timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by '+esc(w.approved_by||'the client'):'Not confirmed by the client yet',w.approval_status==='approved')}
+${row('timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by '+esc(w.approved_by||'the client'):'Not confirmed by the client yet',w.approval_status==='approved')}
 ${row('crew','Crew',!ec.length?'No crew added':[acc?acc+' accepted':'',wait?wait+' waiting':'',dec?dec+' declined':''].filter(Boolean).join(' · '),ec.length>0&&!wait&&!dec)}
 ${row('cost','Costs and profit',t==null?(cost?gbp(cost)+' in costs':'No costs added'):'Profit '+sg(t-cost)+(cost?' after '+gbp(cost)+' in costs':' · no costs added'),false)}
 ${row('del','Delivery',!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published'+(d.expires_on?' · access until '+fmtD(d.expires_on):''):'Added but not published',d.published)}
@@ -1633,9 +1633,10 @@ function famMain(){
 <div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
 <div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyF">Copy family &amp; friends link</button></div>
 ${tabsHtml()}${listHtml()}`}
+const BACKN={free:'Freelance',enq:'Enquiries',cine:'Cinema',year:'Progress',due:'Costs to pay',crew:'Crew',rev:'Reviews'};
 function mainView(){
   const w=wed,ap=w.approval_status==='approved';
-  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+  return`<div class="top2" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-a="goBack">← ${ui.sec!=='overview'?'Overview':BACKN[ui.from]||'All events'}</button>${ui.sec!=='overview'||BACKN[ui.from]?'<button class="btn" data-a="back">All events</button>':''}</div>
 <div class="brand">${brand(w)}</div>
 <h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${dm(w)}</div>
 ${tagHtml(w)}
@@ -1996,6 +1997,7 @@ document.addEventListener('click',async e=>{
   if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
+  else if(a==='goBack'&&!TOKEN){if(ui.sec!=='overview'){ui.sec='overview';render();scrollTo(0,0)}else loadDash(BACKN[ui.from]?ui.from:'dash')}
   else if(a==='togHideMoney'){hideMoney=!hideMoney;try{localStorage.setItem('zemaHideMoney',hideMoney?'1':'0')}catch(_){}render()}
   else if(a==='out')await sb.auth.signOut();
   else if(a==='retry')reload();
