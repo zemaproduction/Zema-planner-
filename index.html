@@ -364,7 +364,7 @@ async function savePk(){
   pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);render();toast('Packages saved');return true;
 }
 
-let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null;
+let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null,cnotes=[];
 let sb,user=null,wed=null,weds=[],chans={},ui={view:'dash',wid:null,sec:'family',tab:'all',day:false,modal:null,stamp:'',live:false};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -584,6 +584,7 @@ function dashView(){
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
 <nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
+${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')}<div style="height:14px"></div>`:''}
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${mny(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(mny(owedSum),'Still to come','owed')}</div>
@@ -924,6 +925,7 @@ async function loadCrewPage(){
   cw=data;setApp(crewView());
 }
 function crewView(){
+  if(cw.status==='invited'||cw.status==='declined')return crewInvite();
   const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=d.timeline||[],pl=d.places||[],pp=d.party||[],mh=d.musts||[];
   return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
@@ -949,7 +951,7 @@ function openCrewForm(id){
 <div class="f"><span class="l">Private note (optional)</span><textarea id="ko" rows="2" maxlength="300" placeholder="e.g. Day rate, own equipment.">${esc(d.note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveCrew">Save</button></div></div></div>`;
 }
-async function refreshCrew(){const q=await sb.from('crew').select('*').order('name');crew=q.error?[]:(q.data||[]);crewErr=!!q.error}
+async function refreshCrew(){const q=await sb.from('crew').select('*').order('name');crew=q.error?[]:(q.data||[]);crewErr=!!q.error;const n=await sb.from('event_crew').select('id,status,wedding_id,crew(name)').eq('seen',false);cnotes=n.error?[]:(n.data||[])}
 async function saveCrew(){
   const name=$('#kn').value.trim();
   if(!name){$('#kn').classList.add('err');$('#kn').focus();return}
@@ -958,33 +960,53 @@ async function saveCrew(){
   if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the crew SQL in Supabase first, then refresh.':'Could not save: '+error.message);
   closeM();await refreshCrew();render();
 }
+const ecStat=x=>x.status==='invited'?'Asked · waiting for an answer':x.status==='declined'?'Declined':'Accepted';
+const askMsg=x=>{const c0=(wed.city||'').trim(),area=/^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i.test(c0)?c0.toUpperCase().replace(/\s*[0-9][A-Z]{2}$/,''):c0;return`Hi ${cName(x)}, are you available for a job with Zema Production?\n\n${etype(wed)} · ${fmtD(wed.wedding_date)}${x.call_time?'\nCall time: '+x.call_time:''}${area?'\nArea: '+area:''}${x.role?'\nRole: '+x.role:''}${x.brief?'\n\n'+x.brief:''}\n\nPlease accept or decline here:\n${cLink(x)}`};
 function crMain(){
   if(wed.ecErr)return`<h2>Crew</h2><p class="empty">Crew isn’t set up in Supabase yet. Run the crew SQL once, then refresh this page.</p>`;
   return`<h2>Crew</h2>
-<p class="intro">Second shooters and helpers on this event. Each gets a private link with the timeline, locations, key people, must-have shots and the to-do list you write for them. They never see prices, payments or the client’s notes.</p>
-<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addEc">+ Add crew to this event</button><button class="btn" data-a="crewV">Manage crew list</button></div>
-<div>${EC().length?EC().map(x=>{const tk=Array.isArray(x.tasks)?x.tasks:[];return`<div class="g"><div class="bd"><div class="nm">${esc(cName(x))}</div><div class="sub">${esc(x.role||'Crew')}${x.call_time?' · call time '+esc(x.call_time):''}${tk.length?' · '+tk.filter(t=>t.done).length+' / '+tk.length+' tasks done':''}</div>${x.brief?`<div class="note fam" style="font-style:normal">${esc(x.brief)}</div>`:''}<div class="acts"><button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="waEc" data-id="${x.id}">Send on WhatsApp</button><button data-a="delEc" data-id="${x.id}">Remove</button></div></div></div>`}).join(''):'<p class="empty">No crew on this event yet.</p>'}</div>`}
-function openEcForm(id){
+<p class="intro">Ask someone if they’re free and they accept or decline from their own link. Once they accept, that link shows them the timeline, locations, key people, must-have shots and their to-do list. They never see prices, payments or the client’s notes.</p>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="askEc">Ask if available</button><button class="btn" data-a="addEc">Add without asking</button><button class="btn" data-a="crewV">Manage crew list</button></div>
+<div>${EC().length?EC().map(x=>{const tk=Array.isArray(x.tasks)?x.tasks:[],st=x.status||'accepted';return`<div class="g"><div class="bd"><div class="nm">${esc(cName(x))}</div><div class="sub">${esc(x.role||'Crew')}${x.call_time?' · call time '+esc(x.call_time):''}${st==='accepted'&&tk.length?' · '+tk.filter(t=>t.done).length+' / '+tk.length+' tasks done':''}</div>
+<div><span class="tag ${st==='declined'?'':'approved'}">${ecStat(x)}</span></div>
+${x.brief?`<div class="note fam" style="font-style:normal">${esc(x.brief)}</div>`:''}
+<div class="acts">${st==='invited'?`<button data-a="waAsk" data-id="${x.id}">Send request again</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="delEc" data-id="${x.id}">Cancel request</button>`:st==='declined'?`<button data-a="reAsk" data-id="${x.id}">Ask again</button><button data-a="delEc" data-id="${x.id}">Remove</button>`:`<button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="waEc" data-id="${x.id}">Send on WhatsApp</button><button data-a="delEc" data-id="${x.id}">Remove</button>`}</div></div></div>`}).join(''):'<p class="empty">No crew on this event yet.</p>'}</div>`}
+function openEcForm(id,invite){
   const x=id?EC().find(y=>y.id===id):null;
   if(!x&&!crew.length){toast('Add someone to your crew list first.');ui.view='crew';render();return openCrewForm()}
-  const d=x||{crew_id:crew[0].id,role:crew[0].role||'Second shooter',call_time:'',brief:'',tasks:[]};
-  ui.modal={type:'ec',id};
-  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit '+esc(cName(x)):'Add crew to this event'}</h3>
-${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${crew.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select></div>`}
+  const free=crew.filter(c=>!EC().some(e=>e.crew_id===c.id));
+  if(!x&&!free.length)return toast('Everyone on your crew list is already on this event.');
+  const d=x||{crew_id:free[0].id,role:free[0].role||'Second shooter',call_time:'',brief:'',tasks:[]},inv=x?x.status==='invited':!!invite;
+  ui.modal={type:'ec',id,invite:!x&&!!invite};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit '+esc(cName(x)):invite?'Ask if available':'Add crew to this event'}</h3>
+${!x&&invite?'<p class="intro">WhatsApp opens with the request written for you. They see the date, call time, area, role and your note, then accept or decline.</p>':''}
+${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select></div>`}
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
-<div class="f"><span class="l">Brief · what they should know</span><textarea id="eb" rows="3" maxlength="1000" placeholder="e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.">${esc(d.brief||'')}</textarea></div>
-<div class="f"><span class="l">Their to-do list · one task per line</span><textarea id="ek" rows="6" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
-<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">Save</button></div></div></div>`;
+<div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
+<div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
 }
 async function saveEc(){
-  const id=ui.modal.id,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
+  const id=ui.modal.id,invite=ui.modal.invite,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
   const tasks=$('#ek').value.split('\n').map(t=>t.trim()).filter(Boolean).map(t=>({t,done:!!(old.find(o=>o.t===t)||{}).done}));
-  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks};
-  const{error}=id?await sb.from('event_crew').update(o).eq('id',id):await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:$('#ec').value});
-  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the crew SQL in Supabase first, then refresh.':'Could not save: '+error.message);
-  closeM();await loadWedding(wed.id);
+  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks},cid=id?null:$('#ec').value;
+  const win=invite?window.open('','_blank'):null;
+  const r=id?await sb.from('event_crew').update(o).eq('id',id).select('*, crew(name,phone)').single():await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:cid,...(invite?{status:'invited'}:{})}).select('*, crew(name,phone)').single();
+  if(r.error){if(win)win.close();return toast(/relation|schema|find the table|column/i.test(r.error.message)?'Run the latest crew SQL in Supabase first, then refresh.':'Could not save: '+r.error.message)}
+  closeM();
+  if(invite){const u='https://wa.me/'+waNum(r.data.crew&&r.data.crew.phone)+'?text='+encodeURIComponent(askMsg(r.data));if(win)win.location=u;else toast('Saved. Tap “Send request again” to open WhatsApp.')}
+  await loadWedding(wed.id);
 }
+function crewInvite(){
+  const d=cw,e=d.event||{},dec=d.status==='declined',row=(a,b)=>b?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx)">${esc(b)}</span></div>`:'';
+  return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${dec?'You declined this job':'Are you available?'}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}</div>
+<section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'')}</div>
+${row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}
+${d.brief?`<p class="ntx" style="margin-top:16px">${esc(d.brief)}</p>`:''}
+${dec?'<p class="intro" style="margin:16px 0 0">If that was a mistake, message Zema Production and they can ask you again.</p>':'<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="cAccept">Accept</button><button class="btn" data-a="cDecline">Decline</button></div>'}</section>
+${dec?'':'<p class="intro" style="margin-top:16px;font-size:13px">Once you accept, this page shows the full timeline, locations and your to-do list.</p>'}
+<footer><span>Private crew link · Zema Production</span></footer>`}
 /* ---- Delivery / Zema Cinema: films (unlisted YouTube) and photo galleries per event ---- */
 let dels=[];
 const safeU=u=>/^https:\/\//i.test(String(u||'').trim())?String(u).trim():'';
@@ -1940,6 +1962,12 @@ document.addEventListener('click',async e=>{
   else if(a==='enqShowCl'){ui.showEnqCl=true;render()}
   else if(a==='eqSend'&&EQPAGE)eqSend();
   else if(a==='copyEq'&&!TOKEN){const u=location.origin+location.pathname+'?e=1';(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Enquiry form link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='askEc'&&!TOKEN)openEcForm(null,1);
+  else if(a==='waAsk'&&!TOKEN){const x=EC().find(y=>y.id===id),ph=waNum(x.crew&&x.crew.phone);if(!ph)return toast('Add a phone number for this person in your crew list first.');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(askMsg(x)),'_blank')}
+  else if(a==='reAsk'&&!TOKEN){const x=EC().find(y=>y.id===id),win=window.open('https://wa.me/'+waNum(x.crew&&x.crew.phone)+'?text='+encodeURIComponent(askMsg(x)),'_blank');x.status='invited';render();run(sb.from('event_crew').update({status:'invited',responded_at:null,seen:true}).eq('id',id))}
+  else if(a==='cAccept'&&CTOKEN){const{error}=await sb.rpc('crew_respond',{p_token:CTOKEN,p_accept:true});if(error)return toast('Could not save. Check your connection and try again.');await loadCrewPage();scrollTo(0,0)}
+  else if(a==='cDecline'&&CTOKEN)ask('Decline this job?',async()=>{const{error}=await sb.rpc('crew_respond',{p_token:CTOKEN,p_accept:false});if(error)return toast('Could not save. Check your connection and try again.');loadCrewPage()});
+  else if(a==='crewNote'&&!TOKEN){await sb.from('event_crew').update({seen:true}).eq('wedding_id',id).eq('seen',false);cnotes=cnotes.filter(n=>n.wedding_id!==id);await openWedding(id);ui.sec='crew';render()}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
