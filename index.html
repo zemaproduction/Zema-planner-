@@ -145,8 +145,8 @@ const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null;
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew','Delivery'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew','Delivery':'del'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Delivery'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -381,7 +381,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Crew','Delivery'];
+const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Costs','Crew','Delivery'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
@@ -478,6 +478,7 @@ async function loadDash(view){
   await refreshCrew();
   await refreshFree();
   await refreshEnq();
+  {const q=await sb.from('event_costs').select('wedding_id,amount,paid');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
@@ -499,7 +500,8 @@ async function loadWedding(id){
   const ec=await sb.from('event_crew').select('*, crew(name,phone)').eq('wedding_id',id).order('created_at');
   const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
   const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
-  wed={...w,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
+  wed={...w,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -546,7 +548,7 @@ function render(){
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
 function famTl(){
@@ -588,7 +590,7 @@ ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${mny(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(mny(owedSum),'Still to come','owed')}</div>
-<p style="text-align:right;margin:10px 0 0"><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
+<p style="display:flex;justify-content:space-between;gap:12px;margin:10px 0 0;font-size:13px;color:var(--mu)"><span>${(u=>u>0?'Costs still to pay: '+mny(u):'')(sum(costsAll.filter(c=>!c.paid)))}</span><button class="lnk" style="font-size:13px" data-a="togHideMoney">${hideMoney?'Show amounts':'Hide amounts'}</button></p>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
 ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “New Event” to add one.</p>'}
 ${late.length?`<h2>Date passed</h2><p class="intro">These events have happened but are still marked Pending or Confirmed. Open each one and move it to Post-production or Delivered.</p>${late.map(evCard).join('')}`:''}
@@ -605,7 +607,7 @@ function yearView(){
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Progress</h1><div class="meta">Events and income, year by year</div>
 <div class="tabs" style="margin-top:22px">${ys.map(v=>`<button class="tab ${v===y?'on':''}" data-a="year" data-k="${v}">${v}</button>`).join('')}</div>
-<div class="stats" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="st"><b>${list.length}</b><span>Events done in ${y}</span></div><div class="st"><b>${mny(recvIn(y))}</b><span>Received in ${y}</span></div></div>
+<div class="stats" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="st"><b>${list.length}</b><span>Events done in ${y}</span></div><div class="st"><b>${mny(recvIn(y))}</b><span>Received in ${y}</span></div><div class="st" style="grid-column:1/-1"><b>${hideMoney?'£ ••••':sg(profitIn(y))}</b><span>Profit on events done in ${y} · income minus costs</span></div></div>
 <section class="card" style="margin-top:12px"><div class="lbl" style="margin-bottom:16px">By category in ${y}</div>
 ${cats.length?cats.map(([k,n])=>`<div class="pg"><div class="row2"><span class="lbl">${esc(k)}</span><span>${n}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/list.length*100)}%"></i></div></div>`).join(''):'<p class="intro" style="margin:0">No completed events in this year yet.</p>'}</section>
 <h2>Year by year</h2>
@@ -1450,6 +1452,50 @@ async function eqSend(){
   try{const{error}=await sb.rpc('enquiry_submit',{p});fail=!!error}catch(_){fail=true}
   eqDone={msg,fail};setApp(eqView());scrollTo(0,0);
 }
+/* ---- Costs and profit per event (photographer only; never sent to any client, crew or hirer link) ---- */
+let costsAll=[];
+const CCAT=['Crew','Album','Transport','Accommodation','Equipment hire','Food','Other'];
+const K=()=>wed.costs||[];
+const sg=n=>(n<0?'−':'')+gbp(Math.abs(n));
+const wCost=id=>sum(costsAll.filter(c=>c.wedding_id===id));
+const profitIn=y=>doneIn(y).reduce((a,w)=>a+(wPrice(w)||0)-wCost(w.id),0);
+function costMain(){
+  if(wed.costErr)return`<h2>Costs &amp; profit</h2><p class="empty">Costs aren’t set up in Supabase yet. Run the costs SQL once, then refresh this page.</p>`;
+  const inc=tot(wed.bill),got=sum(Y()),cost=sum(K()),out=sum(K().filter(c=>c.paid)),profit=(inc||0)-cost,r=(a,b,x)=>`<div class="row2" style="margin-top:${x||6}px"><span>${a}</span><span style="color:var(--tx)">${b}</span></div>`;
+  return`<h2>Costs &amp; profit</h2>
+<section class="card"><div class="lbl">Profit on this event</div><div class="num">${inc==null?'Set a price first':sg(profit)}</div>
+${r('Income · the total on the Payments tab',inc==null?'Not set':gbp(inc),0)}${r('Costs',cost?'−'+gbp(cost):gbp(0))}${inc?r('Profit as a share of income',Math.round(profit/inc*100)+'%'):''}
+<div style="height:16px;border-bottom:1px solid var(--line);margin-bottom:10px"></div>
+${r('Received from the client so far',gbp(got))}${r('Paid out so far',out?'−'+gbp(out):gbp(0))}${r('In hand now',sg(got-out))}${cost-out>0?r('Costs still to pay',gbp(cost-out)):''}</section>
+<div class="cta"><button class="btn fill" data-a="addCost">+ Add cost</button></div>
+<div>${K().length?K().map(c=>{const cr=c.crew_id&&crew.find(x=>x.id===c.crew_id);return`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(c.amount)}</div><div class="sub">${esc(c.label||c.category||'Cost')} · ${esc(c.category||'Other')}${c.hours&&c.rate?' · '+Number(c.hours)+' hours at '+gbp(c.rate):''}${cr&&cr.name!==c.label?' · '+esc(cr.name):''}</div>
+<div><span class="tag ${c.paid?'approved':''}">${c.paid?'Paid'+(c.paid_on?' '+fmtD(c.paid_on):''):'To pay'}</span></div>
+<div class="acts"><button data-a="togCost" data-id="${c.id}">${c.paid?'Mark as not paid':'Mark as paid'}</button><button data-a="editCost" data-id="${c.id}">Edit</button><button data-a="delCost" data-id="${c.id}">Delete</button></div></div></div>`}).join(''):'<p class="empty">No costs added yet. Add what you pay out for this event: crew, album, travel, accommodation.</p>'}</div>
+<p class="intro" style="margin-top:16px;font-size:13px">Costs are what you pay out. Anything you charge the client, such as transport on the invoice, belongs on the Payments tab. Profit here is before your own time and tax, and only you can see this tab.</p>`}
+function openCostForm(id){
+  const c=id?K().find(x=>x.id===id):null,d=c||{category:'Crew',label:'',amount:'',hours:'',rate:'',crew_id:'',paid:false,paid_on:''},ev=(wed.crew||[]).map(x=>x.crew_id),list=[...crew].sort((a,b)=>(ev.includes(b.id)?1:0)-(ev.includes(a.id)?1:0));
+  ui.modal={type:'cost',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${c?'Edit cost':'Add cost'}</h3>
+<div class="f"><span class="l">Category</span><select id="kc">${CCAT.map(x=>`<option ${x===d.category?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Crew member, if this is their pay</span><select id="kw"><option value="">Not a crew payment</option>${list.map(x=>`<option value="${x.id}" ${x.id===d.crew_id?'selected':''}>${esc(x.name)}${ev.includes(x.id)?' · on this event':''}</option>`).join('')}</select></div>
+<div class="f"><span class="l">What it is</span><input id="kl" maxlength="120" placeholder="e.g. Second shooter fee, 30-page album, hotel" value="${esc(d.label||'')}"></div>
+<div class="f"><span class="l">Amount in £ · flat fee or total</span><input id="ka" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.amount??'')}"></div>
+<p class="intro">Or, for hourly pay, fill in hours and rate and the amount is worked out for you.</p>
+<div class="f"><span class="l">Hours</span><input id="kh" type="number" inputmode="decimal" min="0" step="0.25" value="${esc(d.hours??'')}"></div>
+<div class="f"><span class="l">Rate per hour in £</span><input id="kr" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.rate??'')}"></div>
+<label class="chk" style="color:var(--tx)"><input type="checkbox" id="kp" ${d.paid?'checked':''}> I have paid this</label>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveCost">Save cost</button></div></div></div>`;
+}
+async function saveCost(){
+  const h=parseFloat($('#kh').value),rt=parseFloat($('#kr').value),hr=h>0&&rt>0,amount=hr?Math.round(h*rt*100)/100:parseFloat($('#ka').value);
+  if(!(amount>=0)){$('#ka').classList.add('err');$('#ka').focus();return toast('Add an amount, or hours and a rate.')}
+  const id=ui.modal.id,old=id?K().find(x=>x.id===id):null,cid=$('#kw').value||null,cr=cid&&crew.find(x=>x.id===cid),cat=$('#kc').value,paid=$('#kp').checked;
+  const o={category:cat,label:$('#kl').value.trim()||(cr?cr.name:cat),amount,hours:hr?h:null,rate:hr?rt:null,crew_id:cid,paid,paid_on:paid?((old&&old.paid_on)||today()):null};
+  const r=id?await sb.from('event_costs').update(o).eq('id',id).select().single():await sb.from('event_costs').insert({...o,wedding_id:wed.id}).select().single();
+  if(r.error)return toast(/relation|schema|find the table/i.test(r.error.message)?'Run the costs SQL in Supabase first, then refresh.':'Could not save: '+r.error.message);
+  if(id)Object.assign(old,r.data);else wed.costs=[...K(),r.data];
+  closeM();render();
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1467,7 +1513,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -2000,6 +2046,11 @@ document.addEventListener('click',async e=>{
   else if(a==='editTpl'&&!TOKEN)openTplForm(+t.dataset.i);
   else if(a==='saveTplF'&&!TOKEN){const n=$('#pn').value.trim();if(!n){$('#pn').classList.add('err');$('#pn').focus();return}const o={n,b:$('#pb').value.trim(),t:$('#pt').value.split('\n').map(x=>x.trim()).filter(Boolean)},i=ui.modal.i,old=ctpl;ctpl=[...ctpl];if(i!=null)ctpl[i]=o;else ctpl.push(o);closeM();if(!await saveTpl())ctpl=old;render()}
   else if(a==='delTpl'&&!TOKEN){const i=+t.dataset.i;ask('Delete this template? Lists already sent to crew are not affected.',async()=>{const old=ctpl;ctpl=ctpl.filter((_,j)=>j!==i);if(!await saveTpl())ctpl=old;render()})}
+  else if(a==='addCost'&&!TOKEN)openCostForm();
+  else if(a==='editCost'&&!TOKEN)openCostForm(id);
+  else if(a==='saveCost'&&!TOKEN)saveCost();
+  else if(a==='togCost'&&!TOKEN){const c=K().find(x=>x.id===id);if(c){c.paid=!c.paid;c.paid_on=c.paid?today():null;render();run(sb.from('event_costs').update({paid:c.paid,paid_on:c.paid_on}).eq('id',id))}}
+  else if(a==='delCost'&&!TOKEN)ask('Delete this cost?',()=>{wed.costs=K().filter(x=>x.id!==id);render();run(sb.from('event_costs').delete().eq('id',id))});
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
