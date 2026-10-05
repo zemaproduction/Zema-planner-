@@ -143,7 +143,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null;
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew','Delivery':'del'};
@@ -445,7 +445,8 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
@@ -529,6 +530,7 @@ const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+erro
 
 /* ---- Views ---- */
 function render(){
+  if(EQPAGE){setApp(eqView());return}
   if(HTOKEN){if(hz)setApp(hirerView());return}
   if(CTOKEN){if(cw)setApp(crewView());return}
   if(FTOKEN){if(wed)setApp(familyView())}
@@ -1273,7 +1275,7 @@ function openMenu(){
   const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Menu</h3>
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
-${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}
+${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
 ${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
@@ -1301,7 +1303,7 @@ function enqView(){
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Enquiries</h1><div class="meta">${op.length} open · ${due.length} to follow up</div>
 ${enqErr?'<p class="intro" style="margin-top:16px">Enquiries aren’t set up yet. Run the enquiries SQL in Supabase once, then refresh this page.</p>':''}
-<div class="cta"><button class="btn fill" data-a="enqAdd">+ Add enquiry</button></div>
+<div class="cta"><button class="btn fill" data-a="enqAdd">+ Add enquiry</button><button class="btn" data-a="copyEq">Copy enquiry form link</button></div>
 ${due.length?`<h2>Follow up now · ${due.length}</h2>${due.map(enqCard).join('')}`:''}
 <h2>Open enquiries</h2>
 ${rest.length?rest.map(enqCard).join(''):`<p class="empty">${due.length?'Nothing else open.':'No open enquiries. Add one as soon as a message comes in.'}</p>`}
@@ -1370,6 +1372,34 @@ async function bookEnq(id){
   Object.assign(e,{status:'booked',follow_on:null,wedding_id:data.id});toast('Event created from the enquiry');openWedding(data.id);
 }
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qd'){const el=$('#qav');if(el)el.textContent=availTxt(ev.target.value)}});
+/* ---- Public enquiry form (?e=1): lands in Enquiries as a new enquiry due for follow-up ---- */
+let eqDone=null;
+function eqView(){
+  if(eqDone)return`<div class="brand">ZEMA PRODUCTION</div><h1>${eqDone.fail?'Almost there':'Thank you'}</h1>
+<section class="card ok" style="margin-top:24px"><p class="intro" style="margin:0 0 18px">${eqDone.fail?'We couldn’t send the form just now. Your details are in the message below, so please send it to us on WhatsApp.':'We’ve received your enquiry and will get back to you soon. To reach us straight away, send the same details on WhatsApp.'}</p>
+<a class="btn fill" style="width:100%" href="${esc(waLink(eqDone.msg))}" target="_blank" rel="noopener">Send on WhatsApp</a></section>
+<div class="cta"><a class="btn" href="${esc(location.pathname+'?p=1')}">See our packages</a></div>`;
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>Check availability</h1><div class="meta">Photography &amp; videography · London</div>
+<p class="intro" style="margin-top:22px">Tell us a little about your event and we’ll get back to you about availability.</p>
+<section class="card ok" style="position:relative;overflow:hidden"><input id="eqhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0">
+<div class="f"><span class="l">Your name</span><input id="eqn" maxlength="120" autocomplete="name"></div>
+<div class="f"><span class="l">Phone or WhatsApp number</span><input id="eqp" type="tel" maxlength="40" autocomplete="tel"></div>
+<div class="f"><span class="l">Type of event</span><select id="eqt"><option value="">Not sure yet</option>${ETYPES.filter(x=>x!==FREE).map(x=>`<option>${x}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Date of the event, if you know it</span><input id="eqd" type="date" min="${today()}"></div>
+<div class="f"><span class="l">Anything you’d like to ask or tell us</span><textarea id="eqm" rows="4" maxlength="1000" placeholder="Location, number of guests, what you have in mind."></textarea></div>
+<div class="bad" id="eqerr"></div><button class="btn fill" style="width:100%" data-a="eqSend">Send enquiry</button></section>
+<div class="cta"><a class="btn" href="${esc(location.pathname+'?p=1')}">See our packages</a><a class="btn" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp us</a></div>
+<footer><span>Zema Production · London</span></footer>`}
+async function eqSend(){
+  const v=id=>$('#'+id).value.trim(),err=m=>{$('#eqerr').textContent=m},p={name:v('eqn'),phone:v('eqp'),event_type:v('eqt'),event_date:v('eqd'),message:v('eqm')};
+  if(!p.name)return err('Please add your name.');
+  if(p.phone.replace(/\D/g,'').length<7)return err('Please add a phone number we can reach you on.');
+  const msg=['Enquiry for Zema Production','','Name: '+p.name,'Phone: '+p.phone,p.event_type&&('Event: '+p.event_type),p.event_date&&('Date: '+fmtD(p.event_date)),p.message&&('Message: '+p.message)].filter(x=>x===''||x).join('\n');
+  if($('#eqhp').value){eqDone={msg};return setApp(eqView())}
+  err('Sending…');let fail=false;
+  try{const{error}=await sb.rpc('enquiry_submit',{p});fail=!!error}catch(_){fail=true}
+  eqDone={msg,fail};setApp(eqView());scrollTo(0,0);
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1908,6 +1938,8 @@ document.addEventListener('click',async e=>{
   else if(a==='enqBook'&&!TOKEN)ask('Create an event from this enquiry?',()=>bookEnq(id));
   else if(a==='enqDel'&&!TOKEN)ask('Delete this enquiry?',async()=>{const{error}=await sb.from('enquiries').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);enqs=enqs.filter(x=>x.id!==id);render()});
   else if(a==='enqShowCl'){ui.showEnqCl=true;render()}
+  else if(a==='eqSend'&&EQPAGE)eqSend();
+  else if(a==='copyEq'&&!TOKEN){const u=location.origin+location.pathname+'?e=1';(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Enquiry form link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
@@ -1921,6 +1953,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
