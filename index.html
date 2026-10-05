@@ -786,6 +786,7 @@ ${row('timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by 
 ${row('crew','Crew',!ec.length?'No crew added':[acc?acc+' accepted':'',wait?wait+' waiting':'',dec?dec+' declined':''].filter(Boolean).join(' · '),ec.length>0&&!wait&&!dec)}
 ${row('cost','Costs and profit',t==null?(cost?gbp(cost)+' in costs':'No costs added'):'Profit '+sg(t-cost)+(cost?' after '+gbp(cost)+' in costs':' · no costs added'),false)}
 ${w.sel||['post','delivered'].includes(stg(w))?row('del','Photo selection',esc(selTxt(w.sel)),selState(w.sel)==='done'):''}
+${(c=>row('gear','To bring for the client',c.length?esc(c.map(x=>x.t).join(', ')):'Nothing added',c.length>0&&c.every(x=>x.pre)))(GI().filter(x=>x.s===GCL))}
 ${row('del','Delivery',!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published'+(d.expires_on?' · access until '+fmtD(d.expires_on):''):'Added but not published',d.published)}
 </section>`}
 /* ---- Home page search across events, enquiries and booking requests ---- */
@@ -1821,6 +1822,8 @@ const GEARDEF='Photography\nSD cards, formatted\nCamera bodies\nCamera batteries
 let gearTpl=GEARDEF;
 const gearParse=(txt,old)=>{const out=[];String(txt||'').split(/\n\s*\n/).forEach(bl=>{const ls=bl.split('\n').map(x=>x.trim()).filter(Boolean);if(!ls.length)return;const s=ls.length>1?ls[0]:'General';(ls.length>1?ls.slice(1):ls).forEach(t=>{const o=(old||[]).find(x=>x.s===s&&x.t===t)||{};out.push({s,t,pre:!!o.pre,post:!!o.post})})});return out};
 const gearText=it=>[...new Set(it.map(x=>x.s))].map(s=>[s,...it.filter(x=>x.s===s).map(x=>x.t)].join('\n')).join('\n\n');
+const GCL='For this client';
+const GADD=['Guest sign board','Crane','Stage screen'];
 const GI=()=>Array.isArray(wed.gear)?wed.gear:gearParse(gearTpl);
 function gearList(it,m,ro){
   return[...new Set(it.map(x=>x.s))].map(s=>`<div class="lbl" style="margin:22px 0 10px;color:var(--ac)">${esc(s)} · ${it.filter(x=>x.s===s&&x[m]).length} / ${it.filter(x=>x.s===s).length}</div>${it.map((x,i)=>{if(x.s!==s)return'';const b=`<span class="ck" style="width:28px;height:28px;font-size:15px">${x[m]?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x.t)}</b></span>`;return ro?`<div class="dr ${x[m]?'done':''}" style="cursor:default;min-height:0;padding:13px 16px">${b}</div>`:`<button class="dr ${x[m]?'done':''}" data-a="gearTog" data-i="${i}" style="min-height:0;padding:13px 16px">${b}</button>`}).join('')}`).join('')}
@@ -1834,6 +1837,10 @@ function gearMain(){
   if(wed.gearErr)return`<h2>Equipment</h2><p class="empty">The equipment checklist isn’t set up in Supabase yet. Run the latest SQL once, then refresh this page.</p>`;
   return`<h2>Equipment</h2>
 <p class="intro">Tick each item when it’s packed before the event, then switch to Packing up at the end and tick it again as it goes back in the bag. Crew on this event can see the list.</p>
+<section class="card" style="margin-bottom:22px"><div class="lbl">${GCL}</div>
+<p class="intro" style="margin:8px 0 12px;font-size:14px">Anything this client asked for or paid extra for that you need to bring, such as a guest sign board, crane or stage screen. It goes at the top of the checklist.</p>
+<div class="pr"><input id="gadd" maxlength="80" placeholder="e.g. Guest sign board"><button class="btn" data-a="gearAdd">Add</button></div>
+<div class="chipsel">${GADD.filter(x=>!GI().some(i=>i.s===GCL&&i.t===x)).map(x=>`<button class="tab" data-a="gearAdd" data-v="${esc(x)}">+ ${esc(x)}</button>`).join('')}</div></section>
 ${gearBlock(GI(),false)}
 <div class="cta"><button class="btn" data-a="gearEdit">Edit this event’s list</button><button class="btn" data-a="gearClear">Untick all</button><button class="btn" data-a="gearTplE">Edit my standard list</button></div>`}
 async function setGear(it){
@@ -2223,6 +2230,7 @@ document.addEventListener('click',async e=>{
   else if(a==='menuV'&&!TOKEN)openMenu();
   else if(a==='goV'&&!TOKEN)openGoLinks();
   else if(a==='gearMode'){ui.gm=t.dataset.k;render()}
+  else if(a==='gearAdd'&&user&&wed){const v=(t.dataset.v||($('#gadd')||{}).value||'').trim();if(!v){const el=$('#gadd');if(el)el.focus();return}const it=GI().map(x=>({...x}));if(it.some(x=>x.s===GCL&&x.t.toLowerCase()===v.toLowerCase()))return toast('That is already on the list.');const mine=it.filter(x=>x.s===GCL),rest=it.filter(x=>x.s!==GCL);setGear([...mine,{s:GCL,t:v,pre:false,post:false},...rest])}
   else if(a==='gearTog'&&user&&wed){const it=GI().map(x=>({...x})),m=ui.gm==='post'?'post':'pre',x=it[+t.dataset.i];if(x){x[m]=!x[m];setGear(it)}}
   else if(a==='gearClear'&&user&&wed){const m=ui.gm==='post'?'post':'pre';ask(m==='pre'?'Untick everything under Before the event?':'Untick everything under Packing up?',()=>setGear(GI().map(x=>({...x,[m]:false}))))}
   else if(a==='gearEdit'&&user)openGearForm();
