@@ -128,10 +128,10 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null;
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Crew'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Crew':'crew'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -266,7 +266,7 @@ async function savePk(){
   pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);render();toast('Packages saved');return true;
 }
 
-let pk=null,pkErr=false,inv=null;
+let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null;
 let sb,user=null,wed=null,weds=[],chans={},ui={view:'dash',wid:null,sec:'family',tab:'all',day:false,modal:null,stamp:'',live:false};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -283,7 +283,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments'];
+const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Payments','Crew'];
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 const gbp=n=>'£'+Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:Number(n||0)%1?2:0,maximumFractionDigits:2});
@@ -345,7 +345,8 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();return setApp(pkgView(r.d))}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
   if(TOKEN){ui.sec=QS.get('s')||'overview';return loadShared()}
@@ -372,6 +373,7 @@ async function loadDash(view){
   const{data,error}=r;
   if(error)return failView(error);
   if(!inv){const q=await sb.from('app_content').select('data').eq('key','invoice').maybeSingle();inv={...INVDEF,...((q.data&&q.data.data)||{})}}
+  await refreshCrew();
   if(!pk){const r=await loadPk();pk=r.d;pkErr=r.err;PKG=pk.wed.map(x=>x.n).filter(Boolean)}
   weds=data;wed=null;ui.view=view||'dash';ui.day=false;render();
 }
@@ -388,7 +390,8 @@ async function loadWedding(id){
   const nt=await sb.from('wedding_notes').select('*').eq('wedding_id',id).maybeSingle();
   const py=await sb.from('payments').select('*').eq('wedding_id',id).order('paid_on');
   const bl=await sb.from('event_billing').select('*').eq('wedding_id',id).maybeSingle();
-  wed={...w,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const ec=await sb.from('event_crew').select('*, crew(name,phone)').eq('wedding_id',id).order('created_at');
+  wed={...w,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -410,22 +413,24 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
 function render(){
+  if(CTOKEN){if(cw)setApp(crewView());return}
   if(FTOKEN){if(wed)setApp(familyView())}
   else if(TOKEN){if(wed)setApp(ui.inv&&wed.money?invView():clientView())}
   else if(ui.view==='dash')setApp(dashView());
   else if(ui.view==='pkgs'){if(pk)setApp(pkEdit())}
   else if(ui.view==='year')setApp(yearView());
+  else if(ui.view==='crew')setApp(crewListView());
   else if(wed)setApp(ui.inv?invView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='pay'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='pay'||k==='crew'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
 function famTl(){
@@ -459,7 +464,7 @@ function dashView(){
   const st=(n,l,k)=>`<button class="st ${ui.flt===k?'sel':''}" data-a="flt" data-k="${k}"><b>${n}</b><span>${l}</span></button>`;
   const fl=STG[ui.flt]?weds.filter(w=>stg(w)===ui.flt):ui.flt==='owed'?owed:null;
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Events</h1><div class="meta">${weds.length} event${weds.length==1?'':'s'}</div>
-<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button></div>
+<div class="cta"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" data-a="editPk">Edit packages</button><button class="btn" data-a="copyP">Copy packages link</button><button class="btn" data-a="crewV">Crew</button></div>
 <div class="stats">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Post-production','post')}<button class="st yr" data-a="year" data-k="${cy}"><b>${doneIn(cy).length}</b><span>Done in ${cy} · view</span></button><button class="st yr" data-a="year" data-k="${cy}"><b>${gbp(recvIn(cy))}</b><span>Received in ${cy}</span></button>${st(gbp(owedSum),'Still to come','owed')}</div>
 ${fl?`<h2>${ui.flt==='owed'?'Money still to come':STG[ui.flt]}</h2>${fl.length?fl.map(evCard).join(''):`<p class="empty">${ui.flt==='owed'?'Nothing outstanding on confirmed events.':'No events with this status.'}</p>`}<div class="cta"><button class="btn" data-a="flt" data-k="">Show all events</button></div>`:`<h2>Upcoming</h2>
 ${up.length?up.map(evCard).join(''):'<p class="empty">Nothing upcoming. Tap “New Event” to add one.</p>'}
@@ -785,6 +790,78 @@ async function saveSet(){
   if(error)return toast('Could not save: '+error.message);
   inv=o;closeM();render();toast('Invoice settings saved');
 }
+/* ---- Crew: second shooters. Photographer manages; each shooter has a private read-only link (?c=) ---- */
+const EC=()=>wed.crew||[];
+const cName=x=>(x.crew&&x.crew.name)||'Crew member';
+const cLink=x=>location.origin+location.pathname+'?c='+x.token;
+const waNum=p=>String(p||'').replace(/\D/g,'').replace(/^00/,'').replace(/^0/,'44');
+async function loadCrewPage(){
+  const{data,error}=await sb.rpc('crew_get',{p_token:CTOKEN});
+  if(error||!data){if(!cw)setApp('<div class="login"><div class="brand">ZEMA PRODUCTION · CREW</div><h2>This link isn’t working</h2><p class="meta">Please ask Zema Production for a new one.</p></div>');return}
+  cw=data;setApp(crewView());
+}
+function crewView(){
+  const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=d.timeline||[],pl=d.places||[],pp=d.party||[],mh=d.musts||[];
+  return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
+<section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
+${tk.length?`<h2>Your to-do list</h2><div>${tk.map((x,i)=>`<button class="dr ${x.done?'done':''}" data-a="ctask" data-i="${i}"><span class="ck">${x.done?'✓':''}</span><span class="dt"><b style="font-size:20px">${esc(x.t)}</b></span></button>`).join('')}</div>`:''}
+${tl.length?`<h2>Timeline</h2>${tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`:''}
+${pl.length?`<h2>Locations</h2><div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
+${pp.length?`<h2>Key people</h2><div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
+${mh.length?`<h2>Must-have shots</h2>${mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')}`:''}
+<footer><span>Private crew link · Zema Production · updates every minute</span></footer>`}
+function crewListView(){
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Crew</h1><div class="meta">Second shooters and helpers</div>
+${crewErr?'<p class="intro" style="margin-top:16px">Crew isn’t set up yet. Run the crew SQL in Supabase once, then refresh this page.</p>':''}
+<div class="cta"><button class="btn fill" data-a="addCrew">+ Add crew member</button></div>
+<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>`}
+function openCrewForm(id){
+  const c=id?crew.find(x=>x.id===id):null,d=c||{name:'',phone:'',role:'Second shooter',note:''};
+  ui.modal={type:'crew',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${c?'Edit crew member':'Add crew member'}</h3>
+<div class="f"><span class="l">Name</span><input id="kn" maxlength="120" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">WhatsApp or phone number</span><input id="kp" type="tel" maxlength="40" placeholder="07…" value="${esc(d.phone||'')}"></div>
+<div class="f"><span class="l">Usual role</span><input id="kr" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
+<div class="f"><span class="l">Private note (optional)</span><textarea id="ko" rows="2" maxlength="300" placeholder="e.g. Day rate, own equipment.">${esc(d.note||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveCrew">Save</button></div></div></div>`;
+}
+async function refreshCrew(){const q=await sb.from('crew').select('*').order('name');crew=q.error?[]:(q.data||[]);crewErr=!!q.error}
+async function saveCrew(){
+  const name=$('#kn').value.trim();
+  if(!name){$('#kn').classList.add('err');$('#kn').focus();return}
+  const o={name,phone:$('#kp').value.trim(),role:$('#kr').value.trim(),note:$('#ko').value.trim()},id=ui.modal.id;
+  const{error}=id?await sb.from('crew').update(o).eq('id',id):await sb.from('crew').insert(o);
+  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the crew SQL in Supabase first, then refresh.':'Could not save: '+error.message);
+  closeM();await refreshCrew();render();
+}
+function crMain(){
+  if(wed.ecErr)return`<h2>Crew</h2><p class="empty">Crew isn’t set up in Supabase yet. Run the crew SQL once, then refresh this page.</p>`;
+  return`<h2>Crew</h2>
+<p class="intro">Second shooters and helpers on this event. Each gets a private link with the timeline, locations, key people, must-have shots and the to-do list you write for them. They never see prices, payments or the client’s notes.</p>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addEc">+ Add crew to this event</button><button class="btn" data-a="crewV">Manage crew list</button></div>
+<div>${EC().length?EC().map(x=>{const tk=Array.isArray(x.tasks)?x.tasks:[];return`<div class="g"><div class="bd"><div class="nm">${esc(cName(x))}</div><div class="sub">${esc(x.role||'Crew')}${x.call_time?' · call time '+esc(x.call_time):''}${tk.length?' · '+tk.filter(t=>t.done).length+' / '+tk.length+' tasks done':''}</div>${x.brief?`<div class="note fam" style="font-style:normal">${esc(x.brief)}</div>`:''}<div class="acts"><button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="waEc" data-id="${x.id}">Send on WhatsApp</button><button data-a="delEc" data-id="${x.id}">Remove</button></div></div></div>`}).join(''):'<p class="empty">No crew on this event yet.</p>'}</div>`}
+function openEcForm(id){
+  const x=id?EC().find(y=>y.id===id):null;
+  if(!x&&!crew.length){toast('Add someone to your crew list first.');ui.view='crew';render();return openCrewForm()}
+  const d=x||{crew_id:crew[0].id,role:crew[0].role||'Second shooter',call_time:'',brief:'',tasks:[]};
+  ui.modal={type:'ec',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit '+esc(cName(x)):'Add crew to this event'}</h3>
+${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${crew.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select></div>`}
+<div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
+<div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
+<div class="f"><span class="l">Brief · what they should know</span><textarea id="eb" rows="3" maxlength="1000" placeholder="e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.">${esc(d.brief||'')}</textarea></div>
+<div class="f"><span class="l">Their to-do list · one task per line</span><textarea id="ek" rows="6" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">Save</button></div></div></div>`;
+}
+async function saveEc(){
+  const id=ui.modal.id,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
+  const tasks=$('#ek').value.split('\n').map(t=>t.trim()).filter(Boolean).map(t=>({t,done:!!(old.find(o=>o.t===t)||{}).done}));
+  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks};
+  const{error}=id?await sb.from('event_crew').update(o).eq('id',id):await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:$('#ec').value});
+  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the crew SQL in Supabase first, then refresh.':'Could not save: '+error.message);
+  closeM();await loadWedding(wed.id);
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -802,7 +879,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='pay'?payMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='overview'?ovMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -1234,6 +1311,18 @@ document.addEventListener('click',async e=>{
   else if(a==='togSent'&&!TOKEN)setB({invoice_sent:!wed.bill.invoice_sent,invoice_sent_on:wed.bill.invoice_sent?null:today()});
   else if(a==='invSet'&&!TOKEN)openSetForm();
   else if(a==='saveSet'&&!TOKEN)saveSet();
+  else if(a==='crewV'&&!TOKEN){ui.view='crew';render();scrollTo(0,0)}
+  else if(a==='addCrew'&&!TOKEN)openCrewForm();
+  else if(a==='editCrew'&&!TOKEN)openCrewForm(id);
+  else if(a==='saveCrew'&&!TOKEN)saveCrew();
+  else if(a==='delCrew'&&!TOKEN)ask('Delete this crew member? They are also removed from any events and their links stop working.',async()=>{const{error}=await sb.from('crew').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);await refreshCrew();render()});
+  else if(a==='addEc'&&!TOKEN)openEcForm();
+  else if(a==='editEc'&&!TOKEN)openEcForm(id);
+  else if(a==='saveEc'&&!TOKEN)saveEc();
+  else if(a==='delEc'&&!TOKEN)ask('Remove this person from the event? Their link stops working.',()=>{wed.crew=EC().filter(x=>x.id!==id);render();run(sb.from('event_crew').delete().eq('id',id))});
+  else if(a==='copyEc'&&!TOKEN){const x=EC().find(y=>y.id===id),u=cLink(x);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Crew link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='waEc'&&!TOKEN){const x=EC().find(y=>y.id===id),ph=waNum(x.crew&&x.crew.phone);if(!ph)return toast('Add a phone number for this person in your crew list first.');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hi ${cName(x)}, here are your details for ${wed.couple} on ${fmtD(wed.wedding_date)}: timeline, locations and your to-do list.\n${cLink(x)}`),'_blank')}
+  else if(a==='ctask'&&CTOKEN&&cw){const i=+t.dataset.i,k=cw.tasks[i];if(k){k.done=!k.done;setApp(crewView());const{error}=await sb.rpc('crew_task_set',{p_token:CTOKEN,p_index:i,p_done:k.done});if(error){k.done=!k.done;setApp(crewView());toast('Could not save. Check your connection.')}}}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
@@ -1247,6 +1336,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&!PKPAGE&&ui.view!=='pkgs'&&((TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&!PKPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
