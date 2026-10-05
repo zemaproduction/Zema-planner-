@@ -206,7 +206,7 @@ function bkRead(q){const el=$('#bkf');if(q.t==='locs'){if($('#bkl0')){bk.loc=bkL
 function bkPkgs(){
   const ty=bk.v.event_type,pr=k=>k.n+(pkd.hide||!k.p?'':' · '+k.p),hr='Hourly rate'+(pkd.hide||!pkd.hr.p?'':' · '+pkd.hr.p);
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
-  return[...o,'Not sure yet'];
+  return o;
 }
 function bkSummary(){const v=bk.v;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
 function bkInner(){
