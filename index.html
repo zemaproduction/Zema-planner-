@@ -143,7 +143,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null;
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv');
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Payments','Costs','Crew','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Delivery':'del'};
@@ -397,8 +397,8 @@ function planRows(b,paid){
   const t=tot(b)||0,pl=planOf(b),full=Math.abs(pl.reduce((a,x)=>a+x,0)-100)<.01;let acc=0;
   return pl.map((pc,i)=>{const amt=full&&i===pl.length-1?Math.round((t-acc)*100)/100:Math.round(t*pc)/100,st=acc;acc+=amt;
     const got=Math.max(0,Math.min(amt,paid-st));
-    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100)}})}
-const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label} · ${r.pc}%</span><span>${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' left':'Due'):'Paid'}</span></div></div>`).join('');
+    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100),due:(Array.isArray(b.plan_due)?b.plan_due[i]:null)||null}})}
+const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label} · ${r.pc}%</span><span>${gbp(r.amt)} · ${r.left<=0?'Paid':r.left<r.amt?gbp(r.left)+' left':'Due'}</span></div>${r.due&&r.left>0?`<div class="row2" style="margin-top:6px"><span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'Overdue · was due ':'Due '}${fmtD(r.due)}</span><span></span></div>`:''}</div>`).join('');
 const wPaid=w=>sum(w.payments||[]);
 const wLeft=w=>wPrice(w)==null?0:Math.max(0,wPrice(w)-wPaid(w));
 const recvIn=y=>weds.reduce((a,w)=>a+sum((w.payments||[]).filter(p=>String(p.paid_on||'').slice(0,4)===String(y))),0);
@@ -445,8 +445,9 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
+  if(RVTOKEN){document.title='Zema Production · Review';return setApp(rvView())}
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
@@ -469,7 +470,8 @@ async function login(){
   if(error)$('#lerr').textContent=error.message;
 }
 async function loadDash(view){
-  let r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no,discount,extras)').order('wedding_date',{ascending:true,nullsFirst:false});
+  let r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no,discount,extras,plan,plan_due,client_phone)').order('wedding_date',{ascending:true,nullsFirst:false});
+  if(r.error)r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no,discount,extras)').order('wedding_date',{ascending:true,nullsFirst:false});
   if(r.error)r=await sb.from('weddings').select('*, photo_groups(done), payments(amount,paid_on), event_billing(price,invoice_no)').order('wedding_date',{ascending:true,nullsFirst:false});
   if(r.error)r=await sb.from('weddings').select('*, photo_groups(done)').order('wedding_date',{ascending:true,nullsFirst:false});
   const{data,error}=r;
@@ -478,6 +480,7 @@ async function loadDash(view){
   await refreshCrew();
   await refreshFree();
   await refreshEnq();
+  await refreshRev();
   {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
@@ -500,8 +503,9 @@ async function loadWedding(id){
   const ec=await sb.from('event_crew').select('*, crew(name,phone)').eq('wedding_id',id).order('created_at');
   const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
   const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
+  const aq=await sb.from('event_agreement').select('*').eq('wedding_id',id).maybeSingle();
   const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
-  wed={...w,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...w,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -516,9 +520,10 @@ async function loadShared(){
   const mn=await sb.rpc('shared_money_get',{p_token:TOKEN});
   const dv=await sb.rpc('shared_delivery_get',{p_token:TOKEN}),dl=dv.error?null:dv.data;
   const tr=await sb.rpc('shared_timer_get',{p_token:TOKEN});
+  const ag=await sb.rpc('shared_agreement_get',{p_token:TOKEN});
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -526,12 +531,13 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
 function render(){
+  if(RVTOKEN){setApp(rvView());return}
   if(EQPAGE){setApp(eqView());return}
   if(HTOKEN){if(hz)setApp(hirerView());return}
   if(CTOKEN){if(cw)setApp(crewView());return}
@@ -545,13 +551,14 @@ function render(){
   else if(ui.view==='free')setApp(freeView());
   else if(ui.view==='enq')setApp(enqView());
   else if(ui.view==='due')setApp(dueView());
+  else if(ui.view==='rev')setApp(revView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
 const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)):!!(ERR[k]&&wed[ERR[k]]);
-const SK_OK=k=>secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
-const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}</nav>`;
+const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
+const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}</nav>`;
 function famTl(){
   const a=T();
   return a.length?`<h2 style="margin-top:44px">Timeline</h2>${a.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}</div></div>`).join('')}`:'';
@@ -587,6 +594,7 @@ function dashView(){
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
 <nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
+${(d=>d.length?`<h2>Client payments due · ${d.length}</h2>${d.map(({w,r})=>`<div class="g"><div class="bd"><div class="nm">${esc(w.couple)}</div><div class="sub">${r.label} · ${hideMoney?'£ ••••':gbp(r.left)} · <span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'overdue since ':'due '}${fmtD(r.due)}</span></div><div class="acts"><button data-a="payRem" data-id="${w.id}" data-l="${esc(r.label)}" data-v="${r.left}" data-d="${r.due}">Remind on WhatsApp</button><button data-a="openW" data-id="${w.id}">Open</button></div></div></div>`).join('')}<div style="height:14px"></div>`:'')(payDues())}
 ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')}<div style="height:14px"></div>`:''}
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
@@ -799,7 +807,8 @@ ${t==null?'':`<div class="row2"><span>Package price</span><span>${gbp(b.price)}<
 :`<div class="lbl">No invoice yet</div><p class="intro" style="margin:10px 0 0">Creates an invoice with its own number from the price and payments above.</p><div class="acts"><button data-a="mkInv">Create invoice</button><button data-a="invSet">Invoice settings</button></div>`}</section>
 <h2>Client link</h2>
 <section class="card"><button class="tab ${b.share_money!==false?'on':''}" data-a="togMoney">${b.share_money!==false?'✓ The client can see what’s left to pay':'Hidden from the client · tap to share'}</button>
-<p class="intro" style="margin:12px 0 0;font-size:13px">When shared, the client’s link shows the total, the payment plan, payments received and what is left. Your payment notes and the family link never show any of this.</p></section>`}
+<p class="intro" style="margin:12px 0 0;font-size:13px">When shared, the client’s link shows the total, the payment plan, payments received and what is left. Your payment notes and the family link never show any of this.</p></section>
+${agrCard()}`}
 function invView(){
   const w=wed,b=w.bill,s=inv||INVDEF,price=Number(b.price||0),t=tot(b)||0,paid=sum(Y()),left=Math.max(0,t-paid),ex=Array.isArray(b.extras)?b.extras:[],disc=Number(b.discount||0),br=x=>esc(x).replace(/\n/g,'<br>'),pr=planRows(b,paid);
   return`<div class="top2 noprint"><button class="btn" data-a="invBack">← Back</button> <button class="btn fill" data-a="invPrint">Print or save as PDF</button></div>
@@ -848,6 +857,8 @@ function openPlanForm(){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Payment plan</h3>
 <p class="intro">The percentage of the total due at each stage, separated by commas. The first is the deposit and the last is the final balance. They should add up to 100.</p>
 <div class="f"><span class="l">Percentages</span><input id="ypl" inputmode="decimal" placeholder="25, 25, 50" value="${esc(planOf(wed.bill).join(', '))}"></div>
+${planRows(wed.bill,0).map((r,i)=>`<div class="f"><span class="l">${r.label} · due date (optional)</span><input id="ypd${i}" type="date" value="${esc(r.due||'')}"></div>`).join('')}
+<p class="intro" style="font-size:13px">Due dates appear on the client’s link, in your phone calendar and on your home page when they are close. If you change the number of stages, save, then open this again to set their dates.</p>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePlan">Save plan</button></div></div></div>`;
 }
 function openPayForm(id){
@@ -1085,7 +1096,7 @@ function delMain(){
   return`<h2>Delivery</h2>
 <section class="card"><div class="lbl">The client’s cinema page</div><button class="tab ${d.published?'on':''}" style="margin-top:12px" data-a="togPub">${d.published?'✓ Published · the client can see it':'Not published · tap to publish'}</button>
 <p class="intro" style="margin:12px 0 0;font-size:13px">Add films, photo galleries, or both. The page only shows what you add, so photo-only and video-only events work too.</p>
-<div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="editHero">Cover image</button></div></section>
+<div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="askRev">Ask for a review</button><button data-a="editHero">Cover image</button></div></section>
 ${accessCard()}
 <h2>Films</h2>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFilm">+ Add film</button></div>
@@ -1330,7 +1341,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -1506,6 +1517,87 @@ async function saveCost(){
   if(id)Object.assign(old,r.data);else wed.costs=[...K(),r.data];
   closeM();render();
 }
+/* ---- Client payments due (from payment-plan due dates) ---- */
+function payDues(){
+  const lim=addDays(today(),7),out=[];
+  weds.forEach(w=>{const b=B(w);if(b.price==null||!Array.isArray(b.plan_due))return;planRows(b,wPaid(w)).forEach(r=>{if(r.due&&r.left>0&&r.due<=lim)out.push({w,r})})});
+  return out.sort((a,b)=>a.r.due.localeCompare(b.r.due));
+}
+/* ---- Double-booking check: what else is on that day, leaving out the request being accepted ---- */
+const clash=(d,skip)=>!d?[]:[...weds.filter(w=>w.wedding_date===d).map(w=>w.couple+' ('+STG[stg(w)]+')'),...bks.filter(b=>b.event_date===d&&b.id!==skip).map(b=>b.name+' (new booking request)'),...fjobs.filter(j=>j.status==='new'&&j.job_date===d&&j.id!==skip).map(j=>j.title+' (freelance request)')];
+const guard=(d,skip,go,plain)=>{const c=clash(d,skip);if(c.length)ask('You already have something on '+fmtD(d)+': '+c.join(', ')+'. Accept this as well?',go);else if(plain)ask(plain,go);else go()};
+/* ---- Booking agreement: the client confirms package, price, plan and terms by typing their name ---- */
+function agrDoc(s){
+  const b={price:s.price,discount:s.discount,extras:s.extras,plan:s.plan,plan_due:s.plan_due},t=tot(b),terms=Array.isArray(s.terms)&&s.terms.length?s.terms:TERMS,r=(a,v)=>v?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx);text-align:right">${esc(v)}</span></div>`:'';
+  return`<section class="card"><div class="lbl">What is agreed</div>${r('Client',s.couple)}${r('Event',s.event_type)}${r('Date',s.wedding_date?fmtD(s.wedding_date):'')}${r('Package',s.package)}${r('Services',s.services)}${s.hours&&s.hourly_rate?r('Hours',Number(s.hours)+' at '+gbp(s.hourly_rate)+' per hour'):''}${s.price!=null&&Number(s.discount)>0?r('Price',gbp(s.price))+r('Discount','−'+gbp(s.discount)):''}${(Array.isArray(s.extras)?s.extras:[]).map(e=>r(e.label||'Extra','+'+gbp(e.amount))).join('')}${t!=null?r('Total',gbp(t)):''}</section>
+${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label} · ${x.pc}%</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
+<h2 style="font-size:20px;margin-top:28px">Terms &amp; Conditions</h2><div class="tc">${terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`}
+function clAgr(){
+  const a=wed.agr,signed=!!a.signed_at,s=(signed?a.snapshot:a.current)||{};
+  return`<h2>Booking Agreement</h2>
+${signed?`<section class="card ok" style="margin-bottom:16px"><div class="lbl">Signed</div><p class="intro" style="margin:10px 0 0">Signed by ${esc(a.signed_name)} on ${fmtDT(Date.parse(a.signed_at))}. This is the record of what was agreed.</p></section>`:'<p class="intro">Please read the details below. If everything is right, type your full name and tap Sign to confirm your booking.</p>'}
+${agrDoc(s)}
+${signed?'':`<section class="card ok" style="margin-top:20px"><div class="f"><span class="l">Your full name</span><input id="agn" maxlength="120" autocomplete="name"></div><label class="chk" style="color:var(--tx);align-items:flex-start"><input type="checkbox" id="agc" style="flex:none;margin-top:2px"> I have read and agree to the details and the Terms &amp; Conditions above</label><div class="bad" id="agerr"></div><button class="btn fill" style="width:100%" data-a="agrSign">Sign agreement</button></section>`}`}
+function agrCard(){
+  if(wed.agrErr)return'';const a=wed.agr;
+  return`<h2>Booking agreement</h2><section class="card">${!a?`<div class="lbl">Not requested</div><p class="intro" style="margin:10px 0 0">Ask the client to confirm their package, price, payment plan and your terms by typing their name. You both get a dated record.</p><div class="acts"><button data-a="agrReq">Request agreement</button></div>`
+:a.signed_at?`<div class="lbl">Signed</div><p class="intro" style="margin:10px 0 0">Signed by ${esc(a.signed_name)} on ${fmtDT(Date.parse(a.signed_at))}.</p><div class="acts"><button data-a="agrView">View what was signed</button><button data-a="agrReset">Clear and ask again</button></div>`
+:`<div class="lbl">Waiting for the client</div><p class="intro" style="margin:10px 0 0">Requested on ${fmtD(String(a.requested_at||'').slice(0,10))}. They sign from the Agreement tab on their link. Changes you make to the price or plan show there until they sign.</p><div class="acts"><button data-a="agrWa">Send on WhatsApp</button><button data-a="agrCopy">Copy link</button><button data-a="agrCancel">Cancel request</button></div>`}</section>`}
+const agrLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=agr';
+async function setAgr(o){
+  const{data,error}=await sb.from('event_agreement').upsert({wedding_id:wed.id,...o}).select().single();
+  if(error){toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  wed.agr=data;render();return true;
+}
+/* ---- Reviews: clients leave one from a link; you approve which appear on the website ---- */
+let revs=[],revErr=false,rvDone=false,rvStars=5;
+async function refreshRev(){const q=await sb.from('reviews').select('*').order('created_at',{ascending:false});revs=q.error?[]:(q.data||[]);revErr=!!q.error}
+const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
+function revView(){
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Reviews</h1><div class="meta">${revs.filter(r=>r.approved).length} approved · ${revs.filter(r=>!r.approved).length} waiting</div>
+${revErr?'<p class="intro" style="margin-top:16px">Reviews aren’t set up yet. Run the latest SQL in Supabase once, then refresh this page.</p>':''}
+<p class="intro" style="margin-top:22px">Ask for a review from an event’s Delivery tab. Only reviews you approve will appear on your website.</p>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addRev">+ Add a review yourself</button></div>
+<div>${revs.length?revs.map(r=>{const w=r.wedding_id&&weds.find(x=>x.id===r.wedding_id);return`<div class="g"><div class="bd"><div class="nm">${esc(r.name)}</div><div class="sub" style="color:var(--ac);letter-spacing:.2em">${stars(Number(r.rating)||5)}</div>${w?`<div class="sub">${esc(etype(w))} · ${fmtD(w.wedding_date)}</div>`:''}
+<div><span class="tag ${r.approved?'approved':''}">${r.approved?'Approved for the website':'Waiting for your approval'}</span></div>
+${r.body?`<p class="ntx" style="font-size:14px;color:#d9d3ca">${esc(r.body)}</p>`:''}
+<div class="acts"><button data-a="togRev" data-id="${r.id}">${r.approved?'Hide from the website':'Approve'}</button><button data-a="editRev" data-id="${r.id}">Edit</button><button data-a="delRev" data-id="${r.id}">Delete</button></div></div></div>`}).join(''):'<p class="empty">No reviews yet.</p>'}</div>`}
+function openRevForm(id){
+  const r=id?revs.find(x=>x.id===id):null,d=r||{name:'',rating:5,body:''};
+  ui.modal={type:'rev',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${r?'Edit review':'Add a review'}</h3>
+${r?'<p class="intro">Only correct typos. A review should stay in the client’s own words.</p>':'<p class="intro">For a review a client gave you elsewhere, such as a message or Google. Use their own words.</p>'}
+<div class="f"><span class="l">Name shown</span><input id="rvn" maxlength="120" placeholder="e.g. Amani &amp; Daniel" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">Stars</span><select id="rvr">${[5,4,3,2,1].map(n=>`<option value="${n}" ${n===Number(d.rating)?'selected':''}>${n}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Review</span><textarea id="rvb" rows="6" maxlength="1500">${esc(d.body||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveRev">Save</button></div></div></div>`;
+}
+function rvView(){
+  if(rvDone)return`<div class="brand">ZEMA PRODUCTION</div><h1>Thank you</h1><section class="card ok" style="margin-top:24px"><p class="intro" style="margin:0">Your review has been sent. It means a lot, thank you for taking the time.</p></section>`;
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>Leave a review</h1><div class="meta">It takes about a minute</div>
+<section class="card ok" style="margin-top:24px">
+<div class="f"><span class="l">Your name, as you’d like it shown</span><input id="rwn" maxlength="120" autocomplete="name" placeholder="e.g. Amani &amp; Daniel"></div>
+<div class="f"><span class="l">How would you rate your experience?</span><div class="chipsel">${[1,2,3,4,5].map(n=>`<button class="tab ${n<=rvStars?'on':''}" data-a="rvStar" data-v="${n}" aria-label="${n} star${n==1?'':'s'}" style="font-size:18px;padding:8px 14px;color:${n<=rvStars?'var(--ac)':'var(--mu)'}">★</button>`).join('')}</div></div>
+<div class="f"><span class="l">Your review</span><textarea id="rwb" rows="6" maxlength="1500" placeholder="What was it like working with us? How do you feel about your photos and film?"></textarea></div>
+<p class="intro" style="font-size:13px">With your permission, we may show this review on our website with the name above.</p>
+<div class="bad" id="rwerr"></div><button class="btn fill" style="width:100%" data-a="rvSend">Send review</button></section>
+<footer><span>Zema Production · London</span></footer>`}
+/* ---- Backup: every table saved to one file on this device ---- */
+const BKT=['weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
+async function doBackup(){
+  toast('Preparing your backup…');
+  const out={app:'Zema Planner',made:new Date().toISOString(),tables:{},missing:[]};
+  for(const t of BKT){
+    let rows=[],from=0,ok=true;
+    for(;;){const{data,error}=await sb.from(t).select('*').range(from,from+999);if(error){ok=false;break}rows=rows.concat(data||[]);if(!data||data.length<1000)break;from+=1000}
+    if(ok)out.tables[t]=rows;else out.missing.push(t);
+  }
+  const n=Object.values(out.tables).reduce((a,r)=>a+r.length,0),blob=new Blob([JSON.stringify(out)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download='zema-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000);
+  try{localStorage.setItem('zemaLastBackup',today())}catch(_){}
+  toast('Backup saved: '+n+' records'+(out.missing.length?'. Not included: '+out.missing.join(', '):'')+'.');
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1553,6 +1645,7 @@ ${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location<
 ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
+  if(sec==='agr')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${secNav(1)}${clAgr()}<footer><span>Private link · Zema Production</span></footer>`;
   if(sec==='del')return`${secNav(1)}<div style="height:20px"></div>${cineBody()}<footer><span>Private link · Zema Production</span></footer>`;
   const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
   const I={timeline:isWed(w)?'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.':'Add the key moments of your event with their times, such as when guests arrive, the cake and any speeches. They sort themselves by time.',
@@ -1943,7 +2036,7 @@ document.addEventListener('click',async e=>{
   else if(a==='saveX'&&!TOKEN){const l=$('#yxl').value.trim(),am=parseFloat($('#yxa').value);if(!l){$('#yxl').classList.add('err');return}if(!(am>0)){$('#yxa').classList.add('err');return}closeM();setB({extras:[...(Array.isArray(wed.bill.extras)?wed.bill.extras:[]),{label:l,amount:am}]})}
   else if(a==='delX'&&!TOKEN){const i=+t.dataset.i,l=Array.isArray(wed.bill.extras)?wed.bill.extras:[];ask(`Remove “${(l[i]||{}).label||'this extra'}”?`,()=>setB({extras:l.filter((_,j)=>j!==i)}))}
   else if(a==='editPlan'&&!TOKEN)openPlanForm();
-  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0);closeM();await setB({plan:p});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
+  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0),due=p.map((_,i)=>($('#ypd'+i)||{}).value||null);closeM();await setB({plan:p,plan_due:due});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
   else if(a==='fillPay'){$('#ya').value=t.dataset.v;$('#yl').value=t.dataset.l}
   else if(a==='togMoney'&&!TOKEN)setB({share_money:wed.bill.share_money===false})
   else if(a==='addPay'&&!TOKEN)openPayForm();
@@ -1976,7 +2069,7 @@ document.addEventListener('click',async e=>{
   else if(a==='bkSet'){const q=bkAct()[bk.step];bk.v[q.k]=t.dataset.v;if(q.k==='event_type'){const o=bk.want&&bkPkgs().find(x=>x.split(' · ')[0]===bk.want);bk.v.package=o||'';bk.want=null}bkNext()}
   else if(a==='bkNext')bkNext();
   else if(a==='bkBack'){bkRead(bkAct()[bk.step]);bk.step=Math.max(0,bk.step-1);bkDraw(1)}
-  else if(a==='bkAccept'&&!TOKEN)acceptBk(id);
+  else if(a==='bkAccept'&&!TOKEN){const b=bks.find(x=>x.id===id);if(b)guard(b.event_date,id,()=>acceptBk(id))}
   else if(a==='bkWa'&&!TOKEN){const b=bks.find(x=>x.id===id);window.open('https://wa.me/'+waNum(b.phone)+'?text='+encodeURIComponent(`Hello ${b.name}, thank you for your booking request with Zema Production for ${fmtD(b.event_date)}.`),'_blank')}
   else if(a==='bkDecline'&&!TOKEN)ask('Decline this booking request? It is removed from your dashboard.',async()=>{const{error}=await sb.from('bookings').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);bks=bks.filter(x=>x.id!==id);render()});
   else if(a==='copyBk'){const u=location.origin+location.pathname+'?p=1#book';(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Booking form link copied'),()=>prompt('Copy this link:',u))}
@@ -2023,7 +2116,7 @@ document.addEventListener('click',async e=>{
   else if(a==='delFc'&&!TOKEN)ask('Delete this person? Their booking link stops working. Jobs you already accepted stay as events.',async()=>{const{error}=await sb.from('freelance_clients').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);await refreshFree();render()});
   else if(a==='copyFc'&&!TOKEN){const u=hLink(fcl.find(x=>x.id===id));(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Booking link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='waFc'&&!TOKEN){const c=fcl.find(x=>x.id===id);window.open('https://wa.me/'+waNum(c.phone)+'?text='+encodeURIComponent(`Hi ${c.name}, here is your booking link for Zema Production. Add each job there with the date, start time and address:\n${hLink(c)}`),'_blank')}
-  else if(a==='fjAccept'&&!TOKEN)acceptFj(id);
+  else if(a==='fjAccept'&&!TOKEN){const j=fjobs.find(x=>x.id===id);if(j)guard(j.job_date,id,()=>acceptFj(id))}
   else if(a==='fjDecline'&&!TOKEN)ask('Decline this request?',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render()});
   else if(a==='newFree'&&!TOKEN)openWForm(null,false,FREE);
   else if(a==='hjSend'&&HTOKEN)hjSend();
@@ -2041,7 +2134,7 @@ document.addEventListener('click',async e=>{
   else if((a==='enqFSet'||a==='enqFDate')&&!TOKEN){const v=a==='enqFSet'?t.dataset.v:$('#qfd').value,en=enqs.find(x=>x.id===id);closeM();if(en)setE(id,{follow_on:v||null,status:v&&en.status==='replied'?'waiting':en.status})}
   else if(a==='enqLost'&&!TOKEN)ask('Mark this enquiry as not going ahead? It moves to Closed.',()=>setE(id,{status:'lost',follow_on:null}));
   else if(a==='enqReopen'&&!TOKEN)setE(id,{status:'waiting',follow_on:addDays(today(),1)});
-  else if(a==='enqBook'&&!TOKEN)ask('Create an event from this enquiry?',()=>bookEnq(id));
+  else if(a==='enqBook'&&!TOKEN){const en=enqs.find(x=>x.id===id);if(en)guard(en.event_date,null,()=>bookEnq(id),'Create an event from this enquiry?')}
   else if(a==='enqDel'&&!TOKEN)ask('Delete this enquiry?',async()=>{const{error}=await sb.from('enquiries').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);enqs=enqs.filter(x=>x.id!==id);render()});
   else if(a==='enqShowCl'){ui.showEnqCl=true;render()}
   else if(a==='eqSend'&&EQPAGE)eqSend();
@@ -2064,6 +2157,24 @@ document.addEventListener('click',async e=>{
   else if(a==='saveCost'&&!TOKEN)saveCost();
   else if(a==='togCost'&&!TOKEN){const c=K().find(x=>x.id===id);if(c){c.paid=!c.paid;c.paid_on=c.paid?today():null;render();run(sb.from('event_costs').update({paid:c.paid,paid_on:c.paid_on}).eq('id',id))}}
   else if(a==='delCost'&&!TOKEN)ask('Delete this cost?',()=>{wed.costs=K().filter(x=>x.id!==id);render();run(sb.from('event_costs').delete().eq('id',id))});
+  else if(a==='payRem'&&!TOKEN){const w=weds.find(x=>x.id===id),d=t.dataset.d,late=d<today();window.open('https://wa.me/'+waNum(B(w).client_phone)+'?text='+encodeURIComponent(`Hello, a reminder from Zema Production: your ${String(t.dataset.l).toLowerCase()} of ${gbp(t.dataset.v)} for ${w.couple} ${late?'was due on':'is due on'} ${fmtD(d)}.\n\nYou can see the details and how to pay here:\n${location.origin+location.pathname}?w=${w.share_token}&s=overview`),'_blank')}
+  else if(a==='agrReq'&&!TOKEN){if(wed.bill.price==null)return toast('Set the price on this tab first, so the agreement shows it.');setAgr({requested_at:new Date().toISOString(),signed_name:null,signed_at:null,snapshot:null})}
+  else if(a==='agrReset'&&!TOKEN)ask('Clear the signed agreement and ask the client to sign again? The current signature is removed.',()=>setAgr({requested_at:new Date().toISOString(),signed_name:null,signed_at:null,snapshot:null}));
+  else if(a==='agrCancel'&&!TOKEN)ask('Cancel the agreement request?',async()=>{const{error}=await sb.from('event_agreement').delete().eq('wedding_id',wed.id);if(error)return toast('Could not save: '+error.message);wed.agr=null;render()});
+  else if(a==='agrWa'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill.client_phone)+'?text='+encodeURIComponent(`Hello, here is your booking agreement with Zema Production for ${wed.couple}. Please read it and sign to confirm your booking:\n${agrLink()}`),'_blank');
+  else if(a==='agrCopy'&&!TOKEN){const u=agrLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Agreement link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='agrView'&&!TOKEN){ui.modal={type:'agrv'};$('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Signed agreement</h3><p class="intro">Signed by ${esc(wed.agr.signed_name)} on ${fmtDT(Date.parse(wed.agr.signed_at))}.</p>${agrDoc(wed.agr.snapshot||{})}<div class="bt" style="margin-top:16px"><button class="btn" data-a="close">Close</button></div></div></div>`}
+  else if(a==='agrSign'&&TOKEN){const n=$('#agn').value.trim(),er=m=>{$('#agerr').textContent=m};if(n.length<3)return er('Please type your full name.');if(!$('#agc').checked)return er('Please tick the box to agree.');er('Saving…');const{error}=await sb.rpc('shared_agreement_sign',{p_token:TOKEN,p_name:n});if(error)return er(error.message||'Could not save. Please try again.');await loadShared();scrollTo(0,0);toast('Thank you. Your agreement is signed.')}
+  else if(a==='revV'&&!TOKEN){ui.view='rev';render();scrollTo(0,0)}
+  else if(a==='addRev'&&!TOKEN)openRevForm();
+  else if(a==='editRev'&&!TOKEN)openRevForm(id);
+  else if(a==='saveRev'&&!TOKEN){const n=$('#rvn').value.trim();if(!n){$('#rvn').classList.add('err');$('#rvn').focus();return}const o={name:n,rating:+$('#rvr').value,body:$('#rvb').value.trim()},rid=ui.modal.id,{error}=rid?await sb.from('reviews').update(o).eq('id',rid):await sb.from('reviews').insert({...o,approved:true,source:'Added by you'});if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+error.message);closeM();await refreshRev();render()}
+  else if(a==='togRev'&&!TOKEN){const r=revs.find(x=>x.id===id);if(r){r.approved=!r.approved;render();run(sb.from('reviews').update({approved:r.approved}).eq('id',id))}}
+  else if(a==='delRev'&&!TOKEN)ask('Delete this review?',async()=>{const{error}=await sb.from('reviews').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);revs=revs.filter(x=>x.id!==id);render()});
+  else if(a==='askRev'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(`Hello, I hope you’re enjoying your photos and film. If you have a minute, I’d be so grateful for a short review:\n${location.origin+location.pathname}?rv=${wed.share_token}\n\nThank you, Zema Production`),'_blank');
+  else if(a==='rvStar'&&RVTOKEN){const n=$('#rwn').value,b=$('#rwb').value;rvStars=+t.dataset.v;setApp(rvView());$('#rwn').value=n;$('#rwb').value=b}
+  else if(a==='rvSend'&&RVTOKEN){const n=$('#rwn').value.trim(),b=$('#rwb').value.trim(),er=m=>{$('#rwerr').textContent=m};if(!n)return er('Please add your name.');if(b.length<10)return er('Please write a few words.');er('Sending…');const{error}=await sb.rpc('review_submit',{p_token:RVTOKEN,p_name:n,p_rating:rvStars,p_text:b});if(error)return er(error.message||'Could not send. Please try again.');rvDone=true;setApp(rvView());scrollTo(0,0)}
+  else if(a==='backup'&&!TOKEN)doBackup();
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
@@ -2077,6 +2188,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
 init();
 </script></body></html>
