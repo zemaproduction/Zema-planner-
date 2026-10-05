@@ -482,6 +482,7 @@ async function loadDash(view){
   await refreshFree();
   await refreshEnq();
   await refreshRev();
+  {const q=await sb.from('event_selection').select('*');sels=q.error?[]:(q.data||[])}
   {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
@@ -505,8 +506,9 @@ async function loadWedding(id){
   const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
   const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
   const aq=await sb.from('event_agreement').select('*').eq('wedding_id',id).maybeSingle();
+  const sq=await sb.from('event_selection').select('*').eq('wedding_id',id).maybeSingle();
   const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
-  wed={...w,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...w,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -522,9 +524,10 @@ async function loadShared(){
   const dv=await sb.rpc('shared_delivery_get',{p_token:TOKEN}),dl=dv.error?null:dv.data;
   const tr=await sb.rpc('shared_timer_get',{p_token:TOKEN});
   const ag=await sb.rpc('shared_agreement_get',{p_token:TOKEN});
+  const sg2=await sb.rpc('shared_selection_get',{p_token:TOKEN});
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -532,7 +535,7 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':'dash'));
 function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
@@ -553,11 +556,12 @@ function render(){
   else if(ui.view==='enq')setApp(enqView());
   else if(ui.view==='due')setApp(dueView());
   else if(ui.view==='rev')setApp(revView());
+  else if(ui.view==='post')setApp(postView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}</nav>`;
 function famTl(){
@@ -595,9 +599,10 @@ function dashView(){
 <div class="f" style="margin:22px 0 14px"><input id="sq" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search a name, date or type of event" value="${esc(ui.q||'')}"></div>
 <div id="sres">${searchHtml()}</div>
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="newW">+ New Event</button><button class="btn" style="flex:0 0 auto;min-width:110px" data-a="menuV">Menu</button></div>
-<nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
+<nav class="sec" style="margin-top:18px"><button class="on">Events</button><button data-a="enqV">Enquiries${enqs.filter(enqDue).length?' · '+enqs.filter(enqDue).length+' due':''}</button><button data-a="freeV">Freelance${frNew?' · '+frNew+' new':fr?' · '+fr:''}</button><button data-a="postV">Post-production${(n=>n?' · '+n:'')(weds.filter(w=>stg(w)==='post').length)}</button><button data-a="cineV">Cinema</button><button data-a="crewV">Crew</button><button data-a="year" data-k="${cy}">Progress</button></nav>
 <div style="height:20px"></div>
 ${(d=>d.length?`<h2>Client payments due · ${d.length}</h2>${d.map(({w,r})=>`<div class="g"><div class="bd"><div class="nm">${esc(w.couple)}</div><div class="sub">${r.label} · ${hideMoney?'£ ••••':gbp(r.left)} · <span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'overdue since ':'due '}${fmtD(r.due)}</span></div><div class="acts"><button data-a="payRem" data-id="${w.id}" data-l="${esc(r.label)}" data-v="${r.left}" data-d="${r.due}">Remind on WhatsApp</button><button data-a="openW" data-id="${w.id}">Open</button></div></div></div>`).join('')}<div style="height:14px"></div>`:'')(payDues())}
+${(d=>d.length?`<h2>Photo selections finished</h2>${d.map(x=>{const w=weds.find(q=>q.id===x.wedding_id);return w?`<button class="or" data-a="selNote" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">Finished choosing</span></button>`:''}).join('')}<div style="height:14px"></div>`:'')(sels.filter(x=>x.done_at&&x.seen===false))}
 ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')}<div style="height:14px"></div>`:''}
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
 ${bks.length?`<h2>New bookings · ${bks.length}</h2>${bks.map(bkCard).join('')}<div style="height:14px"></div>`:''}
@@ -764,6 +769,7 @@ ${row('pay','Payment',t==null?'No price set':paid>=t-0.005?'Paid in full · '+gb
 ${row('timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by '+esc(w.approved_by||'the client'):'Not confirmed by the client yet',w.approval_status==='approved')}
 ${row('crew','Crew',!ec.length?'No crew added':[acc?acc+' accepted':'',wait?wait+' waiting':'',dec?dec+' declined':''].filter(Boolean).join(' · '),ec.length>0&&!wait&&!dec)}
 ${row('cost','Costs and profit',t==null?(cost?gbp(cost)+' in costs':'No costs added'):'Profit '+sg(t-cost)+(cost?' after '+gbp(cost)+' in costs':' · no costs added'),false)}
+${w.sel||['post','delivered'].includes(stg(w))?row('del','Photo selection',esc(selTxt(w.sel)),selState(w.sel)==='done'):''}
 ${row('del','Delivery',!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published'+(d.expires_on?' · access until '+fmtD(d.expires_on):''):'Added but not published',d.published)}
 </section>`}
 /* ---- Home page search across events, enquiries and booking requests ---- */
@@ -809,7 +815,7 @@ ${(s=>s.an||s.sc||s.acn?`<section class="card" style="margin-bottom:16px"><div c
 function clOv(){
   const p=wed.prog,al=p&&p.album_status;
   const line=(label,v,del)=>`<div class="pg"><div class="row2"><span class="lbl">${label}</span><span>${del?'Delivered':(v||0)+'%'}</span></div><div class="bar" style="margin:12px 0 0"><i style="width:${del?100:(v||0)}%"></i></div></div>`;
-  return(isWed(wed)?'':timerCard())+clMoney()+(p?`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
+  return clSel()+(isWed(wed)?'':timerCard())+clMoney()+(p?`<section class="card">${line('Photo editing',p.photo_progress,p.photos_delivered)}${line('Film editing',p.video_progress,p.film_delivered)}${al&&al!=='na'?`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]||ALB.none}</span></div></div>`:''}</section>
 <p class="intro" style="margin-top:16px">Your photographer updates this as your photos and film are edited.</p>`:'')}
 /* ---- Payments and invoice (photographer only; never sent to client or family links) ---- */
 function payMain(){
@@ -1124,6 +1130,7 @@ function delMain(){
 <p class="intro" style="margin:12px 0 0;font-size:13px">Add films, photo galleries, or both. The page only shows what you add, so photo-only and video-only events work too.</p>
 <div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="askRev">Ask for a review</button><button data-a="editHero">Cover image</button></div></section>
 ${accessCard()}
+${selCard()}
 <h2>Films</h2>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFilm">+ Add film</button></div>
 <div>${d.films.length?d.films.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(fThumb(x))}"></div><div class="bd"><div class="nm">${esc(x.title||'Film')}</div><div class="sub">${esc(x.dur||'')}${ytId(x.url)?'':' YouTube link not recognised'}</div>${x.desc?`<div class="note fam" style="font-style:normal">${esc(x.desc)}</div>`:''}<div class="acts">${mv('Film',i)}</div></div></div>`).join(''):'<p class="empty">No films. Leave this empty for a photo-only delivery.</p>'}</div>
@@ -1610,7 +1617,7 @@ function rvView(){
 <div class="bad" id="rwerr"></div><button class="btn fill" style="width:100%" data-a="rvSend">Send review</button></section>
 <footer><span>Zema Production · London</span></footer>`}
 /* ---- Backup: every table saved to one file on this device ---- */
-const BKT=['weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
+const BKT=['event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
 async function doBackup(){
   toast('Preparing your backup…');
   const out={app:'Zema Planner',made:new Date().toISOString(),tables:{},missing:[]};
@@ -1624,6 +1631,58 @@ async function doBackup(){
   try{localStorage.setItem('zemaLastBackup',today())}catch(_){}
   toast('Backup saved: '+n+' records'+(out.missing.length?'. Not included: '+out.missing.join(', '):'')+'.');
 }
+/* ---- Photo selection: ask the client to choose their favourites in the gallery, track and remind ---- */
+let sels=[];
+const selState=s=>!s||!s.asked_at?'none':s.done_at?'done':'wait';
+const selLink=w=>location.origin+location.pathname+'?w='+w.share_token+'&s=overview';
+const selAskMsg=(w,s)=>`Hello, your photos from ${w.couple} are uploaded and ready to view. Please choose your ${s.pick_count||200} favourites${s.purpose?' for '+s.purpose:''}${s.deadline?' by '+fmtD(s.deadline):''}.\n\nOpen your page to view the gallery, and tap “I’ve finished choosing” when you’re done:\n${selLink(w)}`;
+const selRemMsg=(w,s)=>`Hello, a gentle reminder to choose your ${s.pick_count||200} favourite photos${s.purpose?' for '+s.purpose:''}${s.deadline?(s.deadline<today()?'. The date we agreed was ':' by ')+fmtD(s.deadline):''}.\n\nYou can find the gallery here, and tap “I’ve finished choosing” when you’re done:\n${selLink(w)}`;
+const selTxt=s=>{const st=selState(s);return st==='done'?'Finished on '+fmtD(String(s.done_at).slice(0,10)):st==='wait'?'Waiting for the client · asked '+(d=>d<=0?'today':d+' day'+(d==1?'':'s')+' ago')(-daysTo(String(s.asked_at).slice(0,10)))+(s.deadline?(s.deadline<today()?' · overdue since ':' · due ')+fmtD(s.deadline):''):s&&s.gallery_url?'Set up, not sent yet':'Not set up'};
+function selCard(){
+  if(wed.selErr)return'';
+  const s=wed.sel,st=selState(s);
+  return`<h2>Photo selection</h2><section class="card ${st==='wait'?'ok':''}"><div class="lbl">${st==='done'?'Finished':st==='wait'?'Waiting for the client':'Client chooses their favourites'}</div>
+<p class="intro" style="margin:10px 0 0">${s&&s.gallery_url?esc(selTxt(s))+'. '+(s.pick_count||200)+' photos'+(s.purpose?' for '+esc(s.purpose):'')+'.':'Add the gallery link and how many photos the client should pick. They get a card on their link with the gallery and an “I’ve finished choosing” button.'}</p>
+${st==='done'&&s.client_note?`<p class="ntx" style="font-size:14px"><span class="lbl" style="display:block;margin-bottom:4px">Note from the client</span>${esc(s.client_note)}</p>`:''}
+<div class="cta" style="margin-bottom:0">${!s||!s.gallery_url?'<button class="btn fill" data-a="selEdit">Set up photo selection</button>':st==='none'?'<button class="btn fill" data-a="selAsk">Ask the client on WhatsApp</button>':st==='wait'?'<button class="btn fill" data-a="selRem">Remind on WhatsApp</button>':`<a class="btn fill" href="${esc(safeU(s.gallery_url))}" target="_blank" rel="noopener">Open the gallery</a>`}</div>
+${s&&s.gallery_url?`<div class="acts"><button data-a="selEdit">Edit</button>${st==='wait'?'<button data-a="selDone">Mark as finished</button><button data-a="selAsk">Send the request again</button>':''}${st==='done'?'<button data-a="selReopen">Reopen</button>':''}<button data-a="selClear">Remove</button></div>`:''}</section>`}
+function openSelForm(){
+  const s=wed.sel||{gallery_url:(delOf(wed.del).galleries[0]||{}).url||'',pick_count:200,purpose:'your album',deadline:''};
+  ui.modal={type:'sel'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Photo selection</h3>
+<div class="f"><span class="l">Gallery link</span><input id="sgu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://…pixieset.com/…" value="${esc(s.gallery_url||'')}"></div>
+<div class="f"><span class="l">How many photos should they pick</span><input id="sgn" type="number" inputmode="numeric" min="1" step="1" value="${esc(s.pick_count||200)}"></div>
+<div class="f"><span class="l">What the picks are for</span><input id="sgp" maxlength="60" placeholder="your album" value="${esc(s.purpose??'your album')}"></div>
+<div class="f"><span class="l">Deadline (optional)</span><input id="sgd" type="date" value="${esc(s.deadline||'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="selSave">Save</button></div></div></div>`;
+}
+async function setSel(o){
+  const{data,error}=await sb.from('event_selection').upsert({wedding_id:wed.id,...o}).select().single();
+  if(error){toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  wed.sel=data;const i=sels.findIndex(x=>x.wedding_id===wed.id);if(i>=0)sels[i]=data;else sels.push(data);render();return true;
+}
+/* Client's card */
+function clSel(){
+  const s=wed.sel;if(!s)return'';
+  const done=!!s.done_at;
+  return`<section class="card ok" style="margin-bottom:16px"><div class="lbl">${done?'Photo selection · finished':'Choose your photos'}</div>
+<div class="nm" style="font-size:24px;margin-top:10px">${done?'Thank you, your choices are in':'Pick your '+(s.pick_count||200)+' favourites'}</div>
+<p class="intro" style="margin:8px 0 16px">${done?'You told us you finished on '+fmtD(String(s.done_at).slice(0,10))+'. If you need to change anything, message us.':'Your photos are ready. Open the gallery and mark your '+(s.pick_count||200)+' favourite photos'+(s.purpose?' for '+esc(s.purpose):'')+(s.deadline?', by '+fmtD(s.deadline):'')+'. When you’re done, come back here and tell us.'}</p>
+${safeU(s.gallery_url)?`<a class="btn ${done?'':'fill'}" style="width:100%" href="${esc(safeU(s.gallery_url))}" target="_blank" rel="noopener">Open the gallery</a>`:''}
+${done?(s.client_note?`<p class="ntx" style="font-size:14px"><span class="lbl" style="display:block;margin-bottom:4px">Your note</span>${esc(s.client_note)}</p>`:''):`<div class="f" style="margin-top:18px"><span class="l">Anything to tell us about your choices (optional)</span><textarea id="csn" rows="2" maxlength="600" placeholder="e.g. Please use photo 143 for the cover."></textarea></div><button class="btn pri" style="width:100%" data-a="cSelDone">I’ve finished choosing</button>`}</section>`}
+/* ---- Post-production page: every event being edited, in one place ---- */
+function postView(){
+  const sOf=id=>sels.find(x=>x.wedding_id===id),list=weds.filter(w=>stg(w)==='post'||selState(sOf(w.id))==='wait').sort((a,b)=>String(a.wedding_date||'').localeCompare(String(b.wedding_date||'')));
+  const bar=(l,v,ok,dl)=>`<div class="pg"><div class="row2"><span class="lbl">${l}</span><span>${ok?'✓ '+dl:(v||0)+'%'}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${ok?100:(v||0)}%"></i></div></div>`;
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Post-production</h1><div class="meta">${list.length} event${list.length==1?'':'s'} in progress</div>
+${list.length?list.map(w=>{const s=sOf(w.id),st=selState(s),d=delOf(dels.find(x=>x.wedding_id===w.id)),dd=daysTo(w.wedding_date),al=ALB[w.album_status]?w.album_status:'none';
+return`<h2 style="margin-bottom:4px">${esc(w.couple)}</h2><div class="sub" style="margin:0 0 14px">${esc(etype(w))} · ${fmtD(w.wedding_date)}${dd!==null&&dd<0?' · '+(-dd)+' day'+(dd==-1?'':'s')+' ago':''}${stg(w)==='post'?'':' · '+STG[stg(w)]}</div>
+<section class="card">${bar('Photo editing',w.photo_progress,w.photos_delivered,'Photos delivered')}${bar('Video editing',w.video_progress,w.film_delivered,'Film delivered')}
+<div class="pg"><div class="row2"><span class="lbl">Photo selection</span><span style="text-align:right;color:${st==='wait'&&s.deadline&&s.deadline<today()?'#d98a82':'inherit'}">${esc(selTxt(s))}</span></div>${st==='wait'?`<div class="acts"><button data-a="selRemW" data-id="${w.id}">Remind on WhatsApp</button></div>`:''}</div>
+${al==='na'?'':`<div class="pg"><div class="row2"><span class="lbl">Album</span><span>${ALB[al]}</span></div></div>`}
+<div class="pg"><div class="row2"><span class="lbl">Cinema page</span><span>${!(d.films.length||d.galleries.length)?'Nothing added yet':d.published?'Published':'Added, not published'}</span></div></div>
+<div class="acts"><button data-a="openW" data-id="${w.id}">Open event</button><button data-a="postDel" data-id="${w.id}">Delivery tab</button></div></section>`}).join(''):'<p class="empty">Nothing in post-production. An event appears here when you set its status to Post-production, or while a client is choosing photos.</p>'}`}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -1633,7 +1692,7 @@ function famMain(){
 <div class="row2"><span>Progress ${s.p}%</span><span>~${s.left} mins remaining</span></div></section>
 <div class="cta"><button class="btn fill" data-a="add">+ Add Group</button><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyF">Copy family &amp; friends link</button></div>
 ${tabsHtml()}${listHtml()}`}
-const BACKN={free:'Freelance',enq:'Enquiries',cine:'Cinema',year:'Progress',due:'Costs to pay',crew:'Crew',rev:'Reviews'};
+const BACKN={post:'Post-production',free:'Freelance',enq:'Enquiries',cine:'Cinema',year:'Progress',due:'Costs to pay',crew:'Crew',rev:'Reviews'};
 function mainView(){
   const w=wed,ap=w.approval_status==='approved';
   return`<div class="top2" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-a="goBack">← ${ui.sec!=='overview'?'Overview':BACKN[ui.from]||'All events'}</button>${ui.sec!=='overview'||BACKN[ui.from]?'<button class="btn" data-a="back">All events</button>':''}</div>
@@ -2203,6 +2262,18 @@ document.addEventListener('click',async e=>{
   else if(a==='rvStar'&&RVTOKEN){const n=$('#rwn').value,b=$('#rwb').value;rvStars=+t.dataset.v;setApp(rvView());$('#rwn').value=n;$('#rwb').value=b}
   else if(a==='rvSend'&&RVTOKEN){const n=$('#rwn').value.trim(),b=$('#rwb').value.trim(),er=m=>{$('#rwerr').textContent=m};if(!n)return er('Please add your name.');if(b.length<10)return er('Please write a few words.');er('Sending…');const{error}=await sb.rpc('review_submit',{p_token:RVTOKEN,p_name:n,p_rating:rvStars,p_text:b});if(error)return er(error.message||'Could not send. Please try again.');rvDone=true;setApp(rvView());scrollTo(0,0)}
   else if(a==='backup'&&!TOKEN)doBackup();
+  else if(a==='postV'&&!TOKEN){ui.view='post';render();scrollTo(0,0)}
+  else if(a==='postDel'&&!TOKEN){await openWedding(id);ui.sec='del';render()}
+  else if(a==='selEdit'&&!TOKEN)openSelForm();
+  else if(a==='selSave'&&!TOKEN){const u=safeU($('#sgu').value);if(!u){$('#sgu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const o={gallery_url:u,pick_count:Math.max(1,parseInt($('#sgn').value)||200),purpose:$('#sgp').value.trim(),deadline:$('#sgd').value||null};closeM();setSel(o)}
+  else if(a==='selAsk'&&!TOKEN){const s=wed.sel;window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true})}
+  else if(a==='selRem'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selRemMsg(wed,wed.sel)),'_blank');
+  else if(a==='selRemW'&&!TOKEN){const w=weds.find(x=>x.id===id),s=sels.find(x=>x.wedding_id===id);if(w&&s)window.open('https://wa.me/'+waNum(B(w).client_phone)+'?text='+encodeURIComponent(selRemMsg(w,s)),'_blank')}
+  else if(a==='selDone'&&!TOKEN)setSel({done_at:new Date().toISOString(),seen:true});
+  else if(a==='selReopen'&&!TOKEN)setSel({done_at:null,asked_at:new Date().toISOString(),seen:true});
+  else if(a==='selClear'&&!TOKEN)ask('Remove the photo selection from this event? The card disappears from the client’s link.',async()=>{const{error}=await sb.from('event_selection').delete().eq('wedding_id',wed.id);if(error)return toast('Could not save: '+error.message);wed.sel=null;sels=sels.filter(x=>x.wedding_id!==wed.id);render()});
+  else if(a==='cSelDone'&&TOKEN){const n=($('#csn')||{}).value||'';ask('Tell Zema Production you’ve finished choosing your photos?',async()=>{const{error}=await sb.rpc('shared_selection_done',{p_token:TOKEN,p_note:n.trim()});if(error)return toast('Could not save. Check your connection and try again.');await loadShared();toast('Thank you. We’ve been told you’re finished.')})}
+  else if(a==='selNote'&&!TOKEN){await sb.from('event_selection').update({seen:true}).eq('wedding_id',id);const x=sels.find(q=>q.wedding_id===id);if(x)x.seen=true;await openWedding(id);ui.sec='del';render()}
   else if(a==='day'&&!TOKEN){ui.day=true;render();scrollTo(0,0);try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{})}catch(_){}}
   else if(a==='exit'){ui.day=false;render()}
   else if(a==='close')closeM();
