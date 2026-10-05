@@ -494,6 +494,7 @@ async function loadDash(view){
   const g0=!ui.went&&QS.get('go');ui.went=1;
   weds=data;wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
+  else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today());if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
 const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;return loadWedding(id)};
 async function loadWedding(id){
@@ -1375,7 +1376,7 @@ async function openCal(){
 }
 /* Direct links (?go=…) so a home-screen icon or shortcut can open straight to one place */
 const GOV={enq:'enq',addenq:'enq',post:'post',free:'free',cine:'cine',due:'due',crew:'crew',year:'year'};
-const GOL=[['addenq','Add an enquiry','Opens the new enquiry form'],['enq','Enquiries','Follow-ups and open enquiries'],['post','Post-production','Everything being edited'],['free','Freelance','Jobs and new requests'],['due','Costs to pay','What you owe crew and suppliers'],['cine','Cinema','Delivered films and photos'],['new','New event','Opens the new event form']];
+const GOL=[['today','Today’s event','Opens today’s job in Day Mode, with the live timer'],['addenq','Add an enquiry','Opens the new enquiry form'],['enq','Enquiries','Follow-ups and open enquiries'],['post','Post-production','Everything being edited'],['free','Freelance','Jobs and new requests'],['due','Costs to pay','What you owe crew and suppliers'],['cine','Cinema','Delivered films and photos'],['new','New event','Opens the new event form']];
 function openGoLinks(){
   ui.modal={type:'go'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Quick links</h3>
