@@ -368,19 +368,27 @@ function small(w, res) {
   foot.lineLimit = 2;
   foot.minimumScaleFactor = 0.8;
 }
+function evLine(e, none) {
+  if (!e) return { text: none, quiet: true };
+  return { text: e.couple, sub: fmtDate(e.date) + " · " + inDays(e.days) + (e.stage === "pending" ? " · Pending" : "") };
+}
 function medium(w, res) {
   const d = res.data;
   w.url = APP;
   header(w, res);
-  w.addSpacer(10);
-  row(w, "calendar", "TODAY", todayLine(d), go("today"));
   w.addSpacer(8);
-  row(w, "sterlingsign.circle", "DUE", dueLine(d), go("owed"));
-  w.addSpacer(8);
+  const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
+  row(w, "calendar", "NEXT", evLine(nx[0], "Nothing booked"), APP);
+  w.addSpacer(6);
+  row(w, "calendar.badge.clock", "THEN", evLine(nx[1], "Nothing else booked"), APP);
+  w.addSpacer(6);
   row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
-  w.addSpacer(8);
-  const n = nextLine(d);
-  row(w, "mappin.and.ellipse", "NEXT", n.when ? { text: n.text, sub: fmtDate(d.next_wedding.date) + (d.next_wedding.city ? " · " + d.next_wedding.city : "") } : n, APP);
+  w.addSpacer(6);
+  const pend = Number(d.pending) || 0;
+  row(w, "hourglass", "PENDING", pend ? { text: plural(pend, "event", "events") + " not confirmed yet" } : { text: "Nothing pending", quiet: true }, go("pending"));
+  w.addSpacer(6);
+  const post = Number(d.post) || 0;
+  row(w, "film", "EDITING", post ? { text: plural(post, "event", "events") + " in post-production" } : { text: "Nothing in post-production", quiet: true }, go("post"));
   w.addSpacer();
 }
 function eventCard(w, label, e) {
