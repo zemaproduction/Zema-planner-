@@ -506,7 +506,7 @@ Script.complete();
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d'),LOCPAGE=QS.get('loc')!==null;
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d'),CPTOKEN=QS.get('cp'),LOCPAGE=QS.get('loc')!==null;
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Travel':'trav','Notes':'notes','Updates':'msg','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
@@ -727,7 +727,7 @@ async function savePk(){
   pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);render();toast('Packages saved');return true;
 }
 
-let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null,cnotes=[];
+let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null,cph=null,cnotes=[];
 let sb,user=null,wed=null,weds=[],chans={},ui={view:'dash',wid:null,sec:'family',tab:'all',day:false,modal:null,stamp:'',live:false};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -811,12 +811,13 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||CPTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
   if(LOCPAGE){document.title='Zema Production · Locations';const lr=await sb.rpc('location_ideas_get');return setApp(locPage(lr.error?[]:(lr.data||[])))}
   if(RVTOKEN){document.title='Zema Production · Review';return setApp(rvView())}
   if(DTOKEN){document.title='Zema Production · Day';loadDay();setInterval(()=>{if(!document.hidden)loadDay()},20000);return}
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
+  if(CPTOKEN){document.title='Zema Production · Crew';document.querySelectorAll('meta[name="apple-mobile-web-app-title"],meta[name="application-name"]').forEach(m=>m.content='Zema Crew');loadCrewHome();setInterval(()=>{if(!document.hidden)loadCrewHome()},60000);return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
   if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
@@ -920,7 +921,7 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':ui.view==='loc'?'loc':'dash'));
+const reload=()=>CPTOKEN?loadCrewHome():CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':ui.view==='loc'?'loc':'dash'));
 function failView(e){const off=navigator.onLine===false||/failed to fetch|load failed|networkerror/i.test(String(e&&e.message||e));setApp(`<div class="login"><div class="brand">ZEMA PLANNER</div><h2>${off?'You’re offline':'Something went wrong'}</h2><p class="meta">${off?'The planner opens without a connection, but it needs one to load and save your events. It will reload when you’re back online.':esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
@@ -931,6 +932,7 @@ function render(){
   if(RVTOKEN){setApp(rvView());return}
   if(EQPAGE){setApp(eqView());return}
   if(HTOKEN){if(hz)setApp(hirerView());return}
+  if(CPTOKEN){if(cph)setApp(crewHomeView());return}
   if(CTOKEN){if(cw)setApp(crewView());return}
   if(FTOKEN){if(wed)setApp(familyView())}
   else if(TOKEN){if(wed)setApp(ui.inv&&wed.money?invView():clientView())}
@@ -1370,7 +1372,7 @@ async function loadCrewPage(){
 function crewView(){
   if(cw.status==='invited'||cw.status==='declined')return crewInvite();
   const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=d.timeline||[],pl=d.places||[],pp=d.party||[],mh=d.musts||[];
-  return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
+  return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
 ${travCrewCard(d.travel)}
 ${tk.length?`<h2>Your to-do list</h2><div>${tk.map((x,i)=>`<button class="dr ${x.done?'done':''}" data-a="ctask" data-i="${i}"><span class="ck">${x.done?'✓':''}</span><span class="dt"><b style="font-size:20px">${esc(x.t)}</b></span></button>`).join('')}</div>`:''}
@@ -1380,12 +1382,37 @@ ${pp.length?`<h2>Key people</h2><div>${pp.map(x=>{const b=`<span class="dt"><b s
 ${mh.length?`<h2>Must-have shots</h2>${mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')}`:''}
 ${Array.isArray(d.gear)&&d.gear.length?`<h2>Equipment</h2>${gearBlock(d.gear,true)}`:''}
 <footer><span>Private crew link · Zema Production · updates every minute</span></footer>`}
+/* ---- Crew member's own page (?cp=): every job they have with you and their own pay. You open the same link to see it. ---- */
+const cpLink=c=>location.origin+location.pathname+'?cp='+c.token;
+const cpBack=d=>d&&d.home?`<div class="top2"><a class="btn" href="?cp=${esc(d.home)}">← All my jobs</a></div>`:'';
+const cpOwed=id=>(costsAll||[]).filter(k=>k.crew_id===id&&!k.paid).reduce((a,k)=>a+Number(k.amount||0),0);
+const cpTip=()=>STANDALONE?'':`<section class="card" style="margin-top:28px"><div class="lbl">Keep this page as an app</div><p class="sub" style="margin:8px 0 0">On iPhone, open this link in Safari, tap the Share button, then “Add to Home Screen”. On Android, open the Chrome menu and tap “Add to Home screen”. The icon opens straight to this page and stays up to date.</p></section>`;
+async function loadCrewHome(){
+  const{data,error}=await sb.rpc('crew_home',{p_token:CPTOKEN});
+  if(error||!data){if(!cph)setApp('<div class="login"><div class="brand">ZEMA PRODUCTION · CREW</div><h2>This link isn’t working</h2><p class="meta">Please ask Zema Production for a new one.</p></div>');return}
+  cph=data;setApp(crewHomeView());
+}
+function crewHomeView(){
+  const d=cph,jobs=d.jobs||[],oth=d.other||[],td=today(),sum=(l,f)=>l.filter(f).reduce((a,k)=>a+Number(k.amount||0),0);
+  const all=[...jobs.flatMap(j=>j.pay||[]),...oth],owed=sum(all,k=>!k.paid),paid=sum(all,k=>k.paid);
+  const payLine=l=>{if(!l||!l.length)return'';const o=sum(l,k=>!k.paid),p=sum(l,k=>k.paid),last=l.filter(k=>k.paid&&k.paid_on).map(k=>k.paid_on).sort().pop();return`<small style="color:var(--tx)">Your pay: ${gbp(o+p)}${o&&p?' · '+gbp(p)+' paid, '+gbp(o)+' still to pay':o?' · still to pay':' · paid'+(last?' on '+fmtD(last):'')}</small>`};
+  const row=j=>`<a class="dr" href="?c=${esc(j.token)}"><span class="dt"><b style="font-size:20px">${esc(j.couple||j.event_type||'Event')}</b><small>${fmtD(j.date)}${j.couple&&j.event_type?' · '+esc(j.event_type):''}${j.city?' · '+esc(j.city):''}</small><small>${esc(j.role||'Crew')}${j.call_time?' · call time '+esc(j.call_time):''}</small>${payLine(j.pay)}<small class="live">${j.status==='invited'?'Tap to accept or decline':'Tap to open'}</small></span></a>`;
+  const ask=jobs.filter(j=>j.status==='invited'&&(!j.date||j.date>=td)),acc=jobs.filter(j=>j.status==='accepted'),up=acc.filter(j=>!j.date||j.date>=td),past=acc.filter(j=>j.date&&j.date<td).reverse();
+  return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(d.name||'Crew')}</h1><div class="meta">${d.role?esc(d.role)+' · ':''}Your jobs with Zema Production</div>
+<section class="card ok" style="margin-top:24px"><div class="lbl">Still to be paid to you</div><div class="num" style="font-size:30px;margin-bottom:6px">${gbp(owed)}</div><div class="sub" style="margin:0">${gbp(paid)} paid so far · ${past.length} past job${past.length==1?'':'s'} · ${up.length} coming up</div></section>
+${ask.length?`<h2>Waiting for your answer</h2><div>${ask.map(row).join('')}</div>`:''}
+<h2>Coming up</h2>${up.length?`<div>${up.map(row).join('')}</div>`:'<p class="empty">No jobs booked at the moment.</p>'}
+${past.length?`<h2>Past jobs</h2><div>${past.map(row).join('')}</div>`:''}
+${oth.length?`<h2>Other pay</h2>${oth.map(k=>`<div class="fr"><div class="nm">${esc(k.couple||k.event_type||'Event')} · ${gbp(k.amount)}</div><div class="sub">${fmtD(k.date)}${k.label?' · '+esc(k.label):''}</div><div class="note">${k.paid?'Paid'+(k.paid_on?' on '+fmtD(k.paid_on):''):'Still to pay'}</div></div>`).join('')}`:''}
+${cpTip()}
+<footer><span>Private crew link · Zema Production · updates every minute</span></footer>`}
 function crewListView(){
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Crew</h1><div class="meta">Second shooters and helpers</div>
+<p class="intro" style="margin-top:16px">Each person has one page of their own, showing every job they have with you, past and coming up, and their pay. You and they open the same link, so you both see the same thing. Their pay comes from the Costs tab of each event.</p>
 ${crewErr?'<p class="intro" style="margin-top:16px">Crew isn’t set up yet. Run the crew SQL in Supabase once, then refresh this page.</p>':''}
 <div class="cta"><button class="btn fill" data-a="addCrew">+ Add crew member</button></div>
-<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>
+<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}${c.token?`<div class="sub">${cpOwed(c.id)?'Still to pay them: '+mny(cpOwed(c.id)):'Nothing to pay them'}</div>`:''}<div class="acts">${c.token?`<button data-a="openCp" data-id="${c.id}">Open their page</button><button data-a="copyCp" data-id="${c.id}">Copy link</button><button data-a="waCp" data-id="${c.id}">Send on WhatsApp</button>`:''}<button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>
 ${tplSection()}`}
 function openCrewForm(id){
   const c=id?crew.find(x=>x.id===id):null,d=c||{name:'',phone:'',role:'Second shooter',note:''};
@@ -1473,7 +1500,7 @@ async function saveEc(){
 }
 function crewInvite(){
   const d=cw,e=d.event||{},dec=d.status==='declined',row=(a,b)=>b?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx)">${esc(b)}</span></div>`:'';
-  return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${dec?'You declined this job':'Are you available?'}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}</div>
+  return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${dec?'You declined this job':'Are you available?'}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'')}</div>
 ${row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}
 ${d.brief?`<p class="ntx" style="margin-top:16px">${esc(d.brief)}</p>`:''}
@@ -2990,6 +3017,9 @@ document.addEventListener('click',async e=>{
   else if(a==='crewV'&&!TOKEN){ui.view='crew';render();scrollTo(0,0)}
   else if(a==='addCrew'&&!TOKEN)openCrewForm();
   else if(a==='editCrew'&&!TOKEN)openCrewForm(id);
+  else if(a==='openCp'&&!TOKEN){const c=crew.find(x=>x.id===id);if(c)window.open(cpLink(c),'_blank')}
+  else if(a==='copyCp'&&!TOKEN){const c=crew.find(x=>x.id===id),u=cpLink(c);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='waCp'&&!TOKEN){const c=crew.find(x=>x.id===id),ph=waNum(c.phone);if(!ph)return toast('Add a phone number for this person first.');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hi ${c.name}, this is your own page with Zema Production. It shows every job you have with us, past and coming up, and your pay. Keep the link, it always stays up to date.\n${cpLink(c)}`),'_blank')}
   else if(a==='saveCrew'&&!TOKEN)saveCrew();
   else if(a==='delCrew'&&!TOKEN)ask('Delete this crew member? They are also removed from any events and their links stop working.',async()=>{const{error}=await sb.from('crew').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);await refreshCrew();render()});
   else if(a==='addEc'&&!TOKEN)openEcForm();
@@ -3139,7 +3169,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!LOCPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
+const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!LOCPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CPTOKEN?cph:CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
 let hidAt=0;
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hidAt=Date.now();return}
@@ -3149,6 +3179,6 @@ document.addEventListener('visibilitychange',()=>{
   else reload();
 });
 addEventListener('offline',()=>toast('You’re offline. Changes can’t be saved until you’re back online.'));
-addEventListener('online',()=>{toast('Back online');if(canReload()||(!PKPAGE&&!EQPAGE&&!RVTOKEN&&!ui.modal&&!wed&&(user||TOKEN||FTOKEN||CTOKEN||DTOKEN)))reload()});
+addEventListener('online',()=>{toast('Back online');if(canReload()||(!PKPAGE&&!EQPAGE&&!RVTOKEN&&!ui.modal&&!wed&&(user||TOKEN||FTOKEN||CTOKEN||CPTOKEN||DTOKEN)))reload()});
 init();
 </script></body></html>
