@@ -3030,6 +3030,7 @@ function openWForm(id,past,ty){
 ${past?'<p class="intro">For events you have already completed. It is saved as Delivered and counts in your yearly totals.</p>':''}
 <div class="f"><span class="l">Event type</span><select id="we">${ETYPES.map(x=>`<option ${x===etype(d)?'selected':''}>${x}</option>`).join('')}</select></div>
 ${wpkField(d.package||'',!w)}
+${past?'':`<div class="f"><span class="l">Status</span><select id="wst">${Object.entries(STG).map(([k,v])=>`<option value="${k}" ${(w?stg(w):'pending')===k?'selected':''}>${v}</option>`).join('')}</select></div>`}
 <div class="f"><span class="l">Client or couple names</span><input id="wc" placeholder="Tinsay &amp; Joe" value="${esc(d.couple)}"></div>
 <div class="f"><span class="l">Event date</span><input id="wd" type="date" value="${d.wedding_date||''}"></div>
 <div class="f"><span class="l">Location</span><input id="wt" placeholder="London" value="${esc(d.city||'')}"></div>
@@ -3042,6 +3043,7 @@ async function saveW(){
   if(!couple){$('#wc').classList.add('err');$('#wc').focus();return}
   const o={couple,wedding_date:$('#wd').value||null,city:$('#wt').value.trim()||null,services:$('#ws').value.trim()||null,event_type:$('#we').value};
   const wp=wpkRead();o.package=wp.name;
+  if($('#wst')&&STG[$('#wst').value])o.stage=$('#wst').value;
   const id=ui.modal.id,past=ui.modal.past,sqlMsg=e=>/column|schema/i.test(e.message)?'Run the events SQL in Supabase first, then refresh.':'Could not save: '+e.message;
   if(id){
     const{error}=await sb.from('weddings').update(o).eq('id',id);
