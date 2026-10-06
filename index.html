@@ -1379,7 +1379,7 @@ function crewView(){
   return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
 ${travCrewCard(d.travel)}
-${Array.isArray(d.days)&&d.days.length?'<p class="intro" style="margin-top:18px">You are also booked for: '+esc(xdShort(d.days).replace(/\+ /g,''))+'. Details are at the bottom of this page.</p>':''}
+${Array.isArray(d.days)&&d.days.length?'<p class="intro" style="margin-top:18px">'+(d.main===false?'You are booked for these days only, not the main day: ':'You are also booked for: ')+esc(xdShort(d.days).replace(/\+ /g,''))+'. Details are at the bottom of this page.</p>':''}
 ${tk.length?`<h2>Your to-do list</h2><div>${tk.map((x,i)=>`<button class="dr ${x.done?'done':''}" data-a="ctask" data-i="${i}"><span class="ck">${x.done?'✓':''}</span><span class="dt"><b style="font-size:20px">${esc(x.t)}</b></span></button>`).join('')}</div>`:''}
 ${tl.length?`<h2>Timeline</h2>${tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`:''}
 ${pl.length?`<h2>Locations</h2><div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
@@ -1402,7 +1402,7 @@ function crewHomeView(){
   const d=cph,jobs=d.jobs||[],oth=d.other||[],td=today(),sum=(l,f)=>l.filter(f).reduce((a,k)=>a+Number(k.amount||0),0);
   const all=[...jobs.flatMap(j=>j.pay||[]),...oth],owed=sum(all,k=>!k.paid),paid=sum(all,k=>k.paid);
   const payLine=l=>{if(!l||!l.length)return'';const o=sum(l,k=>!k.paid),p=sum(l,k=>k.paid),last=l.filter(k=>k.paid&&k.paid_on).map(k=>k.paid_on).sort().pop();return`<small style="color:var(--tx)">Your pay: ${gbp(o+p)}${o&&p?' · '+gbp(p)+' paid, '+gbp(o)+' still to pay':o?' · still to pay':' · paid'+(last?' on '+fmtD(last):'')}</small>`};
-  const row=j=>`<a class="dr" href="?c=${esc(j.token)}"><span class="dt"><b style="font-size:20px">${esc(j.couple||j.event_type||'Event')}</b><small>${fmtD(j.date)}${j.couple&&j.event_type?' · '+esc(j.event_type):''}${j.city?' · '+esc(j.city):''}</small><small>${esc(j.role||'Crew')}${j.call_time?' · call time '+esc(j.call_time):''}</small>${Array.isArray(j.days)&&j.days.length?`<small>${esc(xdShort(j.days))}</small>`:''}${payLine(j.pay)}<small class="live">${j.status==='invited'?'Tap to accept or decline':'Tap to open'}</small></span></a>`;
+  const row=j=>`<a class="dr" href="?c=${esc(j.token)}"><span class="dt"><b style="font-size:20px">${esc(j.couple||j.event_type||'Event')}</b><small>${j.main===false?'Not the main day':fmtD(j.date)}${j.couple&&j.event_type?' · '+esc(j.event_type):''}${j.city?' · '+esc(j.city):''}</small><small>${esc(j.role||'Crew')}${j.call_time?' · call time '+esc(j.call_time):''}</small>${Array.isArray(j.days)&&j.days.length?`<small>${esc(xdShort(j.days))}</small>`:''}${payLine(j.pay)}<small class="live">${j.status==='invited'?'Tap to accept or decline':'Tap to open'}</small></span></a>`;
   const ask=jobs.filter(j=>j.status==='invited'&&(!j.date||j.date>=td)),acc=jobs.filter(j=>j.status==='accepted'),up=acc.filter(j=>!j.date||j.date>=td),past=acc.filter(j=>j.date&&j.date<td).reverse();
   return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(d.name||'Crew')}</h1><div class="meta">${d.role?esc(d.role)+' · ':''}Your jobs with Zema Production</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">Still to be paid to you</div><div class="num" style="font-size:30px;margin-bottom:6px">${gbp(owed)}</div><div class="sub" style="margin:0">${gbp(paid)} paid so far · ${past.length} past job${past.length==1?'':'s'} · ${up.length} coming up</div></section>
@@ -1440,7 +1440,7 @@ async function saveCrew(){
   closeM();await refreshCrew();render();
 }
 const ecStat=x=>x.status==='invited'?'Asked · waiting for an answer':x.status==='declined'?'Declined':'Accepted';
-const askMsg=x=>{const c0=(wed.city||'').trim(),area=/^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i.test(c0)?c0.toUpperCase().replace(/\s*[0-9][A-Z]{2}$/,''):c0;return`Hi ${cName(x)}, are you available for a job with Zema Production?\n\n${etype(wed)} · ${fmtD(wed.wedding_date)}${x.call_time?'\nCall time: '+x.call_time:''}${area?'\nArea: '+area:''}${x.role?'\nRole: '+x.role:''}${x.brief?'\n\n'+x.brief:''}\n\nPlease accept or decline here:\n${cLink(x)}`};
+const askMsg=x=>{const c0=(wed.city||'').trim(),area=/^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i.test(c0)?c0.toUpperCase().replace(/\s*[0-9][A-Z]{2}$/,''):c0;const dl=[x.main_day!==false?fmtD(wed.wedding_date)+(XD().length?' (main day)':''):null,...xdSort(XD()).filter(d=>Array.isArray(x.day_ids)&&x.day_ids.includes(d.id)).map(d=>(d.day_date?fmtD(d.day_date):'Date to be confirmed')+' ('+d.kind+')')].filter(Boolean);return`Hi ${cName(x)}, are you available for a job with Zema Production?\n\n${etype(wed)} · ${dl.join('\n')}${x.call_time?'\nCall time: '+x.call_time:''}${area?'\nArea: '+area:''}${x.role?'\nRole: '+x.role:''}${x.brief?'\n\n'+x.brief:''}\n\nPlease accept or decline here:\n${cLink(x)}`};
 /* ---- Crew to-do templates: saved lists you pick when adding or asking crew, then edit before sending ---- */
 const CTDEF=[
 {n:'Second shooter · wedding',b:'Smart black outfit. Please arrive 15 minutes before the call time.',t:['Groom getting ready','Guests arriving','Second angle for the ceremony','Reactions during the vows','Wide shot of the confetti exit','Candid guests during the reception','Details: tables, cake and decor','Reactions during the speeches','Second angle for the first dance']},
@@ -1489,7 +1489,7 @@ ${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
-${XD().length?`<div class="f"><span class="l">Also booked for these extra days</span>${xdSort(XD()).map(y=>`<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" class="edy" value="${y.id}" style="width:22px;height:22px" ${x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.id)?'checked':''}> ${esc(y.kind)}${y.day_date?' · '+fmtD(y.day_date):''}</label>`).join('')}</div>`:''}
+${XD().length?`<div class="f"><span class="l">Which days are they working? Tick any</span><label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" id="emain" style="width:22px;height:22px" ${!x||x.main_day!==false?'checked':''}> Main day${wed.wedding_date?' · '+fmtD(wed.wedding_date):''}</label>${xdSort(XD()).map(y=>`<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" class="edy" value="${y.id}" style="width:22px;height:22px" ${x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.id)?'checked':''}> ${esc(y.kind)}${y.day_date?' · '+fmtD(y.day_date):''}</label>`).join('')}</div>`:''}
 ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
 <div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
@@ -1497,7 +1497,8 @@ ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><selec
 async function saveEc(){
   const id=ui.modal.id,invite=ui.modal.invite,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
   const tasks=$('#ek').value.split('\n').map(t=>t.trim()).filter(Boolean).map(t=>({t,done:!!(old.find(o=>o.t===t)||{}).done}));
-  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks,...(XD().length?{day_ids:[...document.querySelectorAll('.edy:checked')].map(e=>e.value)}:{})},cid=id?null:$('#ec').value;
+  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks,...(XD().length?{day_ids:[...document.querySelectorAll('.edy:checked')].map(e=>e.value),main_day:$('#emain').checked}:{})},cid=id?null:$('#ec').value;
+  if(XD().length&&!o.main_day&&!o.day_ids.length)return toast('Tick at least one day for them.');
   const win=invite?window.open('','_blank'):null;
   const r=id?await sb.from('event_crew').update(o).eq('id',id).select('*, crew(name,phone)').single():await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:cid,...(invite?{status:'invited'}:{})}).select('*, crew(name,phone)').single();
   if(r.error){if(win)win.close();return toast(/relation|schema|find the table|column/i.test(r.error.message)?'Run the latest crew SQL in Supabase first, then refresh.':'Could not save: '+r.error.message)}
@@ -1509,7 +1510,7 @@ function crewInvite(){
   const d=cw,e=d.event||{},dec=d.status==='declined',row=(a,b)=>b?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx)">${esc(b)}</span></div>`:'';
   return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${dec?'You declined this job':'Are you available?'}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'')}</div>
-${row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}${row('Also asked for',xdShort(d.days).replace(/\+ /g,''))}
+${d.main===false?'':row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}${row(d.main===false?'Asked for':'Also asked for',xdShort(d.days).replace(/\+ /g,''))}
 ${d.brief?`<p class="ntx" style="margin-top:16px">${esc(d.brief)}</p>`:''}
 ${dec?'<p class="intro" style="margin:16px 0 0">If that was a mistake, message Zema Production and they can ask you again.</p>':'<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="cAccept">Accept</button><button class="btn" data-a="cDecline">Decline</button></div>'}</section>
 ${dec?'':'<p class="intro" style="margin-top:16px;font-size:13px">Once you accept, this page shows the full timeline, locations and your to-do list.</p>'}
@@ -2089,7 +2090,7 @@ function dcalc(t){
 }
 /* ---- Extra days of one wedding: church on another date, Mels, Hammawiti. Each has its own date, hours, price and running order.
    The price is kept as a line on the wedding invoice (billing extras, tagged with the day's id). ---- */
-const XD=()=>wed.days||[],XDK=['Church','Mels','Hammawiti'];
+const XD=()=>wed.days||[],XDK=['Pre-wedding shoot','Church','Mels','Hammawiti'];
 const xdH=h=>String(Number(h));
 const xdSort=a=>a.slice().sort((x,y)=>String(x.day_date||'9999').localeCompare(String(y.day_date||'9999')));
 const xdLine=id=>{const l=xdSort(daysAll.filter(d=>d.wedding_id===id));return l.length?`<div class="sub">${l.map(d=>'+ '+esc(d.kind)+(d.day_date?' '+fmtD(d.day_date):'')).join(' · ')}</div>`:''};
@@ -2097,12 +2098,12 @@ const xdLabel=d=>d.kind+(d.day_date?' · '+fmtD(d.day_date):'')+(d.hours?' · '+
 function xdCard(){
   if(wed.dayErr)return'<h2>Extra days</h2><p class="empty">Extra days aren’t set up in Supabase yet. Run the extra days SQL once, then refresh this page.</p>';
   const a=xdSort(XD());
-  return`<h2>Extra days</h2><p class="intro">For a church ceremony, Mels or Hammawiti on a different date. Each one has its own date and hours, goes in your calendar, and is added to this invoice as its own line.</p>
-<div>${a.map(d=>`<div class="g"><div class="bd"><div class="nm">${esc(d.kind)}</div><div class="sub">${d.day_date?fmtD(d.day_date):'No date yet'}${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div>${d.venue||d.address?`<div class="sub" style="text-transform:none;letter-spacing:0">${esc([d.venue,d.address].filter(Boolean).join(', '))}</div>`:''}${d.price!=null&&!hideMoney?`<div class="sub">${gbp(d.price)} on the invoice</div>`:''}${d.note?`<div class="note">${esc(d.note)}</div>`:''}${xdTmLine(d)}<div class="acts"><button data-a="xdTm" data-id="${d.id}">${ui.tmDay===d.id?'Close timer':'Timer'}</button><button data-a="xdEdit" data-id="${d.id}">Edit</button><button data-a="xdDel" data-id="${d.id}">Delete</button></div>${ui.tmDay===d.id?timerCard():''}</div></div>`).join('')}</div>
+  return`<h2>Extra days</h2><p class="intro">For a pre-wedding shoot, church ceremony, Mels or Hammawiti on a different date. Each one has its own date and hours and goes in your calendar. A day with a price is added to this invoice as its own line; a day included in the package is not charged.</p>${/platinum/i.test(wed.package||'')&&!XD().some(d=>/pre/i.test(d.kind))?'<p class="intro" style="color:var(--ac)">This package includes a pre-wedding shoot. <button class="lnk" data-a="xdPre">Add it</button></p>':''}
+<div>${a.map(d=>`<div class="g"><div class="bd"><div class="nm">${esc(d.kind)}</div><div class="sub">${d.day_date?fmtD(d.day_date):'No date yet'}${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div>${d.venue||d.address?`<div class="sub" style="text-transform:none;letter-spacing:0">${esc([d.venue,d.address].filter(Boolean).join(', '))}</div>`:''}${Number(d.price)===0&&d.price!=null?'<div class="sub">Included in the package</div>':d.price!=null&&!hideMoney?`<div class="sub">${gbp(d.price)} on the invoice</div>`:''}${d.note?`<div class="note">${esc(d.note)}</div>`:''}${xdTmLine(d)}<div class="acts"><button data-a="xdTm" data-id="${d.id}">${ui.tmDay===d.id?'Close timer':'Timer'}</button><button data-a="xdEdit" data-id="${d.id}">Edit</button><button data-a="xdDel" data-id="${d.id}">Delete</button></div>${ui.tmDay===d.id?timerCard():''}</div></div>`).join('')}</div>
 <div class="cta"><button class="btn" data-a="xdAdd">+ Add an extra day</button></div>
 ${a.length?'<p class="intro" style="font-size:13px;margin-top:10px">The running order for each extra day is on the Timeline tab, under the main timeline.</p>':''}`}
-function xdForm(id){
-  const x=id?XD().find(d=>d.id===id):null,d=x||{kind:'Church',day_date:'',start_time:'',hours:5,price:'',venue:'',address:'',note:''},oth=!XDK.includes(d.kind),hs=[5,8,10].includes(Number(d.hours));
+function xdForm(id,pre){
+  const x=id?XD().find(d=>d.id===id):null,d=x||(pre?{kind:'Pre-wedding shoot',day_date:'',start_time:'',hours:null,price:0,venue:'',address:'',note:''}:{kind:'Church',day_date:'',start_time:'',hours:5,price:'',venue:'',address:'',note:''}),oth=!XDK.includes(d.kind),hs=[5,8,10].includes(Number(d.hours));
   ui.modal={type:'xd',id};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit extra day':'Add an extra day'}</h3>
 <div class="f"><span class="l">What is it?</span><select id="xdk">${XDK.map(k=>`<option ${d.kind===k?'selected':''}>${k}</option>`).join('')}<option value="" ${oth?'selected':''}>Something else</option></select></div>
@@ -2111,7 +2112,8 @@ function xdForm(id){
 <div class="f"><span class="l">Start time</span><input id="xds" type="time" value="${esc(d.start_time||'')}"></div>
 <div class="f"><span class="l">Package</span><select id="xdh">${[5,8,10].map(h=>`<option value="${h}" ${Number(d.hours)===h?'selected':''}>${h} hours</option>`).join('')}<option value="" ${hs?'':'selected'}>Other</option></select></div>
 <div class="f"><span class="l">If other, how many hours</span><input id="xdho" type="number" inputmode="decimal" min="0" step="0.5" value="${hs||d.hours==null?'':esc(xdH(d.hours))}"></div>
-<div class="f"><span class="l">Price for this day, in £</span><input id="xdp" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.price??'')}"></div>
+<label style="display:flex;gap:10px;align-items:center;margin:4px 0 14px;font-size:16px"><input type="checkbox" id="xdinc" style="width:22px;height:22px" ${Number(d.price)===0&&d.price!==''&&d.price!=null?'checked':''}> Included in the package, no extra charge</label>
+<div class="f"><span class="l">Or the price for this day, in £</span><input id="xdp" type="number" inputmode="decimal" min="0" step="0.01" value="${Number(d.price)>0?esc(d.price):''}"></div>
 <div class="f"><span class="l">Venue name</span><input id="xdv" maxlength="160" value="${esc(d.venue||'')}"></div>
 <div class="f"><span class="l">Address and postcode</span><input id="xda" maxlength="200" value="${esc(d.address||'')}"></div>
 <div class="f"><span class="l">Private note (optional)</span><textarea id="xdn" rows="2" maxlength="500">${esc(d.note||'')}</textarea></div>
@@ -2126,7 +2128,7 @@ async function xdBill(d,gone){
 function xdSave(){
   const v=i=>$('#'+i).value.trim(),id=ui.modal.id,kind=v('xdk')||v('xdkn');
   if(!kind){$('#xdkn').classList.add('err');$('#xdkn').focus();return}
-  const h=parseFloat(v('xdh')||v('xdho')),pr=parseFloat(v('xdp'));
+  const h=parseFloat(v('xdh')||v('xdho')),pr=parseFloat(v('xdp'))>0?parseFloat(v('xdp')):$('#xdinc').checked?0:NaN;
   const o={kind,day_date:v('xdd')||null,start_time:v('xds').slice(0,5),hours:h>0?h:null,price:pr>=0?Math.round(pr*100)/100:null,venue:v('xdv'),address:v('xda'),note:v('xdn')};
   const go=async()=>{
     const q=id?await sb.from('event_days').update(o).eq('id',id).select().single():await sb.from('event_days').insert({...o,wedding_id:wed.id}).select().single();
@@ -2146,11 +2148,13 @@ const xdRO=l=>(Array.isArray(l)?l:[]).map(d=>`<h2>${esc(d.kind)}${d.day_date?' �
 ${d.address?`<p style="margin:0 0 12px"><a class="lnk" href="${esc(mapUrl(d.address))}" target="_blank" rel="noopener">Tap for directions</a></p>`:''}
 ${xdItems(d).map(x=>`<div class="fr tl"><div class="tm">${esc(x.t||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.loc?`<div class="sub">${esc(x.loc)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`).join('');
 const xdShort=l=>(Array.isArray(l)?l:[]).map(d=>'+ '+d.kind+(d.day_date?' '+fmtD(d.day_date):'')).join(' · ');
+/* every date of the event under the main heading, in date order */
+const xdHead=()=>{const l=xdSort(XD());return l.length?`<div class="meta" style="margin-top:6px;color:var(--ac)">${l.map(d=>esc(d.kind)+' · '+(d.day_date?fmtD(d.day_date):'date to be confirmed')).join('<br>')}</div>`:''};
 const xdItems=d=>(Array.isArray(d.items)?d.items:[]).map((x,i)=>({...x,i})).sort((a,b)=>(!a.t)-(!b.t)||String(a.t).localeCompare(String(b.t)));
 function xdTl(lk){
   const a=xdSort(XD());if(!a.length)return'';
   return a.map(d=>{const it=xdItems(d);return`<h2>${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</h2>
-<div class="meta" style="margin-bottom:14px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>${xdTmLine(d)}
+<div class="meta" style="margin-bottom:14px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>${d.included||(!TOKEN&&Number(d.price)===0&&d.price!=null)?'<div class="sub" style="margin-bottom:10px">Included in your package</div>':''}${xdTmLine(d)}
 ${d.address?`<p style="margin:0 0 14px"><a class="lnk" href="${esc(mapUrl(d.address))}" target="_blank" rel="noopener">Open in Maps</a></p>`:''}
 <div>${it.length?it.map(x=>`<div class="g"><div class="tm">${esc(x.t||'—')}</div><div class="bd"><div class="nm">${esc(x.title)}</div>${x.loc?`<div class="sub">${esc(x.loc)}</div>`:''}${x.note?`<div class="note"><b>Note:</b> ${esc(x.note)}</div>`:''}${lk?'':`<div class="acts"><button data-a="xdIEdit" data-id="${d.id}" data-i="${x.i}">Edit</button><button data-a="xdIDel" data-id="${d.id}" data-i="${x.i}">Delete</button></div>`}</div></div>`).join(''):'<p class="empty">No moments yet for this day.</p>'}</div>
 ${lk?'':`<div class="cta"><button class="btn" data-a="xdIAdd" data-id="${d.id}">+ Add moment to ${esc(d.kind)}</button></div>`}`}).join('')}
@@ -2648,7 +2652,7 @@ function mainView(){
   const w=wed,ap=w.approval_status==='approved';
   return`<div class="top2" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-a="goBack">← ${ui.sec!=='overview'?'Overview':BACKN[ui.from]||'All events'}</button>${ui.sec!=='overview'||BACKN[ui.from]?'<button class="btn" data-a="back">All events</button>':''}</div>
 <div class="brand">${brand(w)}</div>
-<h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${dm(w)}</div>
+<h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${dm(w)}</div>${xdHead()}
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
@@ -2682,8 +2686,8 @@ ${lk?'':`<div class="cta"><button class="btn fill" data-a="addL">+ Add Location<
 ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
-  if(sec==='agr')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${secNav(1)}${clAgr()}<footer><span>Private link · Zema Production</span></footer>`;
-  if(sec==='msg'||sec==='trav'||sec==='ideas')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${secNav(1)}${sec==='msg'?clMsg():sec==='trav'?clTrav():clIdeas(lk)}<footer><span>Private link · Zema Production</span></footer>`;
+  if(sec==='agr')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}${secNav(1)}${clAgr()}<footer><span>Private link · Zema Production</span></footer>`;
+  if(sec==='msg'||sec==='trav'||sec==='ideas')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}${secNav(1)}${sec==='msg'?clMsg():sec==='trav'?clTrav():clIdeas(lk)}<footer><span>Private link · Zema Production</span></footer>`;
   if(sec==='del')return`${secNav(1)}<div style="height:20px"></div>${cineBody()}<footer><span>Private link · Zema Production</span></footer>`;
   const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
   const I={timeline:isWed(w)?'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.':'Add the key moments of your event with their times, such as when guests arrive, the cake and any speeches. They sort themselves by time.',
@@ -2693,7 +2697,7 @@ party:'Add the key people of your day with their role and a phone number, such a
 places:isWed(w)?'Add each place your photographer needs to be: where you’re getting ready, the ceremony, the reception and any photo spots. Include the full address with postcode, the time to arrive, and anything useful about parking or access. Family and friends can’t see this list.':'Add each place your photographer needs to be for your event. Include the full address with postcode, the time to arrive, and anything useful about parking or access.',
 notes:'Tell your photographer anything that doesn’t fit elsewhere: traditions or cultural moments, family sensitivities, surprises, things you love or want to avoid. Family and friends can’t see this.'};
   return`<div class="brand">${brand(w)}</div>
-<h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>
+<h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}
 ${secNav(1)}
 <h2>${H[sec]}</h2>
 ${sec==='overview'?'':lk?`<section class="card ok" style="margin-bottom:20px"><div class="lbl">Confirmed</div><div class="big" style="font-size:28px">Your plan is confirmed</div>
@@ -3220,6 +3224,7 @@ document.addEventListener('click',async e=>{
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
   else if(a==='xdTm'&&!TOKEN){ui.tmDay=id&&ui.tmDay!==id?id:null;render()}
   else if(a==='xdAdd'&&!TOKEN)xdForm();
+  else if(a==='xdPre'&&!TOKEN)xdForm(null,true);
   else if(a==='xdEdit'&&!TOKEN)xdForm(id);
   else if(a==='xdSave'&&!TOKEN)xdSave();
   else if(a==='xdDel'&&!TOKEN){const d=XD().find(x=>x.id===id);if(d)ask(`Delete ${d.kind}? Its line is also taken off the invoice.`,async()=>{const{error}=await sb.from('event_days').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);wed.days=XD().filter(x=>x.id!==id);daysAll=daysAll.filter(x=>x.id!==id);await xdBill(d,true);render()})}
