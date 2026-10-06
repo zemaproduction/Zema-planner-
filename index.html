@@ -178,6 +178,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 // Runs in the free Scriptable app. It reads live figures from your planner
 // and opens the right part of the planner when you tap it.
 // Copy this from the planner (Menu > iPhone app & widget) so your private key is filled in.
+// Version 3 · 7 October 2026
 
 const API = "__SB_URL__/rest/v1/rpc/widget_summary";
 const KEY = "__SB_KEY__";
@@ -337,12 +338,12 @@ function action(parent, text, url) {
 // ---- Layouts ----
 function small(w, res) {
   const d = res.data;
-  const today = (d.today || [])[0];
-  const item = today || d.next_wedding || d.next;
-  w.url = today ? go("today") : APP;
+  const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
+  const item = nx[0];
+  w.url = APP;
   header(w, res);
   w.addSpacer(8);
-  const lab = w.addText(today ? "TODAY" : d.next_wedding ? "NEXT WEDDING" : "NEXT EVENT");
+  const lab = w.addText("NEXT EVENT");
   lab.font = Font.semiboldSystemFont(8.5);
   lab.textColor = C.mu;
   w.addSpacer(3);
@@ -353,19 +354,18 @@ function small(w, res) {
   name.minimumScaleFactor = 0.7;
   if (item) {
     w.addSpacer(3);
-    const sub = w.addText(today ? (today.start ? "Starts " + today.start : today.event_type) : fmtDate(item.date) + " · " + inDays(item.days));
+    const sub = w.addText(fmtDate(item.date) + " · " + inDays(item.days));
     sub.font = Font.regularSystemFont(11);
     sub.textColor = C.ac;
     sub.lineLimit = 1;
     sub.minimumScaleFactor = 0.8;
   }
   w.addSpacer();
-  const due = dueLine(d), enq = d.enquiries || {};
-  const waiting = Math.max(Number(enq.new) || 0, Number(enq.followups) || 0) + (Number(enq.bookings) || 0) + (Number(enq.freelance) || 0);
-  const foot = w.addText((due.quiet ? "Nothing owed" : due.text) + "\n" + (waiting ? plural(waiting, "enquiry", "enquiries") + " waiting" : "No enquiries waiting"));
+  const where = item ? (item.address || item.city || "") : "";
+  const foot = w.addText(item ? (where || "No address added yet") : "Tap to add an event");
   foot.font = Font.regularSystemFont(10);
-  foot.textColor = C.soft;
-  foot.lineLimit = 2;
+  foot.textColor = where ? C.soft : C.mu;
+  foot.lineLimit = 3;
   foot.minimumScaleFactor = 0.8;
 }
 function evLine(e, none) {
@@ -377,12 +377,12 @@ function medium(w, res) {
   w.url = APP;
   header(w, res);
   w.addSpacer(8);
+  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
+  w.addSpacer(6);
   const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
   row(w, "calendar", "NEXT", evLine(nx[0], "Nothing booked"), APP);
   w.addSpacer(6);
   row(w, "calendar.badge.clock", "THEN", evLine(nx[1], "Nothing else booked"), APP);
-  w.addSpacer(6);
-  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
   w.addSpacer(6);
   const pend = Number(d.pending) || 0;
   row(w, "hourglass", "PENDING", pend ? { text: plural(pend, "event", "events") + " not confirmed yet" } : { text: "Nothing pending", quiet: true }, go("pending"));
@@ -432,14 +432,13 @@ function large(w, res) {
   header(w, res);
   w.addSpacer(12);
 
+  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
+  w.addSpacer(12);
   const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
   eventCard(w, "NEXT EVENT", nx[0]);
   w.addSpacer(8);
   eventCard(w, "AFTER THAT", nx[1]);
-
   w.addSpacer(14);
-  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
-  w.addSpacer(10);
   const pend = Number(d.pending) || 0;
   row(w, "hourglass", "PENDING", pend ? { text: plural(pend, "event", "events") + " not confirmed yet" } : { text: "Nothing pending", quiet: true }, go("pending"));
   w.addSpacer(10);
