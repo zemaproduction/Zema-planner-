@@ -866,9 +866,9 @@ async function loadDash(view){
   demoW=data.find(w=>w.is_demo)||null;
   weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;if(g0==='owed')ui.flt='owed';render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
-  else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today());if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
+  else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today()||daysAll.some(d=>d.wedding_id===w.id&&d.day_date===today()));if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
-const openWedding=(id,c)=>{if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;scrollTo(0,0);return loadWedding(id).then(r=>{scrollTo(0,0);return r})};
+const openWedding=(id,c)=>{ui.tmDay=null;ui.tmAuto=0;if(ui.view!=='wed')ui.from=ui.view;ui.cine=!!c;ui.play=null;ui.wid=id;ui.view='wed';ui.inv=false;ui.sec='overview';ui.tab='all';ui.day=false;scrollTo(0,0);return loadWedding(id).then(r=>{scrollTo(0,0);return r})};
 async function loadWedding(id){
   const{data:w,error}=await sb.from('weddings').select('*').eq('id',id).single();
   if(error)return failView(error);
@@ -1185,7 +1185,7 @@ function ovMain(){
   const after=['post','delivered'].includes(stg(wed));
   return`<h2>Where this job stands</h2>
 ${standCard()}
-${isWed(wed)?'':timerCard()}
+${isWed(wed)||tmDay()?'':timerCard()}
 ${after?postCard():''}
 <h2>Status and package</h2>
 ${statusCard()}
@@ -1379,12 +1379,14 @@ function crewView(){
   return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
 ${travCrewCard(d.travel)}
+${Array.isArray(d.days)&&d.days.length?'<p class="intro" style="margin-top:18px">You are also booked for: '+esc(xdShort(d.days).replace(/\+ /g,''))+'. Details are at the bottom of this page.</p>':''}
 ${tk.length?`<h2>Your to-do list</h2><div>${tk.map((x,i)=>`<button class="dr ${x.done?'done':''}" data-a="ctask" data-i="${i}"><span class="ck">${x.done?'✓':''}</span><span class="dt"><b style="font-size:20px">${esc(x.t)}</b></span></button>`).join('')}</div>`:''}
 ${tl.length?`<h2>Timeline</h2>${tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`:''}
 ${pl.length?`<h2>Locations</h2><div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
 ${pp.length?`<h2>Key people</h2><div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
 ${mh.length?`<h2>Must-have shots</h2>${mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')}`:''}
 ${Array.isArray(d.gear)&&d.gear.length?`<h2>Equipment</h2>${gearBlock(d.gear,true)}`:''}
+${xdRO(d.days)}
 <footer><span>Private crew link · Zema Production · updates every minute</span></footer>`}
 /* ---- Crew member's own page (?cp=): every job they have with you and their own pay. You open the same link to see it. ---- */
 const cpLink=c=>location.origin+location.pathname+'?cp='+c.token;
@@ -1400,7 +1402,7 @@ function crewHomeView(){
   const d=cph,jobs=d.jobs||[],oth=d.other||[],td=today(),sum=(l,f)=>l.filter(f).reduce((a,k)=>a+Number(k.amount||0),0);
   const all=[...jobs.flatMap(j=>j.pay||[]),...oth],owed=sum(all,k=>!k.paid),paid=sum(all,k=>k.paid);
   const payLine=l=>{if(!l||!l.length)return'';const o=sum(l,k=>!k.paid),p=sum(l,k=>k.paid),last=l.filter(k=>k.paid&&k.paid_on).map(k=>k.paid_on).sort().pop();return`<small style="color:var(--tx)">Your pay: ${gbp(o+p)}${o&&p?' · '+gbp(p)+' paid, '+gbp(o)+' still to pay':o?' · still to pay':' · paid'+(last?' on '+fmtD(last):'')}</small>`};
-  const row=j=>`<a class="dr" href="?c=${esc(j.token)}"><span class="dt"><b style="font-size:20px">${esc(j.couple||j.event_type||'Event')}</b><small>${fmtD(j.date)}${j.couple&&j.event_type?' · '+esc(j.event_type):''}${j.city?' · '+esc(j.city):''}</small><small>${esc(j.role||'Crew')}${j.call_time?' · call time '+esc(j.call_time):''}</small>${payLine(j.pay)}<small class="live">${j.status==='invited'?'Tap to accept or decline':'Tap to open'}</small></span></a>`;
+  const row=j=>`<a class="dr" href="?c=${esc(j.token)}"><span class="dt"><b style="font-size:20px">${esc(j.couple||j.event_type||'Event')}</b><small>${fmtD(j.date)}${j.couple&&j.event_type?' · '+esc(j.event_type):''}${j.city?' · '+esc(j.city):''}</small><small>${esc(j.role||'Crew')}${j.call_time?' · call time '+esc(j.call_time):''}</small>${Array.isArray(j.days)&&j.days.length?`<small>${esc(xdShort(j.days))}</small>`:''}${payLine(j.pay)}<small class="live">${j.status==='invited'?'Tap to accept or decline':'Tap to open'}</small></span></a>`;
   const ask=jobs.filter(j=>j.status==='invited'&&(!j.date||j.date>=td)),acc=jobs.filter(j=>j.status==='accepted'),up=acc.filter(j=>!j.date||j.date>=td),past=acc.filter(j=>j.date&&j.date<td).reverse();
   return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(d.name||'Crew')}</h1><div class="meta">${d.role?esc(d.role)+' · ':''}Your jobs with Zema Production</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">Still to be paid to you</div><div class="num" style="font-size:30px;margin-bottom:6px">${gbp(owed)}</div><div class="sub" style="margin:0">${gbp(paid)} paid so far · ${past.length} past job${past.length==1?'':'s'} · ${up.length} coming up</div></section>
@@ -1487,6 +1489,7 @@ ${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
+${XD().length?`<div class="f"><span class="l">Also booked for these extra days</span>${xdSort(XD()).map(y=>`<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" class="edy" value="${y.id}" style="width:22px;height:22px" ${x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.id)?'checked':''}> ${esc(y.kind)}${y.day_date?' · '+fmtD(y.day_date):''}</label>`).join('')}</div>`:''}
 ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
 <div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
@@ -1494,7 +1497,7 @@ ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><selec
 async function saveEc(){
   const id=ui.modal.id,invite=ui.modal.invite,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
   const tasks=$('#ek').value.split('\n').map(t=>t.trim()).filter(Boolean).map(t=>({t,done:!!(old.find(o=>o.t===t)||{}).done}));
-  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks},cid=id?null:$('#ec').value;
+  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks,...(XD().length?{day_ids:[...document.querySelectorAll('.edy:checked')].map(e=>e.value)}:{})},cid=id?null:$('#ec').value;
   const win=invite?window.open('','_blank'):null;
   const r=id?await sb.from('event_crew').update(o).eq('id',id).select('*, crew(name,phone)').single():await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:cid,...(invite?{status:'invited'}:{})}).select('*, crew(name,phone)').single();
   if(r.error){if(win)win.close();return toast(/relation|schema|find the table|column/i.test(r.error.message)?'Run the latest crew SQL in Supabase first, then refresh.':'Could not save: '+r.error.message)}
@@ -1506,7 +1509,7 @@ function crewInvite(){
   const d=cw,e=d.event||{},dec=d.status==='declined',row=(a,b)=>b?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx)">${esc(b)}</span></div>`:'';
   return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${dec?'You declined this job':'Are you available?'}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'')}</div>
-${row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}
+${row('Date',fmtD(e.wedding_date))}${row('Call time',d.call_time)}${row('Area',e.city)}${row('Role',d.role)}${row('Also asked for',xdShort(d.days).replace(/\+ /g,''))}
 ${d.brief?`<p class="ntx" style="margin-top:16px">${esc(d.brief)}</p>`:''}
 ${dec?'<p class="intro" style="margin:16px 0 0">If that was a mistake, message Zema Production and they can ask you again.</p>':'<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="cAccept">Accept</button><button class="btn" data-a="cDecline">Decline</button></div>'}</section>
 ${dec?'':'<p class="intro" style="margin-top:16px;font-size:13px">Once you accept, this page shows the full timeline, locations and your to-do list.</p>'}
@@ -1621,8 +1624,9 @@ function openHeroForm(){
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveHero">Save</button></div></div></div>`;
 }
 /* ---- Live timer for small events, photoshoots and freelance jobs. Saved as a record both sides can see ---- */
-const TM=()=>wed.timer||{};
-const tmBooked=()=>{const t=TM();return t.booked_minutes!=null?Number(t.booked_minutes):(wed.bill&&wed.bill.hours?Math.round(Number(wed.bill.hours)*60):null)};
+const tmDay=()=>ui.tmDay&&wed&&Array.isArray(wed.days)&&wed.days.find(d=>d.id===ui.tmDay)||null;
+const TM=()=>{const d=tmDay();return d?(d.timer||{}):(wed.timer||{})};
+const tmBooked=()=>{const t=TM(),d=tmDay();return t.booked_minutes!=null?Number(t.booked_minutes):d?(d.hours?Math.round(Number(d.hours)*60):null):(wed.bill&&wed.bill.hours?Math.round(Number(wed.bill.hours)*60):null)};
 function tmCalc(){
   const t=TM();if(!t.started_at)return null;
   const now=Date.now(),s=Date.parse(t.started_at),e=t.ended_at?Date.parse(t.ended_at):now,pz=Number(t.paused_ms||0)+(t.paused_at&&!t.ended_at?Math.max(0,now-Date.parse(t.paused_at)):0);
@@ -1638,21 +1642,23 @@ function timerCard(){
   const ro=!!(TOKEN||DTOKEN),t=TM(),c=tmCalc(),bk=tmBooked();
   if(!ro&&wed.tmErr)return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">The timer isn’t set up in Supabase yet. Run the timer SQL once, then refresh this page.</p></section>`;
   if(!c){if(ro)return'';ui.tmFlag='';
-    return`<section class="card" style="margin-top:16px"><div class="lbl">Timer</div><p class="intro" style="margin:10px 0 0">${bk!=null?'Booked for '+hm(bk*60000)+'. The timer will count down.':'No booked hours set, so the timer will count up.'} Start it when you begin. The client sees it live on their link.</p>
+    return`<section class="card" style="margin-top:16px"><div class="lbl">Timer${tmDay()?' · '+esc(tmDay().kind):''}</div><p class="intro" style="margin:10px 0 0">${bk!=null?'Booked for '+hm(bk*60000)+'. The timer will count down.':'No booked hours set, so the timer will count up.'} Start it when you begin. The client sees it live on their link.</p>
 <div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="tmStart">Start event</button><button class="btn" data-a="tmHours">Booked hours</button></div></section>`}
   ui.tmFlag=(c.soon?'s':'')+(c.over?'o':'');
   const lab=c.state==='done'?'Finished · time worked':c.state==='paused'?'Paused'+(c.left!=null?' · '+(c.over?'over the booked time':'time left'):''):c.left!=null?(c.over?'Over the booked time':'Time left'):'Time worked';
   const pl=Array.isArray(t.pauses)?t.pauses:[],rows=[['Started',fmtDT(c.s)],c.state==='done'?['Finished',fmtDT(c.e)]:c.eta?['Expected finish','<span id="tmeta">'+clk(c.eta)+'</span>']:null,c.state==='done'?null:['Time worked','<span id="tmw">'+hm(c.worked)+'</span>'],c.bk!=null?['Booked',hm(c.bk*60000)]:null,c.pz>=60000||pl.length?['Paused in total',hm(c.pz)]:null,c.state==='done'&&c.over?['Over the booked time',hm(c.left)]:null].filter(Boolean);
-  return`<section class="card ${c.soon||c.over||c.state==='run'?'ok':''}" style="margin-top:16px"><div class="lbl">${TOKEN?'Your booking':'Timer'} · ${lab}</div>
+  return`<section class="card ${c.soon||c.over||c.state==='run'?'ok':''}" style="margin-top:16px"><div class="lbl">${TOKEN?'Your booking':'Timer'}${tmDay()?' · '+esc(tmDay().kind):''} · ${lab}</div>
 <div class="num" id="tmbig" style="margin-bottom:10px">${tmBig(c)}</div>
 ${c.soon?`<p class="intro" style="margin:0 0 12px;color:var(--ac)">${TOKEN?'Your booking is about to end. Message us if you’d like to extend.':DTOKEN?'About to end.':'About to end. Let the client know.'}</p>`:''}
 ${rows.map(([a,b])=>`<div class="row2" style="margin-top:6px"><span>${a}</span><span>${b}</span></div>`).join('')}
 ${pl.map(p=>`<div class="row2" style="margin-top:6px"><span>Pause</span><span>${clk(Date.parse(p.from))} to ${clk(Date.parse(p.to))}</span></div>`).join('')}
 ${t.paused_at&&!t.ended_at?`<div class="row2" style="margin-top:6px"><span>Paused since</span><span>${clk(Date.parse(t.paused_at))}</span></div>`:''}
 ${t.edited?'<div class="row2" style="margin-top:6px"><span>Record edited by Zema Production</span><span></span></div>':''}
-${ro?'':`<div class="cta" style="margin-bottom:0">${c.state==='run'?'<button class="btn" data-a="tmPause">Pause</button><button class="btn fill" data-a="tmFinish">Finish event</button>':c.state==='paused'?'<button class="btn fill" data-a="tmResume">Resume</button><button class="btn" data-a="tmFinish">Finish event</button>':(wed.bill&&Number(wed.bill.hourly_rate)>0?'<button class="btn pri" data-a="tmBill">Use this time on the invoice</button>':'')+'<button class="btn fill" data-a="tmWaDone">Tell the client it’s finished</button><button class="btn" data-a="tmEdit">Correct the record</button><button class="btn" data-a="tmReset">Reset timer</button>'}${c.state!=='done'&&(c.soon||c.over)?'<button class="btn pri" data-a="tmWa">Tell the client on WhatsApp</button>':''}</div>${c.state!=='done'?'<div class="acts"><button data-a="tmWaStart">Tell the client it’s started</button><button data-a="tmHours">Booked hours</button></div>':''}`}
+${ro?'':`<div class="cta" style="margin-bottom:0">${c.state==='run'?'<button class="btn" data-a="tmPause">Pause</button><button class="btn fill" data-a="tmFinish">Finish event</button>':c.state==='paused'?'<button class="btn fill" data-a="tmResume">Resume</button><button class="btn" data-a="tmFinish">Finish event</button>':(!tmDay()&&wed.bill&&Number(wed.bill.hourly_rate)>0?'<button class="btn pri" data-a="tmBill">Use this time on the invoice</button>':'')+'<button class="btn fill" data-a="tmWaDone">Tell the client it’s finished</button><button class="btn" data-a="tmEdit">Correct the record</button><button class="btn" data-a="tmReset">Reset timer</button>'}${c.state!=='done'&&(c.soon||c.over)?'<button class="btn pri" data-a="tmWa">Tell the client on WhatsApp</button>':''}</div>${c.state!=='done'?'<div class="acts"><button data-a="tmWaStart">Tell the client it’s started</button><button data-a="tmHours">Booked hours</button></div>':''}`}
 </section>`}
 async function setT(o){
+  const dy=tmDay();
+  if(dy){const pv=dy.timer||{};dy.timer={...pv,...o};render();const{error}=await sb.from('event_days').update({timer:dy.timer}).eq('id',dy.id);if(error){dy.timer=pv;render();toast(/column|schema/i.test(error.message)?'Run the extra days SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}return true}
   const prev={...(wed.timer||{})};wed.timer={...prev,...o};render();
   const{error}=await sb.from('event_timer').upsert({wedding_id:wed.id,...o,updated_at:new Date().toISOString()});
   if(error){wed.timer=prev;render();toast(/relation|schema|find the table|column/i.test(error.message)?'Run the timer SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
@@ -2092,7 +2098,7 @@ function xdCard(){
   if(wed.dayErr)return'<h2>Extra days</h2><p class="empty">Extra days aren’t set up in Supabase yet. Run the extra days SQL once, then refresh this page.</p>';
   const a=xdSort(XD());
   return`<h2>Extra days</h2><p class="intro">For a church ceremony, Mels or Hammawiti on a different date. Each one has its own date and hours, goes in your calendar, and is added to this invoice as its own line.</p>
-<div>${a.map(d=>`<div class="g"><div class="bd"><div class="nm">${esc(d.kind)}</div><div class="sub">${d.day_date?fmtD(d.day_date):'No date yet'}${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div>${d.venue||d.address?`<div class="sub" style="text-transform:none;letter-spacing:0">${esc([d.venue,d.address].filter(Boolean).join(', '))}</div>`:''}${d.price!=null&&!hideMoney?`<div class="sub">${gbp(d.price)} on the invoice</div>`:''}${d.note?`<div class="note">${esc(d.note)}</div>`:''}<div class="acts"><button data-a="xdEdit" data-id="${d.id}">Edit</button><button data-a="xdDel" data-id="${d.id}">Delete</button></div></div></div>`).join('')}</div>
+<div>${a.map(d=>`<div class="g"><div class="bd"><div class="nm">${esc(d.kind)}</div><div class="sub">${d.day_date?fmtD(d.day_date):'No date yet'}${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div>${d.venue||d.address?`<div class="sub" style="text-transform:none;letter-spacing:0">${esc([d.venue,d.address].filter(Boolean).join(', '))}</div>`:''}${d.price!=null&&!hideMoney?`<div class="sub">${gbp(d.price)} on the invoice</div>`:''}${d.note?`<div class="note">${esc(d.note)}</div>`:''}${xdTmLine(d)}<div class="acts"><button data-a="xdTm" data-id="${d.id}">${ui.tmDay===d.id?'Close timer':'Timer'}</button><button data-a="xdEdit" data-id="${d.id}">Edit</button><button data-a="xdDel" data-id="${d.id}">Delete</button></div>${ui.tmDay===d.id?timerCard():''}</div></div>`).join('')}</div>
 <div class="cta"><button class="btn" data-a="xdAdd">+ Add an extra day</button></div>
 ${a.length?'<p class="intro" style="font-size:13px;margin-top:10px">The running order for each extra day is on the Timeline tab, under the main timeline.</p>':''}`}
 function xdForm(id){
@@ -2133,11 +2139,18 @@ function xdSave(){
   if(o.day_date&&(!prev||prev.day_date!==o.day_date))guard(o.day_date,id||'-',go);else go();
 }
 /* running order of one extra day: shown on the Timeline tab for you and for the client */
+const xdTmLine=d=>{const t=d&&d.timer;if(!t||!t.started_at)return'';const s=Date.parse(t.started_at),e=t.ended_at?Date.parse(t.ended_at):null,pz=Number(t.paused_ms||0);return`<div class="sub" style="color:var(--ac)">${e?'Finished · started '+clk(s)+', finished '+clk(e)+' · '+hm(Math.max(0,e-s-pz))+' worked':t.paused_at?'Paused · started '+clk(s):'Under way · started '+clk(s)}</div>`};
+/* read-only view of extra days: crew links, Day Mode link, your own Day Mode */
+const xdRO=l=>(Array.isArray(l)?l:[]).map(d=>`<h2>${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</h2>
+<div class="meta" style="margin-bottom:12px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>${xdTmLine(d)}
+${d.address?`<p style="margin:0 0 12px"><a class="lnk" href="${esc(mapUrl(d.address))}" target="_blank" rel="noopener">Tap for directions</a></p>`:''}
+${xdItems(d).map(x=>`<div class="fr tl"><div class="tm">${esc(x.t||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.loc?`<div class="sub">${esc(x.loc)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`).join('');
+const xdShort=l=>(Array.isArray(l)?l:[]).map(d=>'+ '+d.kind+(d.day_date?' '+fmtD(d.day_date):'')).join(' · ');
 const xdItems=d=>(Array.isArray(d.items)?d.items:[]).map((x,i)=>({...x,i})).sort((a,b)=>(!a.t)-(!b.t)||String(a.t).localeCompare(String(b.t)));
 function xdTl(lk){
   const a=xdSort(XD());if(!a.length)return'';
   return a.map(d=>{const it=xdItems(d);return`<h2>${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</h2>
-<div class="meta" style="margin-bottom:14px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>
+<div class="meta" style="margin-bottom:14px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>${xdTmLine(d)}
 ${d.address?`<p style="margin:0 0 14px"><a class="lnk" href="${esc(mapUrl(d.address))}" target="_blank" rel="noopener">Open in Maps</a></p>`:''}
 <div>${it.length?it.map(x=>`<div class="g"><div class="tm">${esc(x.t||'—')}</div><div class="bd"><div class="nm">${esc(x.title)}</div>${x.loc?`<div class="sub">${esc(x.loc)}</div>`:''}${x.note?`<div class="note"><b>Note:</b> ${esc(x.note)}</div>`:''}${lk?'':`<div class="acts"><button data-a="xdIEdit" data-id="${d.id}" data-i="${x.i}">Edit</button><button data-a="xdIDel" data-id="${d.id}" data-i="${x.i}">Delete</button></div>`}</div></div>`).join(''):'<p class="empty">No moments yet for this day.</p>'}</div>
 ${lk?'':`<div class="cta"><button class="btn" data-a="xdIAdd" data-id="${d.id}">+ Add moment to ${esc(d.kind)}</button></div>`}`}).join('')}
@@ -2330,8 +2343,8 @@ async function loadDay(){
 }
 function dayRO(){
   const w=wed,tl=w.timeline||[],fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
-  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
-  const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')
+  const tabs=[['timeline','Timeline',tl.length+(Array.isArray(w.days)?w.days.length:0)],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
+  const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')+xdRO(w.days)
   :sec==='family'?`<div class="big">${fam.filter(g=>g.done).length} / ${fam.length} <small>completed</small></div>${fam.map((g,i)=>`<div class="fr ${g.done?'d':''}"><div class="nm">${i+1}. ${esc(g.name)}${g.done?' ✓':''}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px">${esc((Array.isArray(g.people)?g.people:[]).join(', '))}</div>${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}</div>`).join('')}`
   :sec==='musts'?mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}${x.done?' ✓':''}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')
   :sec==='people'?`<div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
@@ -2699,7 +2712,7 @@ function dayTl(){
   return`<h2>Timeline</h2>
 <div class="big">${d} / ${a.length} <small>completed · ${p}%</small></div><div class="bar"><i style="width:${p}%"></i></div>
 <div>${a.map(x=>`<button class="dr ${x.done?'done':''} ${x===nx?'nx':''}" data-a="togT" data-id="${x.id}"><span class="ck">${x.done?'✓':''}</span><span class="dt">${x===nx?'<small class="live">Up next</small>':''}<b>${x.at_time?`<span class="tn">${esc(x.at_time)}</span>`:''}${esc(x.title)}</b>${x.location?`<small>${esc(x.location)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span></button>`).join('')}</div>
-${a.length?(d===a.length?'<p class="fin">Every moment on the timeline is done.</p>':''):'<p class="empty">No timeline yet. Exit and add moments in the Timeline section.</p>'}`}
+${a.length?(d===a.length?'<p class="fin">Every moment on the timeline is done.</p>':''):'<p class="empty">No timeline yet. Exit and add moments in the Timeline section.</p>'}${xdRO(XD())}`}
 function dayMh(){
   const a=M(),d=a.filter(x=>x.done).length,p=a.length?Math.round(d/a.length*100):0;
   return`<h2>Must-Have Moments</h2>
@@ -2722,7 +2735,7 @@ function dayView(){
   const w=wed,sec=SK_OK(ui.sec)==='overview'?'timeline':SK_OK(ui.sec);
   return`<div class="top">${isWed(w)?'<button class="btn" data-a="copyF">Family &amp; friends link</button>':''}<button class="btn" data-a="exit">Exit</button></div>
 <div class="brand">${isWed(w)?'ZEMA WEDDING DAY':'ZEMA EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${fmtD(w.wedding_date)}</div>
-${isWed(w)?'':timerCard()}
+${(x=>{if(x&&w.wedding_date!==today()&&!ui.tmDay&&!ui.tmAuto){ui.tmAuto=1;ui.tmDay=x.id}return tmDay()?timerCard()+`<p class="intro" style="font-size:13px;margin:10px 0 0">This timer is for ${esc(tmDay().kind)}. <button class="lnk" style="font-size:13px" data-a="xdTm" data-id="">Close it</button></p>`:isWed(w)?'':timerCard()})(XD().find(d=>d.day_date===today()))}
 <div class="tabs" style="margin-top:22px">${[['timeline','Timeline'],['family','Family Photos'],['musts','Must-Haves'],['party','People'],['places','Places'],['notes','Notes'],['gear','Equipment']].filter(([k])=>secsFor(wed).some(x=>SK[x]===k)).map(([k,v])=>`<button class="tab ${sec===k?'on':''}" data-a="sec" data-k="${k}">${v}</button>`).join('')}</div>
 ${sec==='gear'?gearMain():sec==='timeline'?dayTl():sec==='musts'?dayMh():sec==='party'?dayPt():sec==='places'?dayLc():sec==='notes'?dayNt():dayFam()}`}
 function copyLink(token,key){
@@ -3205,6 +3218,7 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
+  else if(a==='xdTm'&&!TOKEN){ui.tmDay=id&&ui.tmDay!==id?id:null;render()}
   else if(a==='xdAdd'&&!TOKEN)xdForm();
   else if(a==='xdEdit'&&!TOKEN)xdForm(id);
   else if(a==='xdSave'&&!TOKEN)xdSave();
