@@ -1,17 +1,44 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ZEMA WEDDING PLANNER</title>
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-<meta name="apple-mobile-web-app-title" content="Zema">
+<title>Zema Planner</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0B0B0C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zema Planner">
+<meta name="application-name" content="Zema Planner">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="zema-icon-180.png">
+<link rel="icon" type="image/png" href="zema-icon-192.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="zema-splash/750x1334.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1242x2208.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1125x2436.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="zema-splash/828x1792.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1242x2688.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1170x2532.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1284x2778.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1179x2556.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1290x2796.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1206x2622.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1320x2868.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="zema-splash/1260x2736.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0B0B0C;--s:#151516;--line:#2b2b2d;--tx:#F3EEE6;--mu:#8C8A86;--ac:#B89B72;--serif:"Cormorant Garamond",Georgia,serif;--sans:Inter,system-ui,-apple-system,sans-serif;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*:before,*:after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+html{background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select,textarea{font:inherit;color:inherit}
+button,a,label,[data-a]{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{-webkit-user-select:none;user-select:none}
+.launch{min-height:72vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.launch .z{font:300 64px/1 var(--serif);color:var(--ac)}.launch .bar{width:120px;margin:0;overflow:hidden}.launch .bar i{width:40%;animation:lz 1.1s ease-in-out infinite alternate}
+@keyframes lz{from{transform:translateX(-40%)}to{transform:translateX(190%)}}
+@media(prefers-reduced-motion:reduce){.launch .bar i{animation:none;width:100%}}
+.steps{margin:0 0 18px;padding-left:20px;color:var(--mu);font-size:14px}.steps li{margin-bottom:8px}.steps b{color:var(--tx);font-weight:500}
 .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
 .brand{font-size:11px;letter-spacing:.32em;color:var(--ac);text-transform:uppercase}
 h1{font:300 44px/1.1 var(--serif);margin:14px 0 6px}
@@ -61,7 +88,7 @@ h2{font:400 26px/1.2 var(--serif);margin:36px 0 18px}
 .empty{color:var(--mu);padding:30px 0;text-align:center}
 footer{margin-top:40px;font-size:12px;color:#5d5b58;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 footer button{background:none;border:0;color:var(--mu);text-decoration:underline;cursor:pointer;font-size:12px;margin-left:12px}
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.ov{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:9}
 .m{background:var(--s);border:1px solid var(--line);width:100%;max-width:520px;max-height:92%;overflow:auto;padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px))}
 .m h3{font:400 28px var(--serif);margin:0 0 18px}.m.sm p{margin:0 0 20px;font-size:17px}.m .intro{font-size:14px}
 .f{margin-bottom:16px}.l{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
@@ -141,8 +168,336 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .dr.nx{border-color:var(--ac)}a.dr{text-decoration:none;color:inherit}a.lnk{display:inline-block;margin-top:8px}.dt .live{color:var(--ac);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
 </style></head>
 <body>
-<main id="app" class="wrap"><p class="empty">Loading…</p></main>
+<main id="app" class="wrap"><div class="launch"><div class="z">Z</div><div class="brand">ZEMA PLANNER</div><div class="bar"><i></i></div></div></main>
 <div id="modal"></div><div id="toast"></div>
+<script type="text/plain" id="wsrc">
+// Zema Planner · Home Screen widget
+// Runs in the free Scriptable app. It reads live figures from your planner
+// and opens the right part of the planner when you tap it.
+// Copy this from the planner (Menu > iPhone app & widget) so your private key is filled in.
+
+const API = "__SB_URL__/rest/v1/rpc/widget_summary";
+const KEY = "__SB_KEY__";
+const TOKEN = "__TOKEN__";
+const APP = "__APP_URL__";
+
+// Change to false to hide pound amounts on your Home Screen (counts are still shown).
+const SHOW_MONEY = true;
+
+const C = {
+  bg: new Color("#0B0B0C"), card: new Color("#151516"), line: new Color("#2b2b2d"),
+  tx: new Color("#F3EEE6"), soft: new Color("#C4BEB5"), mu: new Color("#8C8A86"),
+  ac: new Color("#B89B72"), bad: new Color("#D98A82")
+};
+const go = k => APP + "?go=" + k;
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function dateOf(iso) {
+  const p = String(iso || "").split("-").map(Number);
+  return p.length === 3 ? new Date(p[0], p[1] - 1, p[2]) : null;
+}
+function fmtDate(iso) {
+  const d = dateOf(iso);
+  return d ? DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] : "";
+}
+function inDays(n) {
+  n = Number(n);
+  return n <= 0 ? "Today" : n === 1 ? "Tomorrow" : "In " + n + " days";
+}
+function gbp(n) {
+  const v = Math.round(Number(n) || 0);
+  return "£" + String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function plural(n, one, many) {
+  return n + " " + (Number(n) === 1 ? one : many);
+}
+function symbol(name) {
+  const s = SFSymbol.named(name) || SFSymbol.named("circle");
+  return s.image;
+}
+
+async function load() {
+  const fm = FileManager.local();
+  const path = fm.joinPath(fm.cacheDirectory(), "zema-planner-widget.json");
+  try {
+    const req = new Request(API);
+    req.method = "POST";
+    req.timeoutInterval = 20;
+    req.headers = { "apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json" };
+    req.body = JSON.stringify({ k: TOKEN });
+    const data = await req.loadJSON();
+    if (!data || !data.money) throw new Error(data && data.message ? data.message : "No data");
+    fm.writeString(path, JSON.stringify(data));
+    return { data: data, stale: false };
+  } catch (e) {
+    if (fm.fileExists(path)) {
+      try { return { data: JSON.parse(fm.readString(path)), stale: true }; } catch (_) {}
+    }
+    return { data: null, error: String(e) };
+  }
+}
+
+// ---- What each line says ----
+function todayLine(d) {
+  const t = d.today || [];
+  if (!t.length) return { text: "Nothing booked today", quiet: true };
+  const first = t[0];
+  const more = t.length > 1 ? "  +" + (t.length - 1) : "";
+  return { text: first.couple + (first.start ? " · " + first.start : "") + more, sub: first.event_type + (first.city ? " · " + first.city : "") };
+}
+function nextLine(d) {
+  const n = d.next_wedding;
+  if (!n) return { text: "No upcoming wedding", quiet: true };
+  return { text: n.couple, sub: fmtDate(n.date) + (n.city ? " · " + n.city : ""), when: inDays(n.days) };
+}
+function dueLine(d) {
+  const m = d.money || {};
+  const owed = Number(m.owed_count) || 0, over = Number(m.overdue_count) || 0, soon = Number(m.due_soon_count) || 0;
+  if (!owed && !over && !soon) return { text: "Nothing outstanding", quiet: true };
+  const lead = SHOW_MONEY ? gbp(m.owed_total) + " to come" : plural(owed, "client owes", "clients owe");
+  const tail = over ? plural(over, "payment", "payments") + " overdue" : soon ? plural(soon, "payment", "payments") + " due this week" : "";
+  return { text: lead, sub: tail, alert: over > 0 };
+}
+function costLine(d) {
+  const m = d.money || {};
+  const c = Number(m.costs_count) || 0;
+  if (!c) return { text: "Nothing to pay", quiet: true };
+  return { text: SHOW_MONEY ? gbp(m.costs_total) + " to pay out" : plural(c, "cost", "costs") + " to pay" };
+}
+function enqLine(d) {
+  const e = d.enquiries || {};
+  const parts = [];
+  if (Number(e.new)) parts.push(e.new + " new");
+  if (Number(e.followups)) parts.push(plural(e.followups, "follow-up", "follow-ups") + " due");
+  if (Number(e.bookings)) parts.push(plural(e.bookings, "booking request", "booking requests"));
+  if (Number(e.freelance)) parts.push(plural(e.freelance, "freelance request", "freelance requests"));
+  if (!parts.length) return { text: Number(e.open) ? e.open + " open, none due" : "Nothing waiting", quiet: true };
+  return { text: parts.slice(0, 2).join(" · "), alert: Number(e.followups) > 0 || Number(e.new) > 0 };
+}
+
+// ---- Building blocks ----
+function header(w, res) {
+  const h = w.addStack();
+  h.layoutHorizontally();
+  h.centerAlignContent();
+  const t = h.addText("ZEMA PLANNER");
+  t.font = Font.semiboldSystemFont(10);
+  t.textColor = C.ac;
+  h.addSpacer();
+  const stamp = String((res.data && res.data.generated_at) || "").slice(11, 16);
+  const s = h.addText(res.stale ? "Offline · " + stamp : stamp);
+  s.font = Font.regularSystemFont(9);
+  s.textColor = res.stale ? C.bad : C.mu;
+}
+function row(parent, icon, label, line, url) {
+  const r = parent.addStack();
+  r.layoutHorizontally();
+  r.centerAlignContent();
+  if (url) r.url = url;
+  const im = r.addImage(symbol(icon));
+  im.imageSize = new Size(13, 13);
+  im.tintColor = line.alert ? C.bad : C.ac;
+  r.addSpacer(7);
+  const lab = r.addStack();
+  lab.size = new Size(64, 0);
+  lab.layoutHorizontally();
+  const lt = lab.addText(label);
+  lt.font = Font.semiboldSystemFont(8.5);
+  lt.textColor = C.mu;
+  lt.lineLimit = 1;
+  lab.addSpacer();
+  const v = r.addText(line.text + (line.sub ? "  ·  " + line.sub : ""));
+  v.font = Font.mediumSystemFont(12);
+  v.textColor = line.quiet ? C.mu : C.tx;
+  v.lineLimit = 1;
+  v.minimumScaleFactor = 0.75;
+  r.addSpacer();
+}
+function action(parent, text, url) {
+  const b = parent.addStack();
+  b.layoutHorizontally();
+  b.centerAlignContent();
+  b.setPadding(7, 10, 7, 10);
+  b.cornerRadius = 8;
+  b.borderWidth = 1;
+  b.borderColor = C.line;
+  b.backgroundColor = C.card;
+  b.url = url;
+  const t = b.addText(text);
+  t.font = Font.mediumSystemFont(11);
+  t.textColor = C.tx;
+  t.lineLimit = 1;
+}
+
+// ---- Layouts ----
+function small(w, res) {
+  const d = res.data;
+  const today = (d.today || [])[0];
+  const item = today || d.next_wedding || d.next;
+  w.url = today ? go("today") : APP;
+  header(w, res);
+  w.addSpacer(8);
+  const lab = w.addText(today ? "TODAY" : d.next_wedding ? "NEXT WEDDING" : "NEXT EVENT");
+  lab.font = Font.semiboldSystemFont(8.5);
+  lab.textColor = C.mu;
+  w.addSpacer(3);
+  const name = w.addText(item ? item.couple : "Nothing booked");
+  name.font = new Font("Georgia", 17);
+  name.textColor = C.tx;
+  name.lineLimit = 2;
+  name.minimumScaleFactor = 0.7;
+  if (item) {
+    w.addSpacer(3);
+    const sub = w.addText(today ? (today.start ? "Starts " + today.start : today.event_type) : fmtDate(item.date) + " · " + inDays(item.days));
+    sub.font = Font.regularSystemFont(11);
+    sub.textColor = C.ac;
+    sub.lineLimit = 1;
+    sub.minimumScaleFactor = 0.8;
+  }
+  w.addSpacer();
+  const due = dueLine(d), enq = d.enquiries || {};
+  const waiting = Math.max(Number(enq.new) || 0, Number(enq.followups) || 0) + (Number(enq.bookings) || 0) + (Number(enq.freelance) || 0);
+  const foot = w.addText((due.quiet ? "Nothing owed" : due.text) + "\n" + (waiting ? plural(waiting, "enquiry", "enquiries") + " waiting" : "No enquiries waiting"));
+  foot.font = Font.regularSystemFont(10);
+  foot.textColor = C.soft;
+  foot.lineLimit = 2;
+  foot.minimumScaleFactor = 0.8;
+}
+function medium(w, res) {
+  const d = res.data;
+  w.url = APP;
+  header(w, res);
+  w.addSpacer(10);
+  row(w, "calendar", "TODAY", todayLine(d), go("today"));
+  w.addSpacer(8);
+  row(w, "sterlingsign.circle", "DUE", dueLine(d), go("owed"));
+  w.addSpacer(8);
+  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
+  w.addSpacer(8);
+  const n = nextLine(d);
+  row(w, "mappin.and.ellipse", "NEXT", n.when ? { text: n.text, sub: fmtDate(d.next_wedding.date) + (d.next_wedding.city ? " · " + d.next_wedding.city : "") } : n, APP);
+  w.addSpacer();
+}
+function large(w, res) {
+  const d = res.data;
+  w.url = APP;
+  header(w, res);
+  w.addSpacer(12);
+
+  const n = nextLine(d);
+  const card = w.addStack();
+  card.layoutVertically();
+  card.setPadding(12, 14, 12, 14);
+  card.cornerRadius = 10;
+  card.backgroundColor = C.card;
+  card.borderWidth = 1;
+  card.borderColor = C.line;
+  card.url = APP;
+  const top = card.addStack();
+  top.layoutHorizontally();
+  const cl = top.addText("NEXT WEDDING");
+  cl.font = Font.semiboldSystemFont(8.5);
+  cl.textColor = C.mu;
+  top.addSpacer();
+  if (n.when) {
+    const cw = top.addText(n.when.toUpperCase());
+    cw.font = Font.semiboldSystemFont(8.5);
+    cw.textColor = C.ac;
+  }
+  card.addSpacer(5);
+  const cn = card.addText(n.text);
+  cn.font = new Font("Georgia", 21);
+  cn.textColor = n.quiet ? C.mu : C.tx;
+  cn.lineLimit = 1;
+  cn.minimumScaleFactor = 0.6;
+  if (n.sub) {
+    card.addSpacer(3);
+    const cs = card.addText(n.sub);
+    cs.font = Font.regularSystemFont(12);
+    cs.textColor = C.soft;
+    cs.lineLimit = 1;
+    cs.minimumScaleFactor = 0.8;
+  }
+
+  w.addSpacer(14);
+  row(w, "calendar", "TODAY", todayLine(d), go("today"));
+  w.addSpacer(10);
+  row(w, "sterlingsign.circle", "DUE", dueLine(d), go("owed"));
+  w.addSpacer(10);
+  row(w, "creditcard", "TO PAY", costLine(d), go("due"));
+  w.addSpacer(10);
+  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
+  w.addSpacer(10);
+  const post = Number(d.post) || 0;
+  row(w, "film", "EDITING", post ? { text: plural(post, "event", "events") + " in post-production" } : { text: "Nothing in post-production", quiet: true }, go("post"));
+  w.addSpacer();
+
+  const bar = w.addStack();
+  bar.layoutHorizontally();
+  bar.centerAlignContent();
+  action(bar, "+ Enquiry", go("addenq"));
+  bar.addSpacer();
+  action(bar, "+ Event", go("new"));
+  bar.addSpacer();
+  action(bar, "Freelance", go("free"));
+  bar.addSpacer();
+  action(bar, "Cinema", go("cine"));
+}
+function lockScreen(w, res) {
+  const d = res.data;
+  const today = (d.today || [])[0];
+  const item = today || d.next_wedding || d.next;
+  w.url = today ? go("today") : APP;
+  const a = w.addText(today ? "ZEMA · TODAY" : "ZEMA · NEXT");
+  a.font = Font.semiboldSystemFont(10);
+  const b = w.addText(item ? item.couple : "Nothing booked");
+  b.font = Font.mediumSystemFont(13);
+  b.lineLimit = 1;
+  b.minimumScaleFactor = 0.7;
+  const c = w.addText(item ? (today ? (today.start ? "Starts " + today.start : today.event_type) : fmtDate(item.date) + " · " + inDays(item.days)) : "");
+  c.font = Font.regularSystemFont(11);
+  c.lineLimit = 1;
+}
+function problem(w, res) {
+  w.url = APP;
+  const t = w.addText("ZEMA PLANNER");
+  t.font = Font.semiboldSystemFont(10);
+  t.textColor = C.ac;
+  w.addSpacer(8);
+  const m = w.addText("Can’t reach the planner yet.");
+  m.font = Font.mediumSystemFont(13);
+  m.textColor = C.tx;
+  w.addSpacer(4);
+  const h = w.addText("Check your connection. If this stays, open the planner, go to Menu, iPhone app & widget, and copy the widget script again.");
+  h.font = Font.regularSystemFont(10);
+  h.textColor = C.mu;
+  h.minimumScaleFactor = 0.8;
+}
+
+const res = await load();
+const family = config.widgetFamily || "medium";
+const widget = new ListWidget();
+const onLockScreen = String(family).indexOf("accessory") === 0;
+if (!onLockScreen) {
+  widget.backgroundColor = C.bg;
+  widget.setPadding(14, 16, 14, 16);
+}
+widget.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
+
+if (!res.data) problem(widget, res);
+else if (onLockScreen) lockScreen(widget, res);
+else if (family === "small") small(widget, res);
+else if (family === "large" || family === "extraLarge") large(widget, res);
+else medium(widget, res);
+
+if (config.runsInWidget) {
+  Script.setWidget(widget);
+} else {
+  await widget.presentLarge();
+}
+Script.complete();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
@@ -445,7 +800,9 @@ function watchFamily(){
 
 /* ---- Startup, auth, loading ---- */
 function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
+const STANDALONE=(()=>{try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches}catch(_){return false}})();
 async function init(){
+  try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
@@ -496,7 +853,7 @@ async function loadDash(view){
   {const ids=data.filter(w=>w.wedding_date===today()&&!w.is_demo).map(w=>w.id);if(ids.length){const q=await sb.from('event_timer').select('*').in('wedding_id',ids);dtimers=q.error?[]:(q.data||[])}else dtimers=[]}
   const g0=!ui.went&&QS.get('go');ui.went=1;
   demoW=data.find(w=>w.is_demo)||null;
-  weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;render();
+  weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;if(g0==='owed')ui.flt='owed';render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
   else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today());if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
@@ -550,7 +907,7 @@ async function loadFamily(){
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
 const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':'dash'));
-function failView(e){setApp(`<div class="login"><div class="brand">ZEMA WEDDING PLANNER</div><h2>Something went wrong</h2><p class="meta">${esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
+function failView(e){const off=navigator.onLine===false||/failed to fetch|load failed|networkerror/i.test(String(e&&e.message||e));setApp(`<div class="login"><div class="brand">ZEMA PLANNER</div><h2>${off?'You’re offline':'Something went wrong'}</h2><p class="meta">${off?'The planner opens without a connection, but it needs one to load and save your events. It will reload when you’re back online.':esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
@@ -1386,9 +1743,41 @@ async function openCal(){
 <p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
 <div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
 }
+/* ---- iPhone app and Home Screen widget ---- */
+let wdg=null;
+const widgetSrc=()=>$('#wsrc').textContent.trim().split('__SB_URL__').join(SB_URL).split('__SB_KEY__').join(SB_KEY).split('__TOKEN__').join(wdg.token).split('__APP_URL__').join(location.origin+location.pathname)+'\n';
+async function openApp(){
+  if(!wdg){const q=await sb.from('app_content').select('data').eq('key','widget').maybeSingle();wdg=q.data&&q.data.data&&q.data.data.token?q.data.data:null}
+  if(!wdg){const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'widget',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not set up the widget key: '+error.message);wdg=c}
+  ui.modal={type:'app'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>iPhone app &amp; widget</h3>
+<div class="lbl" style="margin-bottom:10px">The app</div>
+${STANDALONE?'<p class="intro" style="color:var(--ac)">✓ You’re using Zema Planner as an app on this phone.</p>':`<ol class="steps"><li>Open the planner’s plain address in <b>Safari</b> and sign in.</li><li>Tap the <b>Share</b> button, then <b>Add to Home Screen</b>.</li><li>Open Zema Planner from its new icon and sign in once more. The app keeps its own sign-in.</li></ol>`}
+<div class="lbl" style="margin:22px 0 10px">Home Screen widget</div>
+<p class="intro">A real iPhone widget showing today’s job, your next wedding, money due and enquiries, straight from the planner. It runs in Scriptable, a free app from the App Store.</p>
+<ol class="steps"><li>Install <b>Scriptable</b> from the App Store and open it.</li><li>Tap <b>Copy widget script</b> below. In Scriptable tap <b>+</b>, paste, and name the script <b>Zema Planner</b>.</li><li>Tap the play button once to preview it, then close.</li><li>On your Home Screen, press and hold, tap <b>Edit</b>, <b>Add Widget</b>, choose <b>Scriptable</b> and pick a size.</li><li>Press and hold the new widget, tap <b>Edit Widget</b>, and choose <b>Zema Planner</b> as the script.</li></ol>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="copyWidget">Copy widget script</button><button class="btn" data-a="testWidget">Check widget data</button></div>
+<div id="wtest"></div>
+<p class="intro" style="font-size:13px">The small size shows one event and opens Today. The medium and large sizes have a line for each area, and each line opens its own part of the planner in Safari. iPhone refreshes widgets on its own schedule, usually every 15 to 30 minutes.</p>
+<p class="intro" style="font-size:13px">The script holds a private key. Anyone with it can read the widget’s figures and event names, so don’t share the script. Reset the key if it ever gets out, then copy the script again.</p>
+<div class="bt"><button class="dng" data-a="resetWidget">Reset widget key</button><button class="btn" data-a="close">Done</button></div></div></div>`;
+}
+async function testWidget(){
+  const el=$('#wtest');if(!el)return;
+  el.innerHTML='<p class="intro">Checking…</p>';
+  const{data:d,error}=await sb.rpc('widget_summary',{k:wdg.token});
+  if(error||!d||!d.money){el.innerHTML=`<p class="intro" style="color:#d98a82">${error&&/find the function|schema cache|does not exist/i.test(error.message)?'The widget isn’t set up in Supabase yet. Run the widget SQL once, then try again.':'Could not load the widget data: '+esc(error?error.message:'no data')}</p>`;return}
+  const m=d.money,e=d.enquiries||{},t=d.today||[],n=d.next_wedding,row=(a,b)=>`<div class="pg"><div class="row2"><span class="lbl">${a}</span><span style="color:var(--tx);text-align:right">${esc(b)}</span></div></div>`;
+  el.innerHTML=`<section class="card" style="margin-bottom:18px"><div class="lbl" style="margin-bottom:14px;color:var(--ac)">Working · what the widget shows right now</div>
+${row('Today',t.length?t.map(x=>x.couple+(x.start?' · '+x.start:'')).join(', '):'Nothing booked today')}
+${row('Next wedding',n?n.couple+' · '+fmtD(n.date)+(n.city?' · '+n.city:''):'No upcoming wedding')}
+${row('Due from clients',Number(m.owed_count)?gbp(m.owed_total)+' to come'+(Number(m.overdue_count)?' · '+m.overdue_count+' overdue':Number(m.due_soon_count)?' · '+m.due_soon_count+' due this week':''):'Nothing outstanding')}
+${row('To pay',Number(m.costs_count)?gbp(m.costs_total):'Nothing to pay')}
+${row('Enquiries',[Number(e.new)?e.new+' new':'',Number(e.followups)?e.followups+' follow-up'+(e.followups==1?'':'s')+' due':'',Number(e.bookings)?e.bookings+' booking request'+(e.bookings==1?'':'s'):'',Number(e.freelance)?e.freelance+' freelance request'+(e.freelance==1?'':'s'):''].filter(Boolean).join(' · ')||'Nothing waiting')}</section>`;
+}
 /* Direct links (?go=…) so a home-screen icon or shortcut can open straight to one place */
 const GOV={enq:'enq',addenq:'enq',post:'post',free:'free',cine:'cine',due:'due',crew:'crew',year:'year'};
-const GOL=[['today','Today’s event','Opens today’s job in Day Mode, with the live timer'],['addenq','Add an enquiry','Opens the new enquiry form'],['enq','Enquiries','Follow-ups and open enquiries'],['post','Post-production','Everything being edited'],['free','Freelance','Jobs and new requests'],['due','Costs to pay','What you owe crew and suppliers'],['cine','Cinema','Delivered films and photos'],['new','New event','Opens the new event form']];
+const GOL=[['today','Today’s event','Opens today’s job in Day Mode, with the live timer'],['addenq','Add an enquiry','Opens the new enquiry form'],['enq','Enquiries','Follow-ups and open enquiries'],['post','Post-production','Everything being edited'],['free','Freelance','Jobs and new requests'],['owed','Money still to come','Clients who still owe you'],['due','Costs to pay','What you owe crew and suppliers'],['cine','Cinema','Delivered films and photos'],['new','New event','Opens the new event form']];
 function openGoLinks(){
   ui.modal={type:'go'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Quick links</h3>
@@ -1428,7 +1817,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}
+${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -2403,6 +2792,11 @@ document.addEventListener('click',async e=>{
   else if(a==='hjSend'&&HTOKEN)hjSend();
   else if(a==='tmBill'&&!TOKEN){const c=tmCalc(),r=Number(wed.bill.hourly_rate);if(!c||!(r>0))return toast('Set an hourly rate on the Payments tab first.');const h=Math.max(.25,Math.round(c.worked/900000)/4);if(await setB({hours:h,price:Math.round(h*r*100)/100}))toast(h+' hours at '+gbp(r)+' added to the invoice')}
   else if(a==='calV'&&!TOKEN)openCal();
+  else if(a==='appV'&&!TOKEN)openApp();
+  else if(a==='reloadV'){try{const rg=await navigator.serviceWorker.getRegistration();if(rg)await rg.update()}catch(_){}location.reload()}
+  else if(a==='copyWidget'&&!TOKEN&&wdg){const v=widgetSrc();(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('Widget script copied. Paste it into a new script in Scriptable.'),()=>prompt('Copy this script:',v))}
+  else if(a==='testWidget'&&!TOKEN&&wdg)testWidget();
+  else if(a==='resetWidget'&&!TOKEN)ask('Reset the widget key? The widget on your Home Screen stops updating until you copy the script again and replace the old one in Scriptable.',async()=>{const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'widget',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not reset: '+error.message);wdg=c;openApp()});
   else if(a==='copyCal'&&!TOKEN&&cal){const u=calUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Calendar link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='resetCal'&&!TOKEN)ask('Reset the calendar link? The old one stops working and you will need to subscribe again.',async()=>{const c={token:newTok()},{error}=await sb.from('app_content').upsert({key:'calendar',data:c,updated_at:new Date().toISOString()});if(error)return toast('Could not reset: '+error.message);cal=c;openCal()});
   else if(a==='enqV'&&!TOKEN){ui.view='enq';render();scrollTo(0,0)}
@@ -2481,6 +2875,16 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user))reload()});
+const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
+let hidAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){hidAt=Date.now();return}
+  if(!canReload())return;
+  /* A Home Screen icon made from a quick link returns to its own place after a break */
+  if(user&&QS.get('go')&&hidAt&&Date.now()-hidAt>10*60*1000){ui.went=0;ui.day=false;scrollTo(0,0);loadDash()}
+  else reload();
+});
+addEventListener('offline',()=>toast('You’re offline. Changes can’t be saved until you’re back online.'));
+addEventListener('online',()=>{toast('Back online');if(canReload()||(!PKPAGE&&!EQPAGE&&!RVTOKEN&&!ui.modal&&!wed&&(user||TOKEN||FTOKEN||CTOKEN||DTOKEN)))reload()});
 init();
 </script></body></html>
