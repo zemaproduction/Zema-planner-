@@ -383,16 +383,10 @@ function medium(w, res) {
   row(w, "mappin.and.ellipse", "NEXT", n.when ? { text: n.text, sub: fmtDate(d.next_wedding.date) + (d.next_wedding.city ? " · " + d.next_wedding.city : "") } : n, APP);
   w.addSpacer();
 }
-function large(w, res) {
-  const d = res.data;
-  w.url = APP;
-  header(w, res);
-  w.addSpacer(12);
-
-  const n = nextLine(d);
+function eventCard(w, label, e) {
   const card = w.addStack();
   card.layoutVertically();
-  card.setPadding(12, 14, 12, 14);
+  card.setPadding(10, 14, 10, 14);
   card.cornerRadius = 10;
   card.backgroundColor = C.card;
   card.borderWidth = 1;
@@ -400,38 +394,46 @@ function large(w, res) {
   card.url = APP;
   const top = card.addStack();
   top.layoutHorizontally();
-  const cl = top.addText("NEXT WEDDING");
+  const cl = top.addText(label);
   cl.font = Font.semiboldSystemFont(8.5);
   cl.textColor = C.mu;
   top.addSpacer();
-  if (n.when) {
-    const cw = top.addText(n.when.toUpperCase());
+  if (e) {
+    const cw = top.addText(inDays(e.days).toUpperCase());
     cw.font = Font.semiboldSystemFont(8.5);
     cw.textColor = C.ac;
   }
-  card.addSpacer(5);
-  const cn = card.addText(n.text);
-  cn.font = new Font("Georgia", 21);
-  cn.textColor = n.quiet ? C.mu : C.tx;
+  card.addSpacer(4);
+  const cn = card.addText(e ? e.couple : "Nothing else booked");
+  cn.font = new Font("Georgia", 18);
+  cn.textColor = e ? C.tx : C.mu;
   cn.lineLimit = 1;
   cn.minimumScaleFactor = 0.6;
-  if (n.sub) {
-    card.addSpacer(3);
-    const cs = card.addText(n.sub);
-    cs.font = Font.regularSystemFont(12);
+  if (e) {
+    card.addSpacer(2);
+    const cs = card.addText([fmtDate(e.date), e.event_type, e.city, e.stage === "pending" ? "Pending" : ""].filter(Boolean).join(" · "));
+    cs.font = Font.regularSystemFont(11);
     cs.textColor = C.soft;
     cs.lineLimit = 1;
     cs.minimumScaleFactor = 0.8;
   }
+}
+function large(w, res) {
+  const d = res.data;
+  w.url = APP;
+  header(w, res);
+  w.addSpacer(12);
+
+  const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
+  eventCard(w, "NEXT EVENT", nx[0]);
+  w.addSpacer(8);
+  eventCard(w, "AFTER THAT", nx[1]);
 
   w.addSpacer(14);
-  row(w, "calendar", "TODAY", todayLine(d), go("today"));
-  w.addSpacer(10);
-  row(w, "sterlingsign.circle", "DUE", dueLine(d), go("owed"));
-  w.addSpacer(10);
-  row(w, "creditcard", "TO PAY", costLine(d), go("due"));
-  w.addSpacer(10);
   row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
+  w.addSpacer(10);
+  const pend = Number(d.pending) || 0;
+  row(w, "hourglass", "PENDING", pend ? { text: plural(pend, "event", "events") + " not confirmed yet" } : { text: "Nothing pending", quiet: true }, go("pending"));
   w.addSpacer(10);
   const post = Number(d.post) || 0;
   row(w, "film", "EDITING", post ? { text: plural(post, "event", "events") + " in post-production" } : { text: "Nothing in post-production", quiet: true }, go("post"));
@@ -881,7 +883,7 @@ async function loadDash(view){
   {const ids=data.filter(w=>w.wedding_date===today()&&!w.is_demo).map(w=>w.id);if(ids.length){const q=await sb.from('event_timer').select('*').in('wedding_id',ids);dtimers=q.error?[]:(q.data||[])}else dtimers=[]}
   const g0=!ui.went&&QS.get('go');ui.went=1;
   demoW=data.find(w=>w.is_demo)||null;
-  weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;if(g0==='owed')ui.flt='owed';render();
+  weds=data.filter(w=>!w.is_demo);wed=null;ui.view=g0&&GOV[g0]?GOV[g0]:view||'dash';ui.day=false;if(g0==='owed')ui.flt='owed';if(g0==='pending')ui.flt='pending';render();
   if(g0==='addenq')openEnqForm();else if(g0==='new')openWForm();
   else if(g0==='today'){const td=weds.filter(w=>w.wedding_date===today()||daysAll.some(d=>d.wedding_id===w.id&&d.day_date===today()));if(td.length===1){await openWedding(td[0].id);ui.day=true;render();scrollTo(0,0)}else if(td.length>1){ui.q=fmtD(today());render();toast('You have '+td.length+' events today. Pick one.')}else toast('No event in the planner for today.')}
 }
