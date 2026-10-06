@@ -38,6 +38,9 @@ button{-webkit-user-select:none;user-select:none}
 .launch .z{font:300 64px/1 var(--serif);color:var(--ac)}.launch .bar{width:120px;margin:0;overflow:hidden}.launch .bar i{width:40%;animation:lz 1.1s ease-in-out infinite alternate}
 @keyframes lz{from{transform:translateX(-40%)}to{transform:translateX(190%)}}
 @media(prefers-reduced-motion:reduce){.launch .bar i{animation:none;width:100%}}
+.msg{padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin:0 12% 10px 0;background:var(--s)}
+.msg.mine{margin:0 0 10px 12%;border-color:var(--ac)}.msg.auto{margin:0 0 10px;border-style:dashed;background:none}.msg .lbl{font-size:10px}
+.lcard{margin-bottom:16px}.limg{aspect-ratio:16/9;background:#1b1b1d center/cover no-repeat;border-radius:4px;margin:-6px -6px 16px}
 .steps{margin:0 0 18px;padding-left:20px;color:var(--mu);font-size:14px}.steps li{margin-bottom:8px}.steps b{color:var(--tx);font-weight:500}
 .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
 .brand{font-size:11px;letter-spacing:.32em;color:var(--ac);text-transform:uppercase}
@@ -268,12 +271,13 @@ function costLine(d) {
 function enqLine(d) {
   const e = d.enquiries || {};
   const parts = [];
+  if (Number(e.notes)) parts.push(plural(e.notes, "client note", "client notes"));
   if (Number(e.new)) parts.push(e.new + " new");
   if (Number(e.followups)) parts.push(plural(e.followups, "follow-up", "follow-ups") + " due");
   if (Number(e.bookings)) parts.push(plural(e.bookings, "booking request", "booking requests"));
   if (Number(e.freelance)) parts.push(plural(e.freelance, "freelance request", "freelance requests"));
   if (!parts.length) return { text: Number(e.open) ? e.open + " open, none due" : "Nothing waiting", quiet: true };
-  return { text: parts.slice(0, 2).join(" · "), alert: Number(e.followups) > 0 || Number(e.new) > 0 };
+  return { text: parts.slice(0, 2).join(" · "), alert: Number(e.followups) > 0 || Number(e.new) > 0 || Number(e.notes) > 0 };
 }
 
 // ---- Building blocks ----
@@ -502,10 +506,10 @@ Script.complete();
 <script>
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
-const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d');
+const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d'),LOCPAGE=QS.get('loc')!==null;
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Notes','Crew','Equipment','Payments','Costs','Delivery'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Notes':'notes','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Travel':'trav','Notes':'notes','Updates':'msg','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -740,7 +744,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>isWed(w)?SECS:['Overview','Timeline','Locations','Notes','Crew','Equipment','Payments','Costs','Delivery'];
+const secsFor=w=>(isWed(w)?SECS:['Overview','Timeline','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery']).filter(x=>x!=='Travel'||!!(w&&w.travel&&w.travel.enabled));
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
@@ -752,11 +756,12 @@ const B=w=>{const b=w.event_billing;return(Array.isArray(b)?b[0]:b)||{}};
 const tot=b=>b.price==null?null:Math.max(0,Number(b.price)+sum(Array.isArray(b.extras)?b.extras:[])-Number(b.discount||0));
 const wPrice=w=>tot(B(w));
 const planOf=b=>{const p=Array.isArray(b.plan)?b.plan.map(Number).filter(x=>x>0):[];return p.length?p:[25,25,50]};
-function planRows(b,paid){
+function planRows(b,paid,date){
+  if(date===undefined)date=wed&&wed.wedding_date?wed.wedding_date:null;
   const t=tot(b)||0,pl=planOf(b),full=Math.abs(pl.reduce((a,x)=>a+x,0)-100)<.01;let acc=0;
   return pl.map((pc,i)=>{const amt=full&&i===pl.length-1?Math.round((t-acc)*100)/100:Math.round(t*pc)/100,st=acc;acc+=amt;
     const got=Math.max(0,Math.min(amt,paid-st));
-    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100),due:(Array.isArray(b.plan_due)?b.plan_due[i]:null)||null}})}
+    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100),due:(Array.isArray(b.plan_due)?b.plan_due[i]:null)||(i===1&&date?date:null)}})}
 const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label} · ${r.pc}%</span><span>${gbp(r.amt)} · ${r.left<=0?'Paid':r.left<r.amt?gbp(r.left)+' left':'Due'}</span></div>${r.due&&r.left>0?`<div class="row2" style="margin-top:6px"><span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'Overdue · was due ':'Due '}${fmtD(r.due)}</span><span></span></div>`:''}</div>`).join('');
 const wPaid=w=>sum(w.payments||[]);
 const wLeft=w=>wPrice(w)==null?0:Math.max(0,wPrice(w)-wPaid(w));
@@ -806,8 +811,9 @@ async function init(){
   if(PKPAGE)document.title='Zema Production · Packages';
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
   if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
+  if(LOCPAGE){document.title='Zema Production · Locations';const lr=await sb.rpc('location_ideas_get');return setApp(locPage(lr.error?[]:(lr.data||[])))}
   if(RVTOKEN){document.title='Zema Production · Review';return setApp(rvView())}
   if(DTOKEN){document.title='Zema Production · Day';loadDay();setInterval(()=>{if(!document.hidden)loadDay()},20000);return}
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
@@ -844,6 +850,9 @@ async function loadDash(view){
   await refreshFree();
   await refreshEnq();
   await refreshRev();
+  await refreshLocs();
+  {const q=await sb.from('event_messages').select('id,wedding_id,body,created_at').eq('who','client').eq('seen',false).order('created_at');newMsgs=q.error?[]:(q.data||[])}
+  {const q=await sb.from('event_travel').select('wedding_id,enabled,seen,data').eq('enabled',true);travAll=q.error?[]:(q.data||[])}
   {const g=await sb.from('app_content').select('data').eq('key','gear').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)gearTpl=g.data.data.text}
   {const q=await sb.from('event_selection').select('*');sels=q.error?[]:(q.data||[]);const g=await sb.from('app_content').select('data').eq('key','sel_guide').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)selGuide=g.data.data.text}
   {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
@@ -879,7 +888,9 @@ async function loadWedding(id){
   let gear0=gq.data&&Array.isArray(gq.data.items)?gq.data.items:null;
   if(!gq.error&&!gear0){gear0=gearParse(gearTpl);sb.from('event_gear').insert({wedding_id:id,items:gear0}).then(()=>{})}
   const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
-  wed={...w,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const mq=await sb.from('event_messages').select('*').eq('wedding_id',id).order('created_at');
+  const vq=await sb.from('event_travel').select('*').eq('wedding_id',id).maybeSingle();
+  wed={...w,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -896,9 +907,12 @@ async function loadShared(){
   const tr=await sb.rpc('shared_timer_get',{p_token:TOKEN});
   const ag=await sb.rpc('shared_agreement_get',{p_token:TOKEN});
   const sg2=await sb.rpc('shared_selection_get',{p_token:TOKEN});
+  const ms=await sb.rpc('shared_messages_get',{p_token:TOKEN});
+  const tv=await sb.rpc('shared_travel_get',{p_token:TOKEN});
+  const li=await sb.rpc('location_ideas_get');
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -906,12 +920,13 @@ async function loadFamily(){
   const tl=await sb.rpc('family_timeline_get',{p_token:FTOKEN});
   wed={...data,timeline:tl.error?[]:(tl.data||[])};tsort();ui.stamp=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
 }
-const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':'dash'));
+const reload=()=>CTOKEN?loadCrewPage():FTOKEN?loadFamily():TOKEN?loadShared():(ui.view==='wed'&&ui.wid?loadWedding(ui.wid):loadDash(ui.view==='year'?'year':ui.view==='crew'?'crew':ui.view==='cine'?'cine':ui.view==='free'?'free':ui.view==='enq'?'enq':ui.view==='due'?'due':ui.view==='rev'?'rev':ui.view==='post'?'post':ui.view==='loc'?'loc':'dash'));
 function failView(e){const off=navigator.onLine===false||/failed to fetch|load failed|networkerror/i.test(String(e&&e.message||e));setApp(`<div class="login"><div class="brand">ZEMA PLANNER</div><h2>${off?'You’re offline':'Something went wrong'}</h2><p class="meta">${off?'The planner opens without a connection, but it needs one to load and save your events. It will reload when you’re back online.':esc(e.message||e)}</p><button class="btn" data-a="retry">Try again</button> <button class="btn" data-a="out">Sign out</button></div>`)}
 const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+error.message);reload();return}notifyFamily()};
 
 /* ---- Views ---- */
 function render(){
+  if(LOCPAGE)return;
   if(DTOKEN){if(wed)setApp(dayRO());return}
   if(RVTOKEN){setApp(rvView());return}
   if(EQPAGE){setApp(eqView());return}
@@ -929,13 +944,14 @@ function render(){
   else if(ui.view==='due')setApp(dueView());
   else if(ui.view==='rev')setApp(revView());
   else if(ui.view==='post')setApp(postView());
+  else if(ui.view==='loc')setApp(locView());
   else if(wed)setApp(ui.inv?invView():ui.cine?cineView():ui.day?dayView():mainView());
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'||k==='gear'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
-const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
-const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}</nav>`;
+const secOff=k=>k==='msg'?!!(TOKEN&&!Array.isArray(wed.msgs)):k==='trav'?false:k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'||k==='gear'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
+const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':k==='ideas'&&TOKEN&&wed.ideas&&wed.ideas.length?'ideas':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
+const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}${cl&&wed.ideas&&wed.ideas.length?`<button class="${ui.sec==='ideas'?'on':''}" data-a="sec" data-k="ideas">Location ideas</button>`:''}</nav>`;
 function famTl(){
   const a=T();
   return a.length?`<h2 style="margin-top:44px">Timeline</h2>${a.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}</div></div>`).join('')}`:'';
@@ -975,6 +991,8 @@ function dashView(){
 <div style="height:20px"></div>
 ${todayBlock()}
 ${(d=>d.length?`<h2>Client payments due · ${d.length}</h2>${d.map(({w,r})=>`<div class="g"><div class="bd"><div class="nm">${esc(w.couple)}</div><div class="sub">${r.label} · ${hideMoney?'£ ••••':gbp(r.left)} · <span${r.due<today()?' style="color:#d98a82"':''}>${r.due<today()?'overdue since ':'due '}${fmtD(r.due)}</span></div><div class="acts"><button data-a="payRem" data-id="${w.id}" data-l="${esc(r.label)}" data-v="${r.left}" data-d="${r.due}">Remind on WhatsApp</button><button data-a="openW" data-id="${w.id}">Open</button></div></div></div>`).join('')}<div style="height:14px"></div>`:'')(payDues())}
+${newMsgs.length?`<h2>Client notes · ${newMsgs.length}</h2>${[...new Set(newMsgs.map(m=>m.wedding_id))].map(id=>{const w=weds.find(x=>x.id===id),l=newMsgs.filter(m=>m.wedding_id===id);return w?`<button class="or" data-a="msgOpen" data-id="${id}"><span class="nm">${esc(w.couple)}</span><span class="sub" style="max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l[l.length-1].body)}</span></button>`:''}).join('')}<div style="height:14px"></div>`:''}
+${(d=>d.length?`<h2>Travel to sort · ${d.length}</h2>${d.map(({w,x})=>`<button class="or" data-a="travOpen" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">${esc(travTxt(x.data))}${x.seen===false?' · updated by the client':''}</span></button>`).join('')}<div style="height:14px"></div>`:'')(travAll.map(x=>({x,w:weds.find(w=>w.id===x.wedding_id)})).filter(({x,w})=>w&&w.wedding_date&&w.wedding_date>=today()&&(!travOk(x.data)||x.seen===false)))}
 ${(d=>d.length?`<h2>Photo selections finished</h2>${d.map(x=>{const w=weds.find(q=>q.id===x.wedding_id);return w?`<button class="or" data-a="selNote" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">Finished choosing</span></button>`:''}).join('')}<div style="height:14px"></div>`:'')(sels.filter(x=>x.done_at&&x.seen===false))}
 ${cnotes.length?`<h2>Crew replies</h2>${cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')}<div style="height:14px"></div>`:''}
 ${(d=>d.length?`<h2>Follow-ups due · ${d.length}</h2>${d.slice(0,3).map(enqCard).join('')}${d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:''}<div style="height:14px"></div>`:'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
@@ -1140,6 +1158,8 @@ function standCard(){
 ${row('pay','Agreement',!a?'Not requested yet':a.signed_at?'Signed by '+esc(a.signed_name)+' on '+fmtD(String(a.signed_at).slice(0,10)):'Sent · waiting for the client to sign',!!(a&&a.signed_at))}
 ${row('pay','Payment',t==null?'No price set':paid>=t-0.005?'Paid in full · '+gbp(t):gbp(paid)+' of '+gbp(t)+' paid'+(nx?(nx.due<today()?' · overdue since ':' · next due ')+fmtD(nx.due):''),t!=null&&paid>=t-0.005)}
 ${row('timeline','Client’s plan',w.approval_status==='approved'?'Confirmed by '+esc(w.approved_by||'the client'):'Not confirmed by the client yet',w.approval_status==='approved')}
+${w.travel&&w.travel.enabled?row('trav','Travel',esc(travTxt(TV()))+(w.travel.seen===false?' · updated by the client':''),travOk(TV())):''}
+${w.msgErr?'':row('msg','Updates',(n=>n?n+' new note'+(n==1?'':'s')+' from the client':MSGS().length?esc(MSGS()[MSGS().length-1].body.slice(0,70)):'Nothing posted yet')(MSGS().filter(m=>m.who==='client'&&m.seen===false).length),false)}
 ${row('crew','Crew',!ec.length?'No crew added':[acc?acc+' accepted':'',wait?wait+' waiting':'',dec?dec+' declined':''].filter(Boolean).join(' · '),ec.length>0&&!wait&&!dec)}
 ${row('cost','Costs and profit',t==null?(cost?gbp(cost)+' in costs':'No costs added'):'Profit '+sg(t-cost)+(cost?' after '+gbp(cost)+' in costs':' · no costs added'),false)}
 ${w.sel||['post','delivered'].includes(stg(w))?row('del','Photo selection',esc(selTxt(w.sel)),selState(w.sel)==='done'):''}
@@ -1167,7 +1187,8 @@ ${statusCard()}
 ${glance()}
 ${after?'':gaps()}
 <div class="cta"><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyD">Copy Day Mode link · read-only</button>${isWed(wed)?'<button class="btn" data-a="copyF">Copy family &amp; friends link</button>':''}</div>
-<p class="intro" style="margin:14px 0 0;font-size:13px">The Day Mode link is view-only, with no money, and closes at the end of the day after the event. <button class="lnk" style="font-size:13px" data-a="resetD">Reset the link</button></p>`}
+<p class="intro" style="margin:14px 0 0;font-size:13px">The Day Mode link is view-only, with no money, and closes at the end of the day after the event. <button class="lnk" style="font-size:13px" data-a="resetD">Reset the link</button></p>
+${(wed.travel&&wed.travel.enabled)||wed.travErr?'':'<p class="intro" style="margin:10px 0 0;font-size:13px">Is this event abroad? <button class="lnk" style="font-size:13px" data-a="travOn">Set up travel</button> to keep track of the flights and hotels the client books for you and your crew.</p>'}`}
 async function setW(o){
   const prev={};for(const k in o)prev[k]=wed[k];
   Object.assign(wed,o);render();
@@ -1264,7 +1285,7 @@ function openPlanForm(){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Payment plan</h3>
 <p class="intro">The percentage of the total due at each stage, separated by commas. The first is the deposit and the last is the final balance. They should add up to 100.</p>
 <div class="f"><span class="l">Percentages</span><input id="ypl" inputmode="decimal" placeholder="25, 25, 50" value="${esc(planOf(wed.bill).join(', '))}"></div>
-${planRows(wed.bill,0).map((r,i)=>`<div class="f"><span class="l">${r.label} · due date (optional)</span><input id="ypd${i}" type="date" value="${esc(r.due||'')}"></div>`).join('')}
+${planRows(wed.bill,0).map((r,i)=>`<div class="f"><span class="l">${r.label} · due date ${i===1?'(the event date unless you change it)':'(optional)'}</span><input id="ypd${i}" type="date" value="${esc(r.due||'')}"></div>`).join('')}
 <p class="intro" style="font-size:13px">Due dates appear on the client’s link, in your phone calendar and on your home page when they are close. If you change the number of stages, save, then open this again to set their dates.</p>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePlan">Save plan</button></div></div></div>`;
 }
@@ -1296,6 +1317,7 @@ async function savePay(){
     const{data,error}=await sb.from('payments').insert({...o,wedding_id:wed.id}).select().single();
     if(error)return toast(msg(error));
     Y().push(data);
+    logUpdate('Payment received: '+gbp(amount)+(o.label?' · '+o.label:''));
   }
   Y().sort((a,b)=>String(a.paid_on).localeCompare(String(b.paid_on)));
   closeM();render();
@@ -1350,6 +1372,7 @@ function crewView(){
   const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=d.timeline||[],pl=d.places||[],pp=d.party||[],mh=d.musts||[];
   return`<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
+${travCrewCard(d.travel)}
 ${tk.length?`<h2>Your to-do list</h2><div>${tk.map((x,i)=>`<button class="dr ${x.done?'done':''}" data-a="ctask" data-i="${i}"><span class="ck">${x.done?'✓':''}</span><span class="dt"><b style="font-size:20px">${esc(x.t)}</b></span></button>`).join('')}</div>`:''}
 ${tl.length?`<h2>Timeline</h2>${tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')}`:''}
 ${pl.length?`<h2>Locations</h2><div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`:''}
@@ -1526,10 +1549,10 @@ function shrink(file){return new Promise((res,rej)=>{const img=new Image(),u=URL
   img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Could not read that image.')),'image/jpeg',.82)};
   img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Could not read that image. Try a JPG or PNG.'))};img.src=u})}
 async function upImg(el){
-  const f=el.files&&el.files[0],t=el.dataset.up,m=$('#upm-'+t);if(!f||!wed)return;
+  const f=el.files&&el.files[0],t=el.dataset.up,m=$('#upm-'+t);if(!f)return;
   m.textContent='Uploading…';
   try{
-    const blob=await shrink(f),path=wed.id+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
+    const blob=await shrink(f),path=(wed?wed.id:'shared')+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
     const{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
     if(error)throw error;
     $('#'+t).value=sb.storage.from('covers').getPublicUrl(path).data.publicUrl;
@@ -1773,7 +1796,7 @@ ${row('Today',t.length?t.map(x=>x.couple+(x.start?' · '+x.start:'')).join(', ')
 ${row('Next wedding',n?n.couple+' · '+fmtD(n.date)+(n.city?' · '+n.city:''):'No upcoming wedding')}
 ${row('Due from clients',Number(m.owed_count)?gbp(m.owed_total)+' to come'+(Number(m.overdue_count)?' · '+m.overdue_count+' overdue':Number(m.due_soon_count)?' · '+m.due_soon_count+' due this week':''):'Nothing outstanding')}
 ${row('To pay',Number(m.costs_count)?gbp(m.costs_total):'Nothing to pay')}
-${row('Enquiries',[Number(e.new)?e.new+' new':'',Number(e.followups)?e.followups+' follow-up'+(e.followups==1?'':'s')+' due':'',Number(e.bookings)?e.bookings+' booking request'+(e.bookings==1?'':'s'):'',Number(e.freelance)?e.freelance+' freelance request'+(e.freelance==1?'':'s'):''].filter(Boolean).join(' · ')||'Nothing waiting')}</section>`;
+${row('Enquiries',[Number(e.notes)?e.notes+' client note'+(e.notes==1?'':'s'):'',Number(e.new)?e.new+' new':'',Number(e.followups)?e.followups+' follow-up'+(e.followups==1?'':'s')+' due':'',Number(e.bookings)?e.bookings+' booking request'+(e.bookings==1?'':'s'):'',Number(e.freelance)?e.freelance+' freelance request'+(e.freelance==1?'':'s'):''].filter(Boolean).join(' · ')||'Nothing waiting')}</section>`;
 }
 /* Direct links (?go=…) so a home-screen icon or shortcut can open straight to one place */
 const GOV={enq:'enq',addenq:'enq',post:'post',free:'free',cine:'cine',due:'due',crew:'crew',year:'year'};
@@ -1815,7 +1838,7 @@ function openMenu(){
   const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Menu</h3>
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
-${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}
+${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
 ${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
@@ -2010,7 +2033,7 @@ setInterval(()=>{document.querySelectorAll('[data-tmh]').forEach(el=>{const c=dc
 /* ---- Client payments due (from payment-plan due dates) ---- */
 function payDues(){
   const lim=addDays(today(),7),out=[];
-  weds.forEach(w=>{const b=B(w);if(b.price==null||!Array.isArray(b.plan_due))return;planRows(b,wPaid(w)).forEach(r=>{if(r.due&&r.left>0&&r.due<=lim)out.push({w,r})})});
+  weds.forEach(w=>{const b=B(w);if(b.price==null)return;planRows(b,wPaid(w),stg(w)==='delivered'?null:(w.wedding_date||null)).forEach(r=>{if(r.due&&r.left>0&&r.due<=lim)out.push({w,r})})});
   return out.sort((a,b)=>a.r.due.localeCompare(b.r.due));
 }
 /* ---- Double-booking check: what else is on that day, leaving out the request being accepted ---- */
@@ -2019,8 +2042,8 @@ const guard=(d,skip,go,plain)=>{const c=clash(d,skip);if(c.length)ask('You alrea
 /* ---- Booking agreement: the client confirms package, price, plan and terms by typing their name ---- */
 function agrDoc(s){
   const b={price:s.price,discount:s.discount,extras:s.extras,plan:s.plan,plan_due:s.plan_due},t=tot(b),terms=Array.isArray(s.terms)&&s.terms.length?s.terms:TERMS,r=(a,v)=>v?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx);text-align:right">${esc(v)}</span></div>`:'';
-  return`<section class="card"><div class="lbl">What is agreed</div>${r('Client',s.couple)}${r('Event',s.event_type)}${r('Date',s.wedding_date?fmtD(s.wedding_date):'')}${r('Package',s.package)}${r('Services',s.services)}${s.hours&&s.hourly_rate?r('Hours',Number(s.hours)+' at '+gbp(s.hourly_rate)+' per hour'):''}${s.price!=null&&Number(s.discount)>0?r('Price',gbp(s.price))+r('Discount','−'+gbp(s.discount)):''}${(Array.isArray(s.extras)?s.extras:[]).map(e=>r(e.label||'Extra','+'+gbp(e.amount))).join('')}${t!=null?r('Total',gbp(t)):''}</section>
-${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label} · ${x.pc}%</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
+  return`<section class="card"><div class="lbl">What is agreed</div>${r('Client',s.couple)}${r('Event',s.event_type)}${r('Date',s.wedding_date?fmtD(s.wedding_date):'')}${r('Package',s.package)}${r('Services',s.services)}${s.travel?r('Travel','Flights and accommodation for '+(Number(s.travel.people)===1?'one person':s.travel.people+' people')+(s.travel.dest?' to '+s.travel.dest:'')+', arranged and paid for by the client'):''}${s.hours&&s.hourly_rate?r('Hours',Number(s.hours)+' at '+gbp(s.hourly_rate)+' per hour'):''}${s.price!=null&&Number(s.discount)>0?r('Price',gbp(s.price))+r('Discount','−'+gbp(s.discount)):''}${(Array.isArray(s.extras)?s.extras:[]).map(e=>r(e.label||'Extra','+'+gbp(e.amount))).join('')}${t!=null?r('Total',gbp(t)):''}</section>
+${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0,s.wedding_date||null).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label} · ${x.pc}%</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
 <h2 style="font-size:20px;margin-top:28px">Terms &amp; Conditions</h2><div class="tc">${terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`}
 function clAgr(){
   const a=wed.agr,signed=!!a.signed_at,s=(signed?a.snapshot:a.current)||{};
@@ -2074,7 +2097,7 @@ function rvView(){
 <div class="bad" id="rwerr"></div><button class="btn fill" style="width:100%" data-a="rvSend">Send review</button></section>
 <footer><span>Zema Production · London</span></footer>`}
 /* ---- Backup: every table saved to one file on this device ---- */
-const BKT=['event_gear','event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
+const BKT=['event_messages','event_travel','location_ideas','event_gear','event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
 async function doBackup(){
   toast('Preparing your backup…');
   const out={app:'Zema Planner',made:new Date().toISOString(),tables:{},missing:[]};
@@ -2161,13 +2184,12 @@ async function loadDay(){
 }
 function dayRO(){
   const w=wed,tl=w.timeline||[],fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
-  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0],['gear','Equipment',Array.isArray(w.gear)?w.gear.length:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
+  const tabs=[['timeline','Timeline',tl.length],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
   const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')
   :sec==='family'?`<div class="big">${fam.filter(g=>g.done).length} / ${fam.length} <small>completed</small></div>${fam.map((g,i)=>`<div class="fr ${g.done?'d':''}"><div class="nm">${i+1}. ${esc(g.name)}${g.done?' ✓':''}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px">${esc((Array.isArray(g.people)?g.people:[]).join(', '))}</div>${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}</div>`).join('')}`
   :sec==='musts'?mh.map(x=>`<div class="fr ${x.done?'d':''}"><div class="nm">${esc(x.title)}${x.done?' ✓':''}</div>${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div>`).join('')
   :sec==='people'?`<div>${pp.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${esc(x.name)}</b>${x.role?`<small>${esc(x.role)}</small>`:''}${x.phone?`<small class="live">Tap to call · ${esc(x.phone)}</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.phone?`<a class="dr" href="tel:${esc(tel(x.phone))}">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
   :sec==='places'?`<div>${pl.map(x=>{const b=`<span class="dt"><b style="font-size:20px">${x.arrive_time?`<span class="tn">${esc(x.arrive_time)}</span>`:''}${esc(x.name)}</b>${x.address?`<small>${esc(x.address)}</small><small class="live">Tap for directions</small>`:''}${x.note?`<em>${esc(x.note)}</em>`:''}</span>`;return x.address?`<a class="dr" href="${esc(mapUrl(x.address))}" target="_blank" rel="noopener">${b}</a>`:`<div class="dr" style="cursor:default">${b}</div>`}).join('')}</div>`
-  :sec==='gear'?gearBlock(w.gear,true)
   :sec==='notes'?`<section class="card"><div class="lbl">Note from the client</div><p class="ntx">${esc(w.client_note||'')}</p></section>`:'<p class="empty">Nothing has been added for this event yet.</p>';
   return`<div class="brand">ZEMA PRODUCTION · ${isWed(w)?'WEDDING DAY':'EVENT DAY'}</div><h1>${esc(w.couple)}</h1><div class="meta">${esc(etype(w))} · ${fmtD(w.wedding_date)}${w.city?' · '+esc(w.city):''}</div>
 ${isWed(w)?'':timerCard()}
@@ -2244,6 +2266,213 @@ function openGearForm(tpl){
 <div class="f"><textarea id="gx" rows="16" maxlength="4000" style="font-size:15px;line-height:1.5">${esc(tpl?gearTpl:gearText(GI()))}</textarea></div>
 <div class="bt">${tpl?'':'<button class="btn" data-a="gearFromTpl">Use my standard list</button>'}<button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="gearSave">Save</button></div></div></div>`;
 }
+/* ================= Updates: a timeline both sides see, plus notes and questions from the client ================= */
+let newMsgs=[];
+const rid=()=>Math.random().toString(36).slice(2,10);
+const MSGS=()=>Array.isArray(wed.msgs)?wed.msgs:[];
+const msgWho=m=>m.who==='client'?(TOKEN?'You':esc(wed.couple)):m.who==='auto'?'Update':'Zema Production';
+function msgList(){
+  const l=MSGS();
+  if(!l.length)return`<p class="empty">${TOKEN?'No updates yet. News about your booking will appear here.':'Nothing here yet. Updates you post and notes from the client appear here.'}</p>`;
+  return l.map(m=>{const mine=TOKEN?m.who==='client':m.who==='studio';return`<div class="msg ${m.who==='auto'?'auto':mine?'mine':''}"><div class="lbl">${msgWho(m)} · ${fmtDT(Date.parse(m.created_at))}${!TOKEN&&m.who==='client'&&m.seen===false?' · <span style="color:var(--ac)">new</span>':''}</div><div class="ntx" style="margin-top:6px">${esc(m.body)}</div>${TOKEN?'':`<button class="lnk" style="font-size:12px;margin-top:8px;color:var(--mu)" data-a="msgDel" data-id="${m.id}">Delete</button>`}</div>`}).join('')}
+function msgMain(){
+  if(wed.msgErr)return`<h2>Updates</h2><p class="empty">Updates aren’t set up in Supabase yet. Run the latest SQL once, then refresh this page.</p>`;
+  return`<h2>Updates</h2>
+<p class="intro">The client sees this on their Updates tab and can leave you a note or question here. Payments, deliveries, album changes and the cinema page being published are added by themselves.</p>
+${msgList()}
+<div class="f" style="margin-top:20px"><span class="l">Post an update or reply</span><textarea id="mb" rows="3" maxlength="1500" placeholder="e.g. Your album has been ordered and should arrive in about three weeks."></textarea></div>
+<div class="chipsel" style="margin:-4px 0 16px">${['Your album has been ordered.','Your album has been delivered.','Your photos are being edited.','Your film is being edited.'].map(q=>`<button class="tab" data-a="msgFill" data-v="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="msgSend">Post update</button><button class="btn" data-a="msgWa">Tell the client on WhatsApp</button></div>
+<p class="intro" style="font-size:13px">The client isn’t alerted when you post. They see it when they next open their link, so use the WhatsApp button for anything they should read soon.</p>`}
+function clMsg(){
+  return`<h2>Updates</h2>
+<p class="intro">News about your booking appears here. You can also leave us a note or a question, and we’ll reply here.</p>
+${msgList()}
+<div class="f" style="margin-top:20px"><span class="l">Leave a note or question</span><textarea id="mb" rows="3" maxlength="1500" placeholder="e.g. Could we move the family photos to before the ceremony?"></textarea></div>
+<div class="chipsel" style="margin:-4px 0 16px">${['When will my photos be ready?','When will my film be ready?','Has my album been ordered?'].map(q=>`<button class="tab" data-a="msgFill" data-v="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+<div class="bad" id="mberr"></div><button class="btn fill" style="width:100%" data-a="msgSend">Send</button>
+<p class="intro" style="margin-top:14px;font-size:13px">We check this regularly, but it isn’t instant. For anything urgent, <a class="lnk" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">message us on WhatsApp</a>.</p>`}
+/* An entry the planner adds by itself when something the client cares about happens */
+function logUpdate(text){
+  if(TOKEN||!user||!wed||wed.msgErr||wed.is_demo)return;
+  const id=wed.id;
+  sb.from('event_messages').insert({wedding_id:id,who:'auto',body:text}).select().single().then(r=>{if(r.data&&wed&&wed.id===id&&Array.isArray(wed.msgs)){wed.msgs.push(r.data);if(ui.sec==='msg'&&!ui.modal)render()}});
+}
+function msgSeen(){
+  if(TOKEN||!wed)return;
+  const un=MSGS().filter(m=>m.who==='client'&&m.seen===false);
+  newMsgs=newMsgs.filter(x=>x.wedding_id!==wed.id);
+  if(!un.length)return;
+  un.forEach(m=>{m.seen=true});
+  sb.from('event_messages').update({seen:true}).eq('wedding_id',wed.id).eq('seen',false).then(()=>{});
+}
+async function msgSend(){
+  const el=$('#mb'),body=(el.value||'').trim();
+  if(body.length<2){el.classList.add('err');el.focus();return}
+  if(TOKEN){
+    const er=$('#mberr');if(er)er.textContent='Sending…';
+    const{error}=await sb.rpc('shared_message_add',{p_token:TOKEN,p_body:body});
+    if(error){if(er)er.textContent=error.message||'Could not send. Please try again.';return}
+    const r=await sb.rpc('shared_messages_get',{p_token:TOKEN});if(!r.error)wed.msgs=r.data||[];
+    render();toast('Sent. We’ll reply here.');return;
+  }
+  const{data,error}=await sb.from('event_messages').insert({wedding_id:wed.id,who:'studio',body}).select().single();
+  if(error)return toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not post: '+error.message);
+  wed.msgs=[...MSGS(),data];render();
+}
+
+/* ================= Location ideas: a list you keep, shown to clients and on a public page ================= */
+let locs=[],locErr=false;
+const LOCNOTE='Some locations listed may require prior permission or filming permits. Certain areas are public or privately managed; access and photography permissions aren’t guaranteed.';
+const LOCDEF=[
+{name:'The Hill Garden and Pergola',area:'Hampstead, London',description:'A raised stone walkway lined with columns and climbing plants, beside Hampstead Heath. Romantic and a little overgrown, with long views through the arches.',best_time:'Weekday mornings are quietest. The wisteria flowers in late spring.',tips:'Check opening times before you travel, as the gardens close in the evening.',map_url:'https://maps.app.goo.gl/Pn2NDVbCukc6qo8Y6'},
+{name:'St Dunstan in the East Church Garden',area:'City of London',description:'The ruins of a church turned into a small public garden, with trees and ivy growing through the old stone windows.',best_time:'Early morning or at the weekend. It fills up with office workers at lunchtime.',tips:'It is a small space, so it suits couples and small groups.',map_url:'https://maps.app.goo.gl/bzhLaQnQ4D1Gash58'},
+{name:'St Alphage Gardens',area:'City of London, near London Wall',description:'A quiet garden beside the remains of the old city wall, with modern glass buildings behind. Good for a mix of historic and contemporary backgrounds.',best_time:'Weekends, when the City is quiet.',tips:'',map_url:'https://maps.app.goo.gl/eNReqPy169Uth7aSA'},
+{name:'Kings Cross Coal Drops Yard',area:'King’s Cross, London',description:'Restored Victorian brick arches and cobbles under a sweeping modern roof, with the canal a short walk away. An urban, stylish look.',best_time:'Weekday mornings, before the shops get busy.',tips:'This is a privately managed estate, so permission may be needed.',map_url:'https://maps.app.goo.gl/uWqpLn4fdaZUq37G7'},
+{name:'Holland Park',area:'Kensington, London',description:'Formal gardens, brick arcades and woodland paths in one park, including the Japanese-style Kyoto Garden with its pond and waterfall.',best_time:'Early morning for soft light and fewer people.',tips:'',map_url:'https://maps.app.goo.gl/6W1tYA4ncY4fRnqB9'},
+{name:'The Regent’s Park',area:'Central London',description:'Wide lawns, tree-lined avenues, a boating lake and Queen Mary’s rose gardens. Plenty of variety within a short walk.',best_time:'The roses are usually at their best in early summer. Mornings are quieter.',tips:'',map_url:'https://maps.app.goo.gl/DotHKqDJNptzpWCh9'},
+{name:'St. Paul’s Cathedral',area:'City of London',description:'The cathedral’s steps and dome as a grand, classic London backdrop, with more views from the streets and bridge approaches around it.',best_time:'Sunrise or early on a weekend morning, before the crowds.',tips:'It is one of the busiest spots in London later in the day.',map_url:'https://maps.app.goo.gl/V4oXyPBYDQH5FWxw7'}];
+function ideaCard(x,extra){
+  const r=(a,b)=>b?`<div class="pg" style="padding:12px 0"><div class="lbl" style="margin-bottom:4px">${a}</div><div style="color:#d9d3ca">${esc(b)}</div></div>`:'';
+  return`<section class="card lcard">${safeU(x.image_url)?`<div class="limg" style="${bgi(safeU(x.image_url))}"></div>`:''}<div class="nm" style="font-size:26px">${esc(x.name)}</div>${x.area?`<div class="sub">${esc(x.area)}</div>`:''}
+${x.description?`<p class="intro" style="margin:12px 0 4px;color:#d9d3ca">${esc(x.description)}</p>`:''}<div>${r('Best time',x.best_time)}${r('Good to know',x.tips)}</div>
+${safeU(x.map_url)?`<p style="margin:12px 0 0"><a class="lnk" href="${esc(safeU(x.map_url))}" target="_blank" rel="noopener">Open in Maps</a></p>`:''}${extra||''}</section>`}
+function locPage(list){
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>Photoshoot locations</h1><div class="meta">Ideas for your shoot · London</div>
+<p class="intro" style="margin-top:22px">Some of our favourite places for a photoshoot. If you have somewhere else in mind, tell us and we’ll plan around it.</p>
+${list.length?list.map(x=>ideaCard(x)).join(''):'<p class="empty">No locations have been added yet.</p>'}
+<p class="intro" style="margin-top:18px;font-size:13px">${esc(LOCNOTE)}</p>
+<div class="cta"><a class="btn fill" href="${esc(location.pathname+'?e=1')}">Check availability</a><a class="btn" href="${esc(location.pathname+'?p=1')}">See our packages</a><a class="btn" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a></div>
+<footer><span>Zema Production · London</span></footer>`}
+function clIdeas(lk){
+  const have=n=>L().some(p=>p.name===n);
+  return`<h2>Location ideas</h2>
+<p class="intro">Some of our favourite places for photos. Tap “I’d like this one” and it is added to your locations, so we know. You can still add a place of your own on the Locations tab.</p>
+${wed.ideas.map(x=>ideaCard(x,have(x.name)?'<p style="margin:14px 0 0;color:var(--ac)">✓ Added to your locations</p>':lk?'':`<div class="cta" style="margin-bottom:0"><button class="btn pri" data-a="ideaPick" data-id="${x.id}">I’d like this one</button></div>`)).join('')}
+<p class="intro" style="margin-top:18px;font-size:13px">${esc(LOCNOTE)}</p>`}
+function locView(){
+  return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
+<div class="brand">ZEMA PRODUCTION</div><h1>Location ideas</h1><div class="meta">${locs.filter(x=>x.active).length} shown to clients</div>
+${locErr?'<p class="intro" style="margin-top:16px">Location ideas aren’t set up yet. Run the latest SQL in Supabase once, then refresh this page.</p>':''}
+<p class="intro" style="margin-top:22px">Places you recommend. Clients see them on their link and can choose one, and you can send the public page to anyone asking for ideas.</p>
+<div class="cta" style="margin-top:0"><button class="btn fill" data-a="addLoc">+ Add location</button><button class="btn" data-a="copyLoc">Copy public link</button>${locs.length?'':'<button class="btn pri" data-a="seedLoc">Add my 7 starter locations</button>'}</div>
+<div>${locs.length?locs.map((x,i)=>`<div class="g" style="${x.active?'':'opacity:.5'}"><div class="th2" style="${bgi(safeU(x.image_url))}"></div><div class="bd"><div class="nm">${esc(x.name)}</div><div class="sub">${esc(x.area||'')}${x.active?'':' · hidden'}${safeU(x.image_url)?'':' · no photo yet'}</div><div class="acts"><button data-a="locUp" data-i="${i}" aria-label="Move up">↑</button><button data-a="locDown" data-i="${i}" aria-label="Move down">↓</button><button data-a="editLoc" data-id="${x.id}">Edit</button><button data-a="togLoc" data-id="${x.id}">${x.active?'Hide':'Show'}</button><button data-a="delLoc" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No locations yet.</p>'}</div>`}
+function openLocForm(id){
+  const x=id?locs.find(y=>y.id===id):null,d=x||{name:'',area:'',description:'',best_time:'',tips:'',map_url:'',image_url:''};
+  ui.modal={type:'loc',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit location':'Add location'}</h3>
+<div class="f"><span class="l">Name</span><input id="on" maxlength="120" value="${esc(d.name)}"></div>
+<div class="f"><span class="l">Area</span><input id="oa" maxlength="120" placeholder="e.g. Hampstead, London" value="${esc(d.area||'')}"></div>
+<div class="f"><span class="l">Description</span><textarea id="od" rows="3" maxlength="600">${esc(d.description||'')}</textarea></div>
+<div class="f"><span class="l">Best time (optional)</span><input id="ob" maxlength="200" value="${esc(d.best_time||'')}"></div>
+<div class="f"><span class="l">Good to know (optional) · permits, parking, access</span><input id="ot" maxlength="300" value="${esc(d.tips||'')}"></div>
+<div class="f"><span class="l">Maps link</span><input id="om" inputmode="url" autocapitalize="none" maxlength="400" placeholder="https://maps.app.goo.gl/…" value="${esc(d.map_url||'')}"></div>
+<div class="f"><span class="l">Photo (optional)</span><input id="oi" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc(d.image_url||'')}">${upBtn('oi')}</div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveLoc">Save</button></div></div></div>`;
+}
+async function refreshLocs(){const q=await sb.from('location_ideas').select('*').order('position').order('created_at');locs=q.error?[]:(q.data||[]);locErr=!!q.error}
+const locMsg=e=>/relation|schema|find the table/i.test(e.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+e.message;
+
+/* ================= Travel for destination events ================= */
+let travAll=[];
+const TV=()=>(wed.travel&&wed.travel.data)||{};
+const TVL=()=>Array.isArray(TV().travellers)?TV().travellers:[];
+const travStat=d=>{const l=Array.isArray(d&&d.travellers)?d.travellers:[];return{n:l.length,f:l.filter(t=>t.f&&t.f.booked).length,h:l.filter(t=>t.h&&t.h.booked).length}};
+const travTxt=d=>{const s=travStat(d);return s.n?`Flights ${s.f} of ${s.n} booked · Hotel ${s.h} of ${s.n} booked`:'No travellers added yet'};
+const travOk=d=>{const s=travStat(d);return s.n>0&&s.f===s.n&&s.h===s.n};
+const dtT=v=>v?fmtD(String(v).slice(0,10))+(String(v).length>10?', '+String(v).slice(11,16):''):'';
+const travLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=trav';
+function travPerson(t,own){
+  const f=t.f||{},h=t.h||{},line=s=>s?`<div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px;color:#d9d3ca;margin-top:6px">${s}</div>`:'';
+  const leg=(lab,no,a,b,at)=>(no||a||b||at)?line(`${lab}: ${esc([f.airline,no].filter(Boolean).join(' '))}${a||b?' · '+esc(a||'?')+' to '+esc(b||'?'):''}${at?' · '+dtT(at):''}`):'';
+  const st=on=>`<span style="color:${on?'var(--ac)':'#d98a82'}">${on?'✓ Booked':'Not booked yet'}</span>`;
+  return`<section class="card" style="margin-bottom:14px"><div class="nm" style="font-size:24px">${esc(t.name||'Name to be confirmed')}</div>${own?'':`<div class="sub">Name as on passport</div>`}
+<div class="pg" style="margin-top:14px"><div class="row2"><span class="lbl">Flights</span>${st(f.booked)}</div>${leg('Out',f.out_no,f.out_from,f.out_to,f.out_at)}${leg('Back',f.back_no,f.back_from,f.back_to,f.back_at)}${f.ref?line('Booking reference: '+esc(f.ref)):''}
+${own?'':`<div class="acts"><button data-a="travF" data-id="${t.id}">${f.booked||f.out_no||f.out_at?'Edit flights':'Add flight details'}</button></div>`}</div>
+<div class="pg"><div class="row2"><span class="lbl">Hotel</span>${st(h.booked)}</div>${h.name?line(esc(h.name)):''}${h.address?line(`<a class="lnk" href="${esc(mapUrl(h.address))}" target="_blank" rel="noopener">${esc(h.address)}</a>`):''}${h.checkin?line('Check in '+fmtD(h.checkin)+(h.checkout?' · check out '+fmtD(h.checkout):'')):''}${h.ref?line('Booking reference: '+esc(h.ref)):''}
+${own?'':`<div class="acts"><button data-a="travH" data-id="${t.id}">${h.booked||h.name?'Edit hotel':'Add hotel details'}</button></div>`}</div>
+${TOKEN||own?'':`<div class="acts"><button data-a="travName" data-id="${t.id}">Edit name</button><button data-a="travDelP" data-id="${t.id}">Remove</button></div>`}</section>`}
+function travMain(){
+  if(wed.travErr)return`<h2>Travel</h2><p class="empty">Travel isn’t set up in Supabase yet. Run the latest SQL once, then refresh this page.</p>`;
+  const d=TV();
+  return`<h2>Travel</h2>
+<section class="card ${travOk(d)?'ok':''}" style="margin-bottom:18px"><div class="lbl">Destination</div><div class="nm" style="font-size:26px;margin-top:8px">${esc(d.dest||'Not set yet')}</div>
+<div class="sub" style="margin-top:8px">${travTxt(d)}</div>
+${d.transfer?`<p class="ntx" style="font-size:14px"><span class="lbl" style="display:block;margin-bottom:4px">Airport transfers and getting around</span>${esc(d.transfer)}</p>`:''}
+<div class="acts"><button data-a="travEdit">Destination and transfers</button><button data-a="travWa">Remind the client on WhatsApp</button><button data-a="travCopy">Copy link</button></div></section>
+<p class="intro">The client books and pays for flights and accommodation, and fills in the details on their link under Travel. You can enter or correct anything here too. Crew you add as travellers see their own flights and hotel on their crew link.</p>
+${TVL().map(t=>travPerson(t)).join('')||'<p class="empty">No travellers yet.</p>'}
+<div class="cta"><button class="btn fill" data-a="travAdd">+ Add traveller</button><button class="btn" data-a="travOff">Turn off travel</button></div>
+<p class="intro" style="font-size:13px">Enter each name as it appears on the passport, since the client needs it to book. Don’t store dates of birth or passport numbers here: send those to the client directly.</p>`}
+function clTrav(){
+  const d=TV(),n=TVL().length;
+  return`<h2>Travel for your team</h2>
+<p class="intro">As agreed, flights and accommodation for ${n===1?'one person':n+' people'}${d.dest?' to '+esc(d.dest):''} are arranged by you. Once each is booked, add the details below so we can plan around them.</p>
+${TVL().map(t=>travPerson(t)).join('')}
+<section class="card"><div class="lbl">Airport transfers and getting around</div><p class="ntx" style="font-size:15px">${esc(d.transfer||'Nothing added yet.')}</p><div class="acts"><button data-a="travEdit">${d.transfer?'Edit':'Add a note'}</button></div></section>
+<p class="intro" style="margin-top:16px;font-size:13px">If you need a date of birth or passport details to book, we’ll send those to you directly. Please don’t enter them here.</p>`}
+function travCrewCard(tr){
+  const t=tr&&tr.me;if(!t)return'';
+  return`<h2>Your travel</h2>${tr.dest?`<p class="intro">${esc(tr.dest)}</p>`:''}${travPerson(t,1)}${tr.transfer?`<section class="card"><div class="lbl">Airport transfers and getting around</div><p class="ntx" style="font-size:15px">${esc(tr.transfer)}</p></section>`:''}`}
+async function saveTrav(data,quiet){
+  if(TOKEN){
+    const{error}=await sb.rpc('shared_travel_save',{p_token:TOKEN,p_data:data});
+    if(error)return toast(error.message||'Could not save. Please try again.');
+    const r=await sb.rpc('shared_travel_get',{p_token:TOKEN});if(!r.error&&r.data)wed.travel={enabled:true,data:r.data};
+    render();toast('Saved. Thank you.');return true;
+  }
+  const prev=wed.travel;wed.travel={...(prev||{}),wedding_id:wed.id,enabled:true,seen:true,data};render();
+  const{error}=await sb.from('event_travel').upsert({wedding_id:wed.id,enabled:true,seen:true,data,updated_at:new Date().toISOString()});
+  if(error){wed.travel=prev;render();toast(/relation|schema|find the table/i.test(error.message)?'Run the latest SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  const i=travAll.findIndex(x=>x.wedding_id===wed.id);if(i>=0)travAll[i]=wed.travel;else travAll.push(wed.travel);
+  return true;
+}
+const travWith=(id,fn)=>({...TV(),travellers:TVL().map(t=>t.id===id?fn({...t}):t)});
+function openTravF(id){
+  const t=TVL().find(x=>x.id===id);if(!t)return;const f=t.f||{};
+  ui.modal={type:'travf',id};
+  const I=(l,k,ty,ph)=>`<div class="f"><span class="l">${l}</span><input data-tf="${k}" type="${ty||'text'}" maxlength="60" placeholder="${ph||''}" value="${esc(f[k]||'')}"></div>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Flights · ${esc(t.name||'traveller')}</h3>
+<label class="chk" style="color:var(--tx)"><input type="checkbox" id="tfb" ${f.booked?'checked':''}> The flights are booked</label>
+${I('Airline','airline','text','e.g. Swiss')}
+<div class="lbl" style="margin:8px 0 12px;color:var(--ac)">Outbound</div>
+${I('Flight number','out_no','text','e.g. LX317')}${I('From','out_from','text','e.g. London Heathrow')}${I('To','out_to','text','e.g. Zurich')}${I('Departs','out_at','datetime-local')}
+<div class="lbl" style="margin:8px 0 12px;color:var(--ac)">Return</div>
+${I('Flight number','back_no','text')}${I('From','back_from','text')}${I('To','back_to','text')}${I('Departs','back_at','datetime-local')}
+${I('Booking reference','ref','text')}
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="travFSave">Save</button></div></div></div>`;
+}
+function openTravH(id){
+  const t=TVL().find(x=>x.id===id);if(!t)return;const h=t.h||{},others=TVL().filter(x=>x.id!==id&&x.h&&x.h.name);
+  ui.modal={type:'travh',id};
+  const I=(l,k,ty,ph,mx)=>`<div class="f"><span class="l">${l}</span><input data-th="${k}" type="${ty||'text'}" maxlength="${mx||80}" placeholder="${ph||''}" value="${esc(h[k]||'')}"></div>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Hotel · ${esc(t.name||'traveller')}</h3>
+${others.length?`<div class="acts" style="margin:0 0 16px"><button data-a="travHCopy" data-id="${others[0].id}">Same hotel as ${esc(others[0].name||'the other traveller')}</button></div>`:''}
+<label class="chk" style="color:var(--tx)"><input type="checkbox" id="thb" ${h.booked?'checked':''}> The hotel is booked</label>
+${I('Hotel name','name')}${I('Address','address','text','Street, city and postcode',200)}${I('Check in','checkin','date')}${I('Check out','checkout','date')}${I('Booking reference','ref')}
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="travHSave">Save</button></div></div></div>`;
+}
+function openTravEdit(){
+  const d=TV();ui.modal={type:'trave'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${TOKEN?'Transfers and getting around':'Destination and transfers'}</h3>
+${TOKEN?'':`<div class="f"><span class="l">Destination</span><input id="tvd" maxlength="120" placeholder="e.g. Zurich, Switzerland" value="${esc(d.dest||'')}"></div>`}
+<div class="f"><span class="l">Airport transfers and getting around</span><textarea id="tvt" rows="4" maxlength="600" placeholder="e.g. A driver will meet you at arrivals. Taxis to the venue are covered.">${esc(d.transfer||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="travESave">Save</button></div></div></div>`;
+}
+function openTravAdd(id){
+  const t=id?TVL().find(x=>x.id===id):null,used=TVL().map(x=>x.crew_id).filter(Boolean),cs=(wed.crew||[]).filter(x=>(x.status||'accepted')==='accepted'&&!used.includes(x.crew_id));
+  ui.modal={type:'trava',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${t?'Edit name':'Add traveller'}</h3>
+${t||!cs.length?'':`<div class="f"><span class="l">Who</span><select id="tvc"><option value="">You, or someone not on the crew list</option>${cs.map(x=>`<option value="${x.crew_id}" data-n="${esc(cName(x))}">${esc(cName(x))} · crew</option>`).join('')}</select></div>`}
+<div class="f"><span class="l">Full name as on the passport</span><input id="tvn" maxlength="120" value="${esc(t?t.name:'')}"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="travASave">Save</button></div></div></div>`;
+}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='tvc'){const o=e.target.selectedOptions[0],n=$('#tvn');if(o&&o.dataset.n&&n&&!n.value)n.value=o.dataset.n}});
+function travSeen(){
+  if(TOKEN||!wed||!wed.travel||wed.travel.seen!==false)return;
+  wed.travel.seen=true;const x=travAll.find(y=>y.wedding_id===wed.id);if(x)x.seen=true;
+  sb.from('event_travel').update({seen:true}).eq('wedding_id',wed.id).then(()=>{});
+}
 function famMain(){
   const s=stats();
   return`<h2>Family &amp; Friends Photo Builder</h2>
@@ -2262,7 +2491,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='del'?delMain():ui.sec==='gear'?gearMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='overview'?ovMain():ui.sec==='msg'?msgMain():ui.sec==='trav'?travMain():ui.sec==='del'?delMain():ui.sec==='gear'?gearMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -2293,6 +2522,7 @@ ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
   if(sec==='agr')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${secNav(1)}${clAgr()}<footer><span>Private link · Zema Production</span></footer>`;
+  if(sec==='msg'||sec==='trav'||sec==='ideas')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${secNav(1)}${sec==='msg'?clMsg():sec==='trav'?clTrav():clIdeas(lk)}<footer><span>Private link · Zema Production</span></footer>`;
   if(sec==='del')return`${secNav(1)}<div style="height:20px"></div>${cineBody()}<footer><span>Private link · Zema Production</span></footer>`;
   const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
   const I={timeline:isWed(w)?'Add the key moments of your day with their times, such as getting ready, the ceremony, family photos and the first dance. They sort themselves by time.':'Add the key moments of your event with their times, such as when guests arrive, the cake and any speeches. They sort themselves by time.',
@@ -2617,6 +2847,37 @@ document.addEventListener('click',async e=>{
   if(ui.modal&&ui.modal.type==='menu'&&a!=='close')closeM();
   if(a==='login')login();
   else if(a==='menuV'&&!TOKEN)openMenu();
+  else if(a==='msgFill'){const el=$('#mb');if(el){el.value=t.dataset.v;el.focus()}}
+  else if(a==='msgSend')msgSend();
+  else if(a==='msgDel'&&!TOKEN)ask('Delete this from the timeline? The client will no longer see it.',()=>{wed.msgs=MSGS().filter(m=>m.id!==id);render();run(sb.from('event_messages').delete().eq('id',id))});
+  else if(a==='msgWa'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(`Hello, there’s a new update on your Zema Production page:\n${location.origin+location.pathname}?w=${wed.share_token}&s=msg`),'_blank');
+  else if(a==='msgOpen'&&!TOKEN){await openWedding(id);ui.sec='msg';render();msgSeen()}
+  else if(a==='locV'&&!TOKEN){ui.view='loc';render();scrollTo(0,0)}
+  else if(a==='addLoc'&&!TOKEN)openLocForm();
+  else if(a==='editLoc'&&!TOKEN)openLocForm(id);
+  else if(a==='saveLoc'&&!TOKEN){const n=$('#on').value.trim();if(!n){$('#on').classList.add('err');$('#on').focus();return}const mu=$('#om').value.trim(),iu=$('#oi').value.trim();if((mu&&!safeU(mu))||(iu&&!safeU(iu)))return toast('Links must start with https://');const o={name:n,area:$('#oa').value.trim(),description:$('#od').value.trim(),best_time:$('#ob').value.trim(),tips:$('#ot').value.trim(),map_url:safeU(mu),image_url:safeU(iu)},lid=ui.modal.id,{error}=lid?await sb.from('location_ideas').update(o).eq('id',lid):await sb.from('location_ideas').insert({...o,position:locs.length});if(error)return toast(locMsg(error));closeM();await refreshLocs();render()}
+  else if(a==='togLoc'&&!TOKEN){const x=locs.find(y=>y.id===id);if(x){x.active=!x.active;render();run(sb.from('location_ideas').update({active:x.active}).eq('id',id))}}
+  else if(a==='delLoc'&&!TOKEN)ask('Delete this location idea? Locations clients already chose stay on their events.',async()=>{const{error}=await sb.from('location_ideas').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);await refreshLocs();render()});
+  else if((a==='locUp'||a==='locDown')&&!TOKEN){const i=+t.dataset.i,j=i+(a==='locUp'?-1:1);if(locs[j]){[locs[i],locs[j]]=[locs[j],locs[i]];render();await Promise.all(locs.map((x,k)=>x.position===k?null:(x.position=k,sb.from('location_ideas').update({position:k}).eq('id',x.id))))}}
+  else if(a==='seedLoc'&&!TOKEN){const{error}=await sb.from('location_ideas').insert(LOCDEF.map((x,i)=>({...x,position:i})));if(error)return toast(locMsg(error));await refreshLocs();render();toast('Starter locations added. Edit the wording and add your photos.')}
+  else if(a==='copyLoc'&&!TOKEN){const u=location.origin+location.pathname+'?loc=1';(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Locations page link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='ideaPick'&&TOKEN){const{error}=await sb.rpc('shared_location_pick',{p_token:TOKEN,p_id:id});if(error)return toast(error.message||'Could not save. Please try again.');await loadShared();toast('Added to your locations.')}
+  else if(a==='travOn'&&!TOKEN){const keep=wed.travel&&wed.travel.data&&TVL().length;if(await saveTrav(keep?TV():{dest:'',transfer:'',travellers:[{id:rid(),name:'',crew_id:null,f:{},h:{}}]})){ui.sec='trav';render();scrollTo(0,0);openTravEdit()}}
+  else if(a==='travOff'&&!TOKEN)ask('Turn off travel for this event? The details are kept, but the Travel tab is hidden from you, the client and crew.',async()=>{const{error}=await sb.from('event_travel').update({enabled:false}).eq('wedding_id',wed.id);if(error)return toast('Could not save: '+error.message);wed.travel={...wed.travel,enabled:false};travAll=travAll.filter(x=>x.wedding_id!==wed.id);ui.sec='overview';render()});
+  else if(a==='travEdit')openTravEdit();
+  else if(a==='travESave'){const d={...TV(),transfer:$('#tvt').value.trim()};if(!TOKEN)d.dest=$('#tvd').value.trim();closeM();saveTrav(d)}
+  else if(a==='travF')openTravF(id);
+  else if(a==='travH')openTravH(id);
+  else if(a==='travFSave'){const f={booked:$('#tfb').checked};document.querySelectorAll('[data-tf]').forEach(el=>{f[el.dataset.tf]=el.value.trim()});const tid=ui.modal.id;closeM();saveTrav(travWith(tid,x=>{x.f=f;return x}))}
+  else if(a==='travHSave'){const h={booked:$('#thb').checked};document.querySelectorAll('[data-th]').forEach(el=>{h[el.dataset.th]=el.value.trim()});const tid=ui.modal.id;closeM();saveTrav(travWith(tid,x=>{x.h=h;return x}))}
+  else if(a==='travHCopy'){const o=TVL().find(x=>x.id===id);if(o&&o.h){$('#thb').checked=!!o.h.booked;document.querySelectorAll('[data-th]').forEach(el=>{if(el.dataset.th!=='ref')el.value=o.h[el.dataset.th]||''})}}
+  else if(a==='travAdd'&&!TOKEN)openTravAdd();
+  else if(a==='travName'&&!TOKEN)openTravAdd(id);
+  else if(a==='travASave'&&!TOKEN){const n=$('#tvn').value.trim();if(!n){$('#tvn').classList.add('err');$('#tvn').focus();return}const tid=ui.modal.id,sel=$('#tvc'),cid=sel&&sel.value?sel.value:null;closeM();saveTrav(tid?travWith(tid,x=>{x.name=n;return x}):{...TV(),travellers:[...TVL(),{id:rid(),name:n,crew_id:cid,f:{},h:{}}]})}
+  else if(a==='travDelP'&&!TOKEN)ask('Remove this traveller and their flight and hotel details?',()=>saveTrav({...TV(),travellers:TVL().filter(x=>x.id!==id)}));
+  else if(a==='travCopy'&&!TOKEN){const u=travLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Travel link copied'),()=>prompt('Copy this link:',u))}
+  else if(a==='travWa'&&!TOKEN){const miss=TVL().map(x=>{const w=[!(x.f&&x.f.booked)&&'flights',!(x.h&&x.h.booked)&&'hotel'].filter(Boolean);return w.length?'· '+(x.name||'Traveller')+': '+w.join(' and '):''}).filter(Boolean);window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(`Hello, a note about travel for ${wed.couple}${TV().dest?' in '+TV().dest:''}.\n\n${miss.length?'Still to book:\n'+miss.join('\n')+'\n\nOnce booked, please add the details here:':'Thank you, everything is booked. You can see the details here:'}\n${travLink()}`),'_blank')}
+  else if(a==='travOpen'&&!TOKEN){await openWedding(id);ui.sec='trav';render();travSeen()}
   else if(a==='goV'&&!TOKEN)openGoLinks();
   else if(a==='gearMode'){ui.gm=t.dataset.k;render()}
   else if(a==='gearAdd'&&user&&wed){const v=(t.dataset.v||($('#gadd')||{}).value||'').trim();if(!v){const el=$('#gadd');if(el)el.focus();return}const it=GI().map(x=>({...x}));if(it.some(x=>x.s===GCL&&x.t.toLowerCase()===v.toLowerCase()))return toast('That is already on the list.');const mine=it.filter(x=>x.s===GCL),rest=it.filter(x=>x.s!==GCL);setGear([...mine,{s:GCL,t:v,pre:false,post:false},...rest])}
@@ -2669,7 +2930,7 @@ document.addEventListener('click',async e=>{
   else if(a==='doApprove'&&TOKEN)doApprove();
   else if(a==='reopen'&&!TOKEN)ask('Reopen this plan so the couple can edit it again?',async()=>{const{error}=await sb.from('weddings').update({approval_status:'draft',approved_at:null,approved_by:null}).eq('id',wed.id);if(error)return toast('Could not reopen: '+error.message);Object.assign(wed,{approval_status:'draft',approved_at:null,approved_by:null});render()});
   else if(a==='tab'){ui.tab=t.dataset.k;render()}
-  else if(a==='sec'){const top=!ui.day&&ui.sec==='overview';ui.sec=t.dataset.k;render();if(top)scrollTo(0,0)}
+  else if(a==='sec'){const top=!ui.day&&ui.sec==='overview';ui.sec=t.dataset.k;render();if(top)scrollTo(0,0);if(ui.sec==='msg')msgSeen();if(ui.sec==='trav')travSeen()}
   else if(a==='tog'&&!TOKEN){g.done=!g.done;render();run(sb.from('photo_groups').update({done:g.done}).eq('id',id))}
   else if(a==='togT'&&!TOKEN&&ti){ti.done=!ti.done;render();run(sb.from('timeline_items').update({done:ti.done}).eq('id',id))}
   else if(a==='up'||a==='down')move(id,a==='up'?-1:1);
@@ -2697,16 +2958,16 @@ document.addEventListener('click',async e=>{
   else if(a==='saveN')saveN();
   else if(a==='setStage'&&!TOKEN&&STG[t.dataset.k])setW({stage:t.dataset.k});
   else if(a==='setPkg'&&!TOKEN)setW({package:wed.package===t.dataset.k?'':t.dataset.k});
-  else if(a==='setAlbum'&&!TOKEN&&ALB[t.dataset.k])setW({album_status:t.dataset.k});
+  else if(a==='setAlbum'&&!TOKEN&&ALB[t.dataset.k]){const ak=t.dataset.k,was=wed.album_status;setW({album_status:ak});if(ak!==was&&(ak==='ordered'||ak==='delivered'))logUpdate(ak==='ordered'?'Your album has been ordered.':'Your album has been delivered.')}
   else if(a==='prog'&&!TOKEN){const k=t.dataset.k==='video'?'video_progress':'photo_progress';setW({[k]:Math.max(0,Math.min(100,(wed[k]||0)+(+t.dataset.d)))})}
-  else if(a==='togW'&&!TOKEN&&['photos_delivered','film_delivered','share_progress'].includes(t.dataset.k))setW({[t.dataset.k]:!wed[t.dataset.k]});
+  else if(a==='togW'&&!TOKEN&&['photos_delivered','film_delivered','share_progress'].includes(t.dataset.k)){const wk=t.dataset.k,on=!wed[wk];setW({[wk]:on});if(on&&wk==='photos_delivered')logUpdate('Your photos have been delivered.');if(on&&wk==='film_delivered')logUpdate('Your film has been delivered.')}
   else if(a==='editPrice'&&!TOKEN)openPriceForm();
   else if(a==='savePrice'&&!TOKEN){const v=$('#yp').value.trim(),dc=Math.max(0,parseFloat($('#ydc').value)||0),h=parseFloat($('#yh').value),r=parseFloat($('#yr').value),hr=h>0&&r>0;closeM();setB({price:hr?Math.round(h*r*100)/100:v===''?null:Math.max(0,parseFloat(v)||0),discount:dc,hours:hr?h:null,hourly_rate:hr?r:null})}
   else if(a==='addX'&&!TOKEN)openXForm();
   else if(a==='saveX'&&!TOKEN){const l=$('#yxl').value.trim(),am=parseFloat($('#yxa').value);if(!l){$('#yxl').classList.add('err');return}if(!(am>0)){$('#yxa').classList.add('err');return}closeM();setB({extras:[...(Array.isArray(wed.bill.extras)?wed.bill.extras:[]),{label:l,amount:am}]})}
   else if(a==='delX'&&!TOKEN){const i=+t.dataset.i,l=Array.isArray(wed.bill.extras)?wed.bill.extras:[];ask(`Remove “${(l[i]||{}).label||'this extra'}”?`,()=>setB({extras:l.filter((_,j)=>j!==i)}))}
   else if(a==='editPlan'&&!TOKEN)openPlanForm();
-  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0),due=p.map((_,i)=>($('#ypd'+i)||{}).value||null);closeM();await setB({plan:p,plan_due:due});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
+  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0),due=p.map((_,i)=>{const v=($('#ypd'+i)||{}).value||null;return i===1&&v===wed.wedding_date?null:v});closeM();await setB({plan:p,plan_due:due});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
   else if(a==='fillPay'){$('#ya').value=t.dataset.v;$('#yl').value=t.dataset.l}
   else if(a==='togMoney'&&!TOKEN)setB({share_money:wed.bill.share_money===false})
   else if(a==='addPay'&&!TOKEN)openPayForm();
@@ -2750,7 +3011,7 @@ document.addEventListener('click',async e=>{
   else if(a==='cineOpen'&&!TOKEN){ui.fromCine=false;ui.cine=true;ui.play=null;render();scrollTo(0,0)}
   else if(a==='cineBack'){ui.cine=false;ui.play=null;if(ui.fromCine){ui.fromCine=false;ui.view='cine';wed=null}render()}
   else if(a==='cineEdit'&&!TOKEN){ui.cine=false;ui.play=null;ui.fromCine=false;ui.sec='del';render()}
-  else if(a==='togPub'&&!TOKEN){const r=wed.del||{},on=!r.published,o={published:on};if(on&&r.access_months&&!r.expires_on)o.expires_on=addMonths(today(),r.access_months);setD(o)}
+  else if(a==='togPub'&&!TOKEN){const r=wed.del||{},on=!r.published,o={published:on};if(on&&r.access_months&&!r.expires_on)o.expires_on=addMonths(today(),r.access_months);setD(o);if(on)logUpdate('Your films and photos are ready to view on your page.')}
   else if(a==='accSet'&&!TOKEN){const k=+t.dataset.k,r=wed.del||{};if(!k)setD({expires_on:null,access_months:null});else if(r.expires_on)setD({expires_on:addMonths(daysTo(r.expires_on)>=0?r.expires_on:today(),k)});else if(r.published)setD({expires_on:addMonths(today(),k),access_months:k});else setD({access_months:k})}
   else if(a==='accDate'&&!TOKEN)openAccForm();
   else if(a==='saveAcc'&&!TOKEN){const v=$('#xd').value;closeM();setD({expires_on:v||null})}
@@ -2854,7 +3115,7 @@ document.addEventListener('click',async e=>{
   else if(a==='postDel'&&!TOKEN){await openWedding(id);ui.sec='del';render()}
   else if(a==='selEdit'&&!TOKEN)openSelForm();
   else if(a==='selSave'&&!TOKEN){const u=safeU($('#sgu').value);if(!u){$('#sgu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const o={gallery_url:u,gallery_password:$('#sgw').value.trim(),pick_count:Math.max(1,parseInt($('#sgn').value)||200),purpose:$('#sgp').value.trim(),deadline:$('#sgd').value||null,instructions:$('#sgi').value.trim()};closeM();if(await setSel(o)&&o.instructions&&o.instructions!==selGuide){selGuide=o.instructions;sb.from('app_content').upsert({key:'sel_guide',data:{text:selGuide},updated_at:new Date().toISOString()}).then(()=>{})}}
-  else if(a==='selAsk'&&!TOKEN){const s=wed.sel;window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true,...(s.instructions?{}:{instructions:selGuide})})}
+  else if(a==='selAsk'&&!TOKEN){const s=wed.sel;if(!s.asked_at)logUpdate('Your photos are ready. Please choose your favourites.');window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selAskMsg(wed,s)),'_blank');setSel({asked_at:s.asked_at||new Date().toISOString(),done_at:null,seen:true,...(s.instructions?{}:{instructions:selGuide})})}
   else if(a==='selRem'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill&&wed.bill.client_phone)+'?text='+encodeURIComponent(selRemMsg(wed,wed.sel)),'_blank');
   else if(a==='selRemW'&&!TOKEN){const w=weds.find(x=>x.id===id),s=sels.find(x=>x.wedding_id===id);if(w&&s)window.open('https://wa.me/'+waNum(B(w).client_phone)+'?text='+encodeURIComponent(selRemMsg(w,s)),'_blank')}
   else if(a==='selDone'&&!TOKEN)setSel({done_at:new Date().toISOString(),seen:true});
@@ -2875,7 +3136,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
+const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!LOCPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
 let hidAt=0;
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hidAt=Date.now();return}
