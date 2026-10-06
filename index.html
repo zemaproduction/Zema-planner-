@@ -804,6 +804,21 @@ function watchFamily(){
 }
 
 /* ---- Startup, auth, loading ---- */
+/* Time picker with an explicit AM or PM, so 2:20 in the afternoon can't be saved as 02:20 at night.
+   The hidden field keeps the 24-hour value the rest of the planner uses. */
+function tpick(id,val,cls){
+  const m=/^(\d{2}):(\d{2})$/.exec(val||''),H=m?+m[1]:null,M=m?m[2]:'00',mins=['00','05','10','15','20','25','30','35','40','45','50','55'];
+  if(!mins.includes(M)){mins.push(M);mins.sort()}
+  const h12=H==null?'':String(H%12||12),ap=H==null?'':H<12?'AM':'PM';
+  return`<div class="tp" style="display:flex;gap:8px"><input type="hidden" ${id?`id="${id}"`:''} class="tpv${cls?' '+cls:''}" value="${m?esc(val):''}"><select class="tph" aria-label="Hour"><option value="">Hour</option>${[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>`<option ${h12===String(h)?'selected':''}>${h}</option>`).join('')}</select><select class="tpm" aria-label="Minutes">${mins.map(x=>`<option ${x===M?'selected':''}>${x}</option>`).join('')}</select><select class="tpa" aria-label="AM or PM"><option value="">AM or PM</option><option ${ap==='AM'?'selected':''}>AM</option><option ${ap==='PM'?'selected':''}>PM</option></select></div>`}
+document.addEventListener('change',e=>{
+  const b=e.target&&e.target.closest&&e.target.closest('.tp');if(!b)return;
+  const h=b.querySelector('.tph').value,mi=b.querySelector('.tpm').value,a=b.querySelector('.tpa');
+  b.querySelector('.tpv').value=h&&a.value?String((+h%12)+(a.value==='PM'?12:0)).padStart(2,'0')+':'+mi:'';
+  a.classList.toggle('err',!!h&&!a.value);
+});
+/* never save a time that has an hour but no AM or PM */
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-a]');if(t&&/^(save|xdSave|xdISave|hjSend|impSave)/.test(t.dataset.a)&&document.querySelector('.tpa.err')){e.stopPropagation();e.preventDefault();toast('Choose AM or PM for the time.')}},true);
 function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
 const STANDALONE=(()=>{try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches}catch(_){return false}})();
 async function init(){
@@ -1496,7 +1511,7 @@ function openEcForm(id,invite){
 ${!x&&invite?'<p class="intro">WhatsApp opens with the request written for you. They see the date, call time, area, role and your note, then accept or decline.</p>':''}
 ${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select></div>`}
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
-<div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
+<div class="f"><span class="l">Call time</span>${tpick('et',d.call_time||'')}</div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
 ${ecDays(x)}
 ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
@@ -1748,7 +1763,7 @@ function openFjForm(id){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Edit booking</h3>
 <div class="f"><span class="l">What is the event?</span><input id="fjt" maxlength="160" value="${esc(j.title||'')}"></div>
 <div class="f"><span class="l">Date</span><input id="fjd" type="date" value="${esc(j.job_date||'')}"></div>
-<div class="f"><span class="l">Start time</span><input id="fjs" type="time" value="${esc(j.start_time||'')}"></div>
+<div class="f"><span class="l">Start time</span>${tpick('fjs',j.start_time||'')}</div>
 <div class="f"><span class="l">Venue name</span><input id="fjv" maxlength="160" value="${esc(j.venue||'')}"></div>
 <div class="f"><span class="l">Address</span><input id="fja" maxlength="200" value="${esc(j.address||'')}"></div>
 <div class="f"><span class="l">Postcode</span><input id="fjp" maxlength="12" value="${esc(j.postcode||'')}"></div>
@@ -1811,7 +1826,7 @@ ${hzSent?`<section class="card ok" style="margin-top:24px"><div class="lbl">Book
 <section class="card">
 ${F('What is the event?','hjt','text','e.g. Smith wedding, second shooter')}
 ${F('Date','hjd','date','','min="'+today()+'"')}
-${F('Start time','hjs','time')}
+<div class="f"><span class="l">Start time · choose AM or PM</span>${tpick('hjs','')}</div>
 ${F('How many hours, if you know','hjh','number','','inputmode="decimal" min="0" step="0.5"')}
 ${F('Venue name','hjv','text','e.g. St Mary’s Church')}
 ${F('Address','hja','text','Street and town')}
@@ -1825,7 +1840,7 @@ async function hjSend(){
   const v=id=>$('#'+id).value.trim(),err=m=>{$('#hjerr').textContent=m},p={title:v('hjt'),job_date:v('hjd'),start_time:v('hjs').slice(0,5),hours:v('hjh'),venue:v('hjv'),address:v('hja'),postcode:v('hjp').toUpperCase().replace(/\s+/g,' '),notes:v('hjn')};
   if(!p.title)return err('Please say what the event is.');
   if(!p.job_date)return err('Please add the date.');
-  if(!p.start_time)return err('Please add the start time.');
+  if(!p.start_time)return err('Please add the start time, including AM or PM.');
   if(p.address.length<5)return err('Please add the address.');
   if(!/^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/.test(p.postcode))return err('Please add a valid postcode.');
   err('Sending…');
@@ -2127,7 +2142,7 @@ function xdForm(id,pre){
 <div class="f"><span class="l">What is it?</span><select id="xdk">${XDK.map(k=>`<option ${d.kind===k?'selected':''}>${k}</option>`).join('')}<option value="" ${oth?'selected':''}>Something else</option></select></div>
 <div class="f"><span class="l">If something else, its name</span><input id="xdkn" maxlength="60" placeholder="e.g. Engagement, Henna night" value="${oth?esc(d.kind):''}"></div>
 <div class="f"><span class="l">Date</span><input id="xdd" type="date" value="${esc(d.day_date||'')}"></div>
-<div class="f"><span class="l">Start time</span><input id="xds" type="time" value="${esc(d.start_time||'')}"></div>
+<div class="f"><span class="l">Start time</span>${tpick('xds',d.start_time||'')}</div>
 <div class="f"><span class="l">Package</span><select id="xdh">${[5,8,10].map(h=>`<option value="${h}" ${Number(d.hours)===h?'selected':''}>${h} hours</option>`).join('')}<option value="" ${hs?'':'selected'}>Other</option></select></div>
 <div class="f"><span class="l">If other, how many hours</span><input id="xdho" type="number" inputmode="decimal" min="0" step="0.5" value="${hs||d.hours==null?'':esc(xdH(d.hours))}"></div>
 <label style="display:flex;gap:10px;align-items:center;margin:4px 0 14px;font-size:16px"><input type="checkbox" id="xdinc" style="width:22px;height:22px" ${Number(d.price)===0&&d.price!==''&&d.price!=null?'checked':''}> Included in the package, no extra charge</label>
@@ -2181,7 +2196,7 @@ function xdIForm(did,i){
   const x=i!=null&&Array.isArray(d.items)&&d.items[i]||{t:'',title:'',loc:'',note:''};
   ui.modal={type:'xdi',id:did,i};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${i!=null?'Edit moment':'Add moment'} · ${esc(d.kind)}</h3>
-<div class="f"><span class="l">Time</span><input id="xit" type="time" value="${esc(x.t||'')}"></div>
+<div class="f"><span class="l">Time</span>${tpick('xit',x.t||'')}</div>
 <div class="f"><span class="l">Moment</span><input id="xin" maxlength="200" placeholder="e.g. Ceremony begins" value="${esc(x.title||'')}"></div>
 <div class="f"><span class="l">Location (optional)</span><input id="xil" maxlength="200" value="${esc(x.loc||'')}"></div>
 <div class="f"><span class="l">Note (optional)</span><textarea id="xio" rows="2" maxlength="500">${esc(x.note||'')}</textarea></div>
@@ -2293,7 +2308,7 @@ function impReview(r,day){
   const box='width:24px;height:24px;flex:none;margin-top:12px';
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Check what was found</h3>
 <p class="intro">Untick anything that is wrong, and fix any wording. Items already in this event start unticked.</p>
-${r.m.length?`<div class="lbl" style="margin-top:8px">Moments · ${r.m.length}${d?' · for '+esc(d.kind):''}</div>${r.m.map(x=>{const dup=have.includes(x.t+'|'+x.title.toLowerCase());return`<div class="imr" data-k="m" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><input type="checkbox" class="imc" style="${box}" ${dup?'':'checked'}><div style="flex:1;min-width:0"><div style="display:flex;gap:8px"><input class="imt" type="time" value="${esc(x.t)}" style="flex:none;width:118px"><input class="imn" maxlength="200" value="${esc(x.title)}" style="flex:1;min-width:0;width:auto"></div><input class="iml" maxlength="200" placeholder="Location (optional)" value="${esc(x.loc)}" style="margin-top:6px"></div></div>`}).join('')}`:'<p class="empty">No moments with times were found.</p>'}
+${r.m.length?`<div class="lbl" style="margin-top:8px">Moments · ${r.m.length}${d?' · for '+esc(d.kind):''}</div>${r.m.map(x=>{const dup=have.includes(x.t+'|'+x.title.toLowerCase());return`<div class="imr" data-k="m" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><input type="checkbox" class="imc" style="${box}" ${dup?'':'checked'}><div style="flex:1;min-width:0">${tpick('',x.t,'imt')}<input class="imn" maxlength="200" value="${esc(x.title)}" style="margin-top:6px"><input class="iml" maxlength="200" placeholder="Location (optional)" value="${esc(x.loc)}" style="margin-top:6px"></div></div>`}).join('')}`:'<p class="empty">No moments with times were found.</p>'}
 ${r.l.length?`<div class="lbl" style="margin-top:22px">Locations · ${r.l.length}</div>${r.l.map(x=>{const dup=haveL.includes(x.address.toLowerCase());return`<div class="imr" data-k="l" data-t="${esc(x.t)}" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><input type="checkbox" class="imc" style="${box}" ${dup?'':'checked'}><div style="flex:1;min-width:0"><input class="imn" maxlength="120" value="${esc(x.name)}"><input class="iml" maxlength="200" value="${esc(x.address)}" style="margin-top:6px"></div></div>`}).join('')}`:'<p class="empty" style="margin-top:16px">No addresses with a postcode were found.</p>'}
 <div class="bad" id="iperr"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="impSave">Add the ticked ones</button></div></div></div>`;
@@ -2982,7 +2997,7 @@ function openTForm(id){
   const x=id?T().find(y=>y.id===id):null,d=x||{at_time:'',title:'',location:'',note:''};
   ui.modal={type:'tform',id};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit moment':'Add moment'}</h3>
-<div class="f"><span class="l">Time</span><input id="xt" type="time" value="${esc(d.at_time||'')}"></div>
+<div class="f"><span class="l">Time</span>${tpick('xt',d.at_time||'')}</div>
 <div class="f"><span class="l">Moment</span><input id="xn" placeholder="Ceremony" value="${esc(d.title)}"></div>
 <div class="f"><span class="l">Location (optional)</span><input id="xl" placeholder="e.g. Church, garden, main hall" value="${esc(d.location||'')}"></div>
 <div class="f"><span class="l">Note (family &amp; friends won’t see this)</span><textarea id="xo" rows="2" maxlength="500" placeholder="e.g. Confetti as we walk out.">${esc(d.note||'')}</textarea></div>
@@ -3081,7 +3096,7 @@ function openLForm(id){
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit location':'Add location'}</h3>
 <div class="f"><span class="l">What happens here</span><input id="ln" maxlength="120" placeholder="Ceremony" value="${esc(d.name)}"></div>
 <div class="f"><span class="l">Address with postcode</span><textarea id="la" rows="2" maxlength="300" placeholder="Venue name, street, London, postcode">${esc(d.address||'')}</textarea></div>
-<div class="f"><span class="l">Arrival time (optional)</span><input id="lt" type="time" value="${esc(d.arrive_time||'')}"></div>
+<div class="f"><span class="l">Arrival time (optional)</span>${tpick('lt',d.arrive_time||'')}</div>
 <div class="f"><span class="l">Note (optional)</span><textarea id="lo" rows="2" maxlength="500" placeholder="e.g. Parking behind the hall. Use the side entrance.">${esc(d.note||'')}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveL">Save location</button></div></div></div>`;
 }
