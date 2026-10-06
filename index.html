@@ -1476,6 +1476,15 @@ function crMain(){
 <div><span class="tag ${st==='declined'?'':'approved'}">${ecStat(x)}</span></div>
 ${x.brief?`<div class="note fam" style="font-style:normal">${esc(x.brief)}</div>`:''}
 <div class="acts">${st==='invited'?`<button data-a="waAsk" data-id="${x.id}">Send request again</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="delEc" data-id="${x.id}">Cancel request</button>`:st==='declined'?`<button data-a="reAsk" data-id="${x.id}">Ask again</button><button data-a="delEc" data-id="${x.id}">Remove</button>`:`<button data-a="editEc" data-id="${x.id}">Edit</button><button data-a="copyEc" data-id="${x.id}">Copy link</button><button data-a="waEc" data-id="${x.id}">Send on WhatsApp</button><button data-a="delEc" data-id="${x.id}">Remove</button>`}</div></div></div>`}).join(''):'<p class="empty">No crew on this event yet.</p>'}</div>`}
+/* Crew form: which days they work, with hours and pay for each. Pay is saved as a Crew cost for that day. */
+const ecKeys=()=>[{k:'main',n:'Main day',l:'Main day'+(wed.wedding_date?' · '+fmtD(wed.wedding_date):'')},...xdSort(XD()).map(d=>({k:d.id,n:d.kind,l:d.kind+(d.day_date?' · '+fmtD(d.day_date):'')}))];
+const ecCost=(cid,k)=>cid?K().find(c=>c.crew_id===cid&&(c.day_ref===k||(k==='main'&&!c.day_ref))):null;
+function ecDays(x){
+  const multi=XD().length>0,cid=x?x.crew_id:null,num=v=>v==null?'':esc(String(Number(v)));
+  return`<div class="f"><span class="l">${multi?'Which days are they working? Tick any, then add hours and pay':'Hours and pay'}</span>${ecKeys().map(y=>{const on=y.k==='main'?(!x||x.main_day!==false):!!(x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.k)),c=ecCost(cid,y.k);
+return`<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">${multi?`<label style="display:flex;gap:10px;align-items:center;font-size:16px"><input type="checkbox" class="edk" value="${y.k}" style="width:22px;height:22px" ${on?'checked':''}> ${esc(y.l)}</label>`:''}
+<div style="display:flex;gap:10px;margin-top:${multi?10:0}px"><input class="eph" data-k="${y.k}" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Hours" value="${c?num(c.hours):''}"><input class="epa" data-k="${y.k}" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Pay in £" value="${c?num(c.amount):''}"></div>${c&&c.paid?'<div class="sub" style="margin-top:6px">Already marked as paid</div>':''}</div>`}).join('')}
+<p class="sub" style="text-transform:none;letter-spacing:0;margin-top:12px">The pay is saved on the Costs tab and shows on their personal page. Leave it empty if you have not agreed it yet.</p></div>`}
 function openEcForm(id,invite){
   const x=id?EC().find(y=>y.id===id):null;
   if(!x&&!crew.length){toast('Add someone to your crew list first.');ui.view='crew';render();return openCrewForm()}
@@ -1489,7 +1498,7 @@ ${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span><input id="et" type="time" value="${esc(d.call_time||'')}"></div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
-${XD().length?`<div class="f"><span class="l">Which days are they working? Tick any</span><label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" id="emain" style="width:22px;height:22px" ${!x||x.main_day!==false?'checked':''}> Main day${wed.wedding_date?' · '+fmtD(wed.wedding_date):''}</label>${xdSort(XD()).map(y=>`<label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:16px"><input type="checkbox" class="edy" value="${y.id}" style="width:22px;height:22px" ${x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.id)?'checked':''}> ${esc(y.kind)}${y.day_date?' · '+fmtD(y.day_date):''}</label>`).join('')}</div>`:''}
+${ecDays(x)}
 ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
 <div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
@@ -1497,12 +1506,21 @@ ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><selec
 async function saveEc(){
   const id=ui.modal.id,invite=ui.modal.invite,x=id?EC().find(y=>y.id===id):null,old=x&&Array.isArray(x.tasks)?x.tasks:[];
   const tasks=$('#ek').value.split('\n').map(t=>t.trim()).filter(Boolean).map(t=>({t,done:!!(old.find(o=>o.t===t)||{}).done}));
-  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks,...(XD().length?{day_ids:[...document.querySelectorAll('.edy:checked')].map(e=>e.value),main_day:$('#emain').checked}:{})},cid=id?null:$('#ec').value;
+  const o={role:$('#er').value.trim(),call_time:($('#et').value||'').slice(0,5),brief:$('#eb').value.trim(),tasks,...(XD().length?{day_ids:[...document.querySelectorAll('.edk:checked')].map(e=>e.value).filter(v=>v!=='main'),main_day:!!document.querySelector('.edk[value="main"]:checked')}:{})},cid=id?null:$('#ec').value;
+  const multi=XD().length>0,pay=ecKeys().map(y=>({...y,on:multi?(y.k==='main'?o.main_day:o.day_ids.includes(y.k)):true,h:parseFloat((document.querySelector('.eph[data-k="'+y.k+'"]')||{}).value),a:parseFloat((document.querySelector('.epa[data-k="'+y.k+'"]')||{}).value)}));
   if(XD().length&&!o.main_day&&!o.day_ids.length)return toast('Tick at least one day for them.');
   const win=invite?window.open('','_blank'):null;
   const r=id?await sb.from('event_crew').update(o).eq('id',id).select('*, crew(name,phone)').single():await sb.from('event_crew').insert({...o,wedding_id:wed.id,crew_id:cid,...(invite?{status:'invited'}:{})}).select('*, crew(name,phone)').single();
   if(r.error){if(win)win.close();return toast(/relation|schema|find the table|column/i.test(r.error.message)?'Run the latest crew SQL in Supabase first, then refresh.':'Could not save: '+r.error.message)}
   closeM();
+  for(const y of pay){
+    const ex=ecCost(r.data.crew_id,y.k);
+    if(y.on&&y.a>0){
+      const c={category:'Crew',label:cName(r.data)+(multi?' · '+y.n:''),amount:Math.round(y.a*100)/100,hours:y.h>0?y.h:null,rate:y.h>0?Math.round(y.a/y.h*100)/100:null,crew_id:r.data.crew_id,day_ref:y.k};
+      const q=ex?await sb.from('event_costs').update(c).eq('id',ex.id):await sb.from('event_costs').insert({...c,wedding_id:wed.id});
+      if(q.error){toast(/column|schema/i.test(q.error.message)?'Crew saved, but not the pay. Run the extra days SQL in Supabase first, then save again.':'Crew saved, but not the pay: '+q.error.message);break}
+    }else if(ex&&!ex.paid)await sb.from('event_costs').delete().eq('id',ex.id);
+  }
   if(invite){const u='https://wa.me/'+waNum(r.data.crew&&r.data.crew.phone)+'?text='+encodeURIComponent(askMsg(r.data));if(win)win.location=u;else toast('Saved. Tap “Send request again” to open WhatsApp.')}
   await loadWedding(wed.id);
 }
