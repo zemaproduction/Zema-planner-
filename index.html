@@ -778,7 +778,9 @@ const lsort=()=>L().sort((a,b)=>(!a.arrive_time-!b.arrive_time)||String(a.arrive
 const mapUrl=a=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a);
 const tel=p=>String(p).replace(/[^\d+]/g,'');
 /* Timeline is always ordered by time; moments without a time go last */
-const tsort=()=>T().sort((a,b)=>(!a.at_time-!b.at_time)||String(a.at_time).localeCompare(String(b.at_time)));
+/* A moment before 05:00 (e.g. 12:45 AM) belongs to the end of the night, after the evening, when the day also has evening moments */
+const tlOrd=(arr,k)=>{const late=arr.some(x=>x[k]>='17:00'),key=x=>!x[k]?'9':(late&&x[k]<'05:00'?'1':'0')+x[k];return arr.sort((a,b)=>key(a).localeCompare(key(b)))};
+const tsort=()=>tlOrd(T(),'at_time');
 const fmtD=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'Date to be confirmed';
 const dm=w=>fmtD(w.wedding_date)+(w.city?' · '+esc(w.city):'');
 const mins=m=>m+' min'+(m==1?'':'s');
@@ -1390,7 +1392,7 @@ async function loadCrewPage(){
 }
 function crewView(){
   if(cw.status==='invited'||cw.status==='declined')return crewInvite();
-  const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=d.timeline||[],pl=d.places||[],pp=d.party||[],mh=d.musts||[];
+  const d=cw,e=d.event||{},tk=Array.isArray(d.tasks)?d.tasks:[],tl=tlOrd((d.timeline||[]).slice(),'at_time'),pl=d.places||[],pp=d.party||[],mh=d.musts||[];
   return`${cpBack(d)}<div class="brand">ZEMA PRODUCTION · CREW</div><h1>${esc(e.couple||'')}</h1><div class="meta">${esc(e.event_type||'Event')} · ${fmtD(e.wedding_date)}${e.city?' · '+esc(e.city):''}</div>
 <section class="card ok" style="margin-top:24px"><div class="lbl">${esc(d.name||'Crew')}${d.role?' · '+esc(d.role):''}</div>${d.call_time?`<div class="num" style="font-size:30px;margin-bottom:6px">${esc(d.call_time)}</div><div class="sub" style="margin:0">Your call time</div>`:''}${d.brief?`<p class="ntx" style="margin-top:14px">${esc(d.brief)}</p>`:''}</section>
 ${travCrewCard(d.travel)}
@@ -2183,7 +2185,7 @@ ${xdItems(d).map(x=>`<div class="fr tl"><div class="tm">${esc(x.t||'—')}</div>
 const xdShort=l=>(Array.isArray(l)?l:[]).map(d=>'+ '+d.kind+(d.day_date?' '+fmtD(d.day_date):'')).join(' · ');
 /* every date of the event under the main heading, in date order */
 const xdHead=()=>{const l=xdSort(XD());return l.length?`<div class="meta" style="margin-top:6px;color:var(--ac)">${l.map(d=>esc(d.kind)+' · '+(d.day_date?fmtD(d.day_date):'date to be confirmed')).join('<br>')}</div>`:''};
-const xdItems=d=>(Array.isArray(d.items)?d.items:[]).map((x,i)=>({...x,i})).sort((a,b)=>(!a.t)-(!b.t)||String(a.t).localeCompare(String(b.t)));
+const xdItems=d=>tlOrd((Array.isArray(d.items)?d.items:[]).map((x,i)=>({...x,i})),'t');
 function xdTl(lk){
   const a=xdSort(XD());if(!a.length)return'';
   return a.map(d=>{const it=xdItems(d);return`<h2>${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</h2>
@@ -2497,7 +2499,7 @@ async function loadDay(){
   if(ch)setApp(dayRO());
 }
 function dayRO(){
-  const w=wed,tl=w.timeline||[],fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
+  const w=wed,tl=tlOrd((w.timeline||[]).slice(),'at_time'),fam=w.groups||[],mh=w.musts||[],pp=w.party||[],pl=w.places||[];
   const tabs=[['timeline','Timeline',tl.length+(Array.isArray(w.days)?w.days.length:0)],['family','Family Photos',fam.length],['musts','Must-Haves',mh.length],['people','People',pp.length],['places','Locations',pl.length],['notes','Notes',w.client_note?1:0]].filter(x=>x[2]),sec=tabs.some(x=>x[0]===ui.dsec)?ui.dsec:(tabs[0]||[])[0];
   const body=sec==='timeline'?tl.map(x=>`<div class="fr tl ${x.done?'d':''}"><div class="tm">${esc(x.at_time||'—')}</div><div><div class="nm">${esc(x.title)}</div>${x.location?`<div class="sub">${esc(x.location)}</div>`:''}${x.note?`<div class="note">${esc(x.note)}</div>`:''}</div></div>`).join('')+xdRO(w.days)
   :sec==='family'?`<div class="big">${fam.filter(g=>g.done).length} / ${fam.length} <small>completed</small></div>${fam.map((g,i)=>`<div class="fr ${g.done?'d':''}"><div class="nm">${i+1}. ${esc(g.name)}${g.done?' ✓':''}</div><div class="sub" style="text-transform:none;letter-spacing:0;font-size:14px">${esc((Array.isArray(g.people)?g.people:[]).join(', '))}</div>${g.notes?`<div class="note">${esc(g.notes)}</div>`:''}</div>`).join('')}`
