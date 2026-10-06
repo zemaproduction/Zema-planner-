@@ -856,6 +856,7 @@ async function loadDash(view){
   {const q=await sb.from('event_travel').select('wedding_id,enabled,seen,data').eq('enabled',true);travAll=q.error?[]:(q.data||[])}
   {const g=await sb.from('app_content').select('data').eq('key','gear').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)gearTpl=g.data.data.text}
   {const q=await sb.from('event_selection').select('*');sels=q.error?[]:(q.data||[]);const g=await sb.from('app_content').select('data').eq('key','sel_guide').maybeSingle();if(g.data&&g.data.data&&g.data.data.text)selGuide=g.data.data.text}
+  {const q=await sb.from('event_days').select('id,wedding_id,kind,day_date,start_time,hours').order('day_date');daysAll=q.error?[]:(q.data||[])}
   {const q=await sb.from('event_costs').select('id,wedding_id,amount,paid,label,category,crew_id,hours,rate').order('created_at');costsAll=q.error?[]:(q.data||[])}
   {let q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries,expires_on');if(q.error)q=await sb.from('event_delivery').select('wedding_id,published,hero,films,galleries');dels=q.error?[]:(q.data||[])}
   {const q=await sb.from('bookings').select('*').eq('status','new').order('created_at',{ascending:false});bks=q.error?[]:(q.data||[]);bkErr=!!q.error}
@@ -891,7 +892,8 @@ async function loadWedding(id){
   const kq=await sb.from('event_costs').select('*').eq('wedding_id',id).order('created_at');
   const mq=await sb.from('event_messages').select('*').eq('wedding_id',id).order('created_at');
   const vq=await sb.from('event_travel').select('*').eq('wedding_id',id).maybeSingle();
-  wed={...w,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  const dyq=await sb.from('event_days').select('*').eq('wedding_id',id).order('day_date');
+  wed={...w,days:dyq.error?[]:(dyq.data||[]),dayErr:!!dyq.error,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -911,9 +913,10 @@ async function loadShared(){
   const ms=await sb.rpc('shared_messages_get',{p_token:TOKEN});
   const tv=await sb.rpc('shared_travel_get',{p_token:TOKEN});
   const li=await sb.rpc('location_ideas_get');
+  const dz=await sb.rpc('shared_days_get',{p_token:TOKEN});
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed={...data,days:dz.error?[]:(dz.data||[]),msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -975,7 +978,7 @@ function evCard(w){
   const dd=daysTo(w.wedding_date),s=stg(w);
   const cd=dd===null?'No date yet':dd>0?dd+' day'+(dd==1?'':'s')+' to go':dd===0?'Today':(-dd)+' day'+(dd==-1?'':'s')+' ago';
   const right=s==='post'?`Photos ${w.photo_progress||0}% · Video ${w.video_progress||0}%`:isWed(w)&&w.photo_groups?w.photo_groups.length+' photo group'+(w.photo_groups.length==1?'':'s'):'';
-  return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${esc(etype(w))} · ${dm(w)}</div>${tagHtml(w)}
+  return`<div class="wc" data-a="openW" data-id="${w.id}"><div class="nm">${esc(w.couple)}</div><div class="sub">${esc(etype(w))} · ${dm(w)}</div>${xdLine(w.id)}${tagHtml(w)}
 <div class="row2" style="margin-top:14px"><span>${cd}</span><span>${right}</span></div>${wPrice(w)==null||hideMoney?'':`<div class="row2" style="margin-top:6px"><span>Paid ${gbp(wPaid(w))} of ${gbp(wPrice(w))}</span><span>${wLeft(w)?gbp(wLeft(w))+' left':'Paid in full'}</span></div>`}
 <div class="acts"><button data-a="openW" data-id="${w.id}">Open</button><button data-a="copyW" data-id="${w.id}">Client link</button>${isWed(w)?`<button data-a="copyFW" data-id="${w.id}">Family &amp; friends link</button>`:''}</div></div>`}
 function dashView(){
@@ -1053,7 +1056,7 @@ function tlMain(){
 <div class="big">${a.length} <small>moment${a.length==1?'':'s'} · ${d} done</small></div>
 <div class="row2"><span>${a.length&&a[0].at_time?'Starts '+esc(a[0].at_time):'Sorted by time'}</span><span>Couple can edit via client link</span></div></section>
 <div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button></div>
-${tlList()}`}
+${tlList()}${xdTl(false)}`}
 /* ---- Must-have moments (photographer and client only, never shown on the family link) ---- */
 function mhRow(x){const lk=locked();return`<div class="g ${x.done&&!TOKEN?'done':''}">
 ${TOKEN?'':`<button class="ck" data-a="togM" data-id="${x.id}" aria-label="Toggle captured">${x.done?'✓':''}</button>`}
@@ -1187,6 +1190,7 @@ ${after?postCard():''}
 <h2>Status and package</h2>
 ${statusCard()}
 ${glance()}
+${xdCard()}
 ${after?'':gaps()}
 <div class="cta"><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button><button class="btn" data-a="copyD">Copy Day Mode link · read-only</button>${isWed(wed)?'<button class="btn" data-a="copyF">Copy family &amp; friends link</button>':''}</div>
 <p class="intro" style="margin:14px 0 0;font-size:13px">The Day Mode link is view-only, with no money, and closes at the end of the day after the event. <button class="lnk" style="font-size:13px" data-a="resetD">Reset the link</button></p>
@@ -2018,7 +2022,7 @@ async function eqSend(){
   eqDone={msg,fail};setApp(eqView());scrollTo(0,0);
 }
 /* ---- Costs and profit per event (photographer only; never sent to any client, crew or hirer link) ---- */
-let costsAll=[];
+let costsAll=[],daysAll=[];
 const CCAT=['Crew','Album','Transport','Accommodation','Equipment hire','Food','Other'];
 const K=()=>wed.costs||[];
 const sg=n=>(n<0?'−':'')+gbp(Math.abs(n));
@@ -2077,7 +2081,95 @@ function dcalc(t){
   const now=Date.now(),s=Date.parse(t.started_at),e=t.ended_at?Date.parse(t.ended_at):now,pz=Number(t.paused_ms||0)+(t.paused_at&&!t.ended_at?Math.max(0,now-Date.parse(t.paused_at)):0),worked=Math.max(0,e-s-pz),bk=t.booked_minutes!=null?Number(t.booked_minutes):null,left=bk!=null?bk*60000-worked:null;
   return{s,worked,left,bk,state:t.ended_at?'done':t.paused_at?'paused':'run',over:left!=null&&left<0};
 }
+/* ---- Extra days of one wedding: church on another date, Mels, Hammawiti. Each has its own date, hours, price and running order.
+   The price is kept as a line on the wedding invoice (billing extras, tagged with the day's id). ---- */
+const XD=()=>wed.days||[],XDK=['Church','Mels','Hammawiti'];
+const xdH=h=>String(Number(h));
+const xdSort=a=>a.slice().sort((x,y)=>String(x.day_date||'9999').localeCompare(String(y.day_date||'9999')));
+const xdLine=id=>{const l=xdSort(daysAll.filter(d=>d.wedding_id===id));return l.length?`<div class="sub">${l.map(d=>'+ '+esc(d.kind)+(d.day_date?' '+fmtD(d.day_date):'')).join(' · ')}</div>`:''};
+const xdLabel=d=>d.kind+(d.day_date?' · '+fmtD(d.day_date):'')+(d.hours?' · '+xdH(d.hours)+' hours':'');
+function xdCard(){
+  if(wed.dayErr)return'<h2>Extra days</h2><p class="empty">Extra days aren’t set up in Supabase yet. Run the extra days SQL once, then refresh this page.</p>';
+  const a=xdSort(XD());
+  return`<h2>Extra days</h2><p class="intro">For a church ceremony, Mels or Hammawiti on a different date. Each one has its own date and hours, goes in your calendar, and is added to this invoice as its own line.</p>
+<div>${a.map(d=>`<div class="g"><div class="bd"><div class="nm">${esc(d.kind)}</div><div class="sub">${d.day_date?fmtD(d.day_date):'No date yet'}${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div>${d.venue||d.address?`<div class="sub" style="text-transform:none;letter-spacing:0">${esc([d.venue,d.address].filter(Boolean).join(', '))}</div>`:''}${d.price!=null&&!hideMoney?`<div class="sub">${gbp(d.price)} on the invoice</div>`:''}${d.note?`<div class="note">${esc(d.note)}</div>`:''}<div class="acts"><button data-a="xdEdit" data-id="${d.id}">Edit</button><button data-a="xdDel" data-id="${d.id}">Delete</button></div></div></div>`).join('')}</div>
+<div class="cta"><button class="btn" data-a="xdAdd">+ Add an extra day</button></div>
+${a.length?'<p class="intro" style="font-size:13px;margin-top:10px">The running order for each extra day is on the Timeline tab, under the main timeline.</p>':''}`}
+function xdForm(id){
+  const x=id?XD().find(d=>d.id===id):null,d=x||{kind:'Church',day_date:'',start_time:'',hours:5,price:'',venue:'',address:'',note:''},oth=!XDK.includes(d.kind),hs=[5,8,10].includes(Number(d.hours));
+  ui.modal={type:'xd',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit extra day':'Add an extra day'}</h3>
+<div class="f"><span class="l">What is it?</span><select id="xdk">${XDK.map(k=>`<option ${d.kind===k?'selected':''}>${k}</option>`).join('')}<option value="" ${oth?'selected':''}>Something else</option></select></div>
+<div class="f"><span class="l">If something else, its name</span><input id="xdkn" maxlength="60" placeholder="e.g. Engagement, Henna night" value="${oth?esc(d.kind):''}"></div>
+<div class="f"><span class="l">Date</span><input id="xdd" type="date" value="${esc(d.day_date||'')}"></div>
+<div class="f"><span class="l">Start time</span><input id="xds" type="time" value="${esc(d.start_time||'')}"></div>
+<div class="f"><span class="l">Package</span><select id="xdh">${[5,8,10].map(h=>`<option value="${h}" ${Number(d.hours)===h?'selected':''}>${h} hours</option>`).join('')}<option value="" ${hs?'':'selected'}>Other</option></select></div>
+<div class="f"><span class="l">If other, how many hours</span><input id="xdho" type="number" inputmode="decimal" min="0" step="0.5" value="${hs||d.hours==null?'':esc(xdH(d.hours))}"></div>
+<div class="f"><span class="l">Price for this day, in £</span><input id="xdp" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.price??'')}"></div>
+<div class="f"><span class="l">Venue name</span><input id="xdv" maxlength="160" value="${esc(d.venue||'')}"></div>
+<div class="f"><span class="l">Address and postcode</span><input id="xda" maxlength="200" value="${esc(d.address||'')}"></div>
+<div class="f"><span class="l">Private note (optional)</span><textarea id="xdn" rows="2" maxlength="500">${esc(d.note||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="xdSave">Save</button></div></div></div>`;
+}
+/* keep the invoice line for a day in step with the day itself */
+async function xdBill(d,gone){
+  const old=Array.isArray(wed.bill.extras)?wed.bill.extras:[],had=old.some(x=>x.day===d.id),ex=old.filter(x=>x.day!==d.id);
+  if(!gone&&Number(d.price)>0)ex.push({label:xdLabel(d),amount:Number(d.price),day:d.id});
+  if(had||ex.length!==old.length)await setB({extras:ex});
+}
+function xdSave(){
+  const v=i=>$('#'+i).value.trim(),id=ui.modal.id,kind=v('xdk')||v('xdkn');
+  if(!kind){$('#xdkn').classList.add('err');$('#xdkn').focus();return}
+  const h=parseFloat(v('xdh')||v('xdho')),pr=parseFloat(v('xdp'));
+  const o={kind,day_date:v('xdd')||null,start_time:v('xds').slice(0,5),hours:h>0?h:null,price:pr>=0?Math.round(pr*100)/100:null,venue:v('xdv'),address:v('xda'),note:v('xdn')};
+  const go=async()=>{
+    const q=id?await sb.from('event_days').update(o).eq('id',id).select().single():await sb.from('event_days').insert({...o,wedding_id:wed.id}).select().single();
+    if(q.error)return toast(/relation|schema|find the table/i.test(q.error.message)?'Run the extra days SQL in Supabase first, then refresh.':'Could not save: '+q.error.message);
+    wed.days=[...XD().filter(d=>d.id!==q.data.id),q.data];daysAll=[...daysAll.filter(d=>d.id!==q.data.id),q.data];
+    closeM();await xdBill(q.data);render();
+    if(q.data.price!=null&&wed.bill.price==null)toast('Saved. Set the main price on the Payments tab to see the full total.');else toast('Saved');
+  };
+  const prev=id&&XD().find(d=>d.id===id);
+  if(o.day_date&&(!prev||prev.day_date!==o.day_date))guard(o.day_date,id||'-',go);else go();
+}
+/* running order of one extra day: shown on the Timeline tab for you and for the client */
+const xdItems=d=>(Array.isArray(d.items)?d.items:[]).map((x,i)=>({...x,i})).sort((a,b)=>(!a.t)-(!b.t)||String(a.t).localeCompare(String(b.t)));
+function xdTl(lk){
+  const a=xdSort(XD());if(!a.length)return'';
+  return a.map(d=>{const it=xdItems(d);return`<h2>${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</h2>
+<div class="meta" style="margin-bottom:14px">${[d.start_time&&'Starts '+esc(d.start_time),d.hours&&xdH(d.hours)+' hours',esc([d.venue,d.address].filter(Boolean).join(', '))].filter(Boolean).join(' · ')||'A separate day from the main event'}</div>
+${d.address?`<p style="margin:0 0 14px"><a class="lnk" href="${esc(mapUrl(d.address))}" target="_blank" rel="noopener">Open in Maps</a></p>`:''}
+<div>${it.length?it.map(x=>`<div class="g"><div class="tm">${esc(x.t||'—')}</div><div class="bd"><div class="nm">${esc(x.title)}</div>${x.loc?`<div class="sub">${esc(x.loc)}</div>`:''}${x.note?`<div class="note"><b>Note:</b> ${esc(x.note)}</div>`:''}${lk?'':`<div class="acts"><button data-a="xdIEdit" data-id="${d.id}" data-i="${x.i}">Edit</button><button data-a="xdIDel" data-id="${d.id}" data-i="${x.i}">Delete</button></div>`}</div></div>`).join(''):'<p class="empty">No moments yet for this day.</p>'}</div>
+${lk?'':`<div class="cta"><button class="btn" data-a="xdIAdd" data-id="${d.id}">+ Add moment to ${esc(d.kind)}</button></div>`}`}).join('')}
+function xdIForm(did,i){
+  const d=XD().find(x=>x.id===did);if(!d)return;
+  const x=i!=null&&Array.isArray(d.items)&&d.items[i]||{t:'',title:'',loc:'',note:''};
+  ui.modal={type:'xdi',id:did,i};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${i!=null?'Edit moment':'Add moment'} · ${esc(d.kind)}</h3>
+<div class="f"><span class="l">Time</span><input id="xit" type="time" value="${esc(x.t||'')}"></div>
+<div class="f"><span class="l">Moment</span><input id="xin" maxlength="200" placeholder="e.g. Ceremony begins" value="${esc(x.title||'')}"></div>
+<div class="f"><span class="l">Location (optional)</span><input id="xil" maxlength="200" value="${esc(x.loc||'')}"></div>
+<div class="f"><span class="l">Note (optional)</span><textarea id="xio" rows="2" maxlength="500">${esc(x.note||'')}</textarea></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="xdISave">Save moment</button></div></div></div>`;
+}
+async function xdPut(d,items){
+  const prev=d.items;d.items=items;render();
+  const{error}=TOKEN?await sb.rpc('shared_day_save',{p_token:TOKEN,p_id:d.id,p_items:items}):await sb.from('event_days').update({items}).eq('id',d.id);
+  if(error){d.items=prev;render();toast(error.message||'Could not save.')}
+}
+function xdISave(){
+  const d=XD().find(x=>x.id===ui.modal.id),i=ui.modal.i,title=$('#xin').value.trim();
+  if(!d)return closeM();
+  if(!title){$('#xin').classList.add('err');$('#xin').focus();return}
+  const o={t:($('#xit').value||'').slice(0,5),title,loc:$('#xil').value.trim(),note:$('#xio').value.trim()},l=(Array.isArray(d.items)?d.items:[]).slice();
+  if(i!=null)l[i]=o;else l.push(o);
+  closeM();xdPut(d,l);
+}
 function todayBlock(){
+  const a=todayBlock0(),x=daysAll.filter(d=>d.day_date===today()&&weds.some(w=>w.id===d.wedding_id));
+  if(!x.length)return a;
+  return(a||'<h2>Today</h2>')+x.map(d=>{const w=weds.find(v=>v.id===d.wedding_id);return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(w.couple)} · ${esc(d.kind)}</div><div class="sub">Extra day${d.start_time?' · starts '+esc(d.start_time):''}${d.hours?' · '+xdH(d.hours)+' hours':''}</div><div class="acts"><button data-a="openW" data-id="${w.id}">Open</button></div></div>`}).join('')}
+function todayBlock0(){
   const td=weds.filter(w=>w.wedding_date===today());if(!td.length)return'';
   return`<h2>Today</h2>${td.map(w=>{const c=dcalc(dtimers.find(x=>x.wedding_id===w.id));
     return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(w.couple)}</div><div class="sub">${esc(etype(w))} · ${STG[stg(w)]}${w.city?' · '+esc(w.city):''}</div>
@@ -2091,7 +2183,7 @@ function payDues(){
   return out.sort((a,b)=>a.r.due.localeCompare(b.r.due));
 }
 /* ---- Double-booking check: what else is on that day, leaving out the request being accepted ---- */
-const clash=(d,skip)=>!d?[]:[...weds.filter(w=>w.wedding_date===d).map(w=>w.couple+' ('+STG[stg(w)]+')'),...bks.filter(b=>b.event_date===d&&b.id!==skip).map(b=>b.name+' (new booking request)'),...fjobs.filter(j=>j.status==='new'&&j.job_date===d&&j.id!==skip).map(j=>j.title+' (freelance request)')];
+const clash=(d,skip)=>!d?[]:[...weds.filter(w=>w.wedding_date===d).map(w=>w.couple+' ('+STG[stg(w)]+')'),...daysAll.filter(x=>x.day_date===d&&x.id!==skip).map(x=>((weds.find(w=>w.id===x.wedding_id)||{}).couple||'Event')+' ('+x.kind+')'),...bks.filter(b=>b.event_date===d&&b.id!==skip).map(b=>b.name+' (new booking request)'),...fjobs.filter(j=>j.status==='new'&&j.job_date===d&&j.id!==skip).map(j=>j.title+' (freelance request)')];
 const guard=(d,skip,go,plain)=>{const c=clash(d,skip);if(c.length)ask('You already have something on '+fmtD(d)+': '+c.join(', ')+'. Accept this as well?',go);else if(plain)ask(plain,go);else go()};
 /* ---- Booking agreement: the client confirms package, price, plan and terms by typing their name ---- */
 function agrDoc(s){
@@ -2559,7 +2651,7 @@ function clTl(lk){
   const a=T();
   return`<section class="card"><div class="lbl">Timeline</div><div class="big">${a.length} <small>moment${a.length==1?'':'s'}</small></div></section>
 ${lk?'':`<div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn pri" data-a="approve">Confirm my plan</button></div>`}
-${tlList()}`}
+${tlList()}${xdTl(lk)}`}
 function clMh(lk){
   const a=M();
   return`<section class="card"><div class="lbl">Must-have moments</div><div class="big">${a.length} <small>moment${a.length==1?'':'s'}</small></div></section>
@@ -3113,6 +3205,14 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
+  else if(a==='xdAdd'&&!TOKEN)xdForm();
+  else if(a==='xdEdit'&&!TOKEN)xdForm(id);
+  else if(a==='xdSave'&&!TOKEN)xdSave();
+  else if(a==='xdDel'&&!TOKEN){const d=XD().find(x=>x.id===id);if(d)ask(`Delete ${d.kind}? Its line is also taken off the invoice.`,async()=>{const{error}=await sb.from('event_days').delete().eq('id',id);if(error)return toast('Could not delete: '+error.message);wed.days=XD().filter(x=>x.id!==id);daysAll=daysAll.filter(x=>x.id!==id);await xdBill(d,true);render()})}
+  else if(a==='xdIAdd'&&!locked())xdIForm(id);
+  else if(a==='xdIEdit'&&!locked())xdIForm(id,+t.dataset.i);
+  else if(a==='xdISave'&&!locked())xdISave();
+  else if(a==='xdIDel'&&!locked()){const d=XD().find(x=>x.id===id),i=+t.dataset.i;if(d&&Array.isArray(d.items)&&d.items[i])ask(`Delete “${d.items[i].title}”?`,()=>xdPut(d,d.items.filter((_,k)=>k!==i)))}
   else if(a==='newFree'&&!TOKEN)openWForm(null,false,FREE);
   else if(a==='hjSend'&&HTOKEN)hjSend();
   else if(a==='tmBill'&&!TOKEN){const c=tmCalc(),r=Number(wed.bill.hourly_rate);if(!c||!(r>0))return toast('Set an hourly rate on the Payments tab first.');const h=Math.max(.25,Math.round(c.worked/900000)/4);if(await setB({hours:h,price:Math.round(h*r*100)/100}))toast(h+' hours at '+gbp(r)+' added to the invoice')}
