@@ -1055,7 +1055,7 @@ function tlMain(){
 <section class="card"><div class="lbl">Running order</div>
 <div class="big">${a.length} <small>moment${a.length==1?'':'s'} · ${d} done</small></div>
 <div class="row2"><span>${a.length&&a[0].at_time?'Starts '+esc(a[0].at_time):'Sorted by time'}</span><span>Couple can edit via client link</span></div></section>
-<div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button></div>
+<div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn" data-a="impV">Import from PDF or text</button><button class="btn pri" data-a="day">${dayLbl()}</button><button class="btn" data-a="copy">Copy client link</button></div>
 ${tlList()}${xdTl(false)}`}
 /* ---- Must-have moments (photographer and client only, never shown on the family link) ---- */
 function mhRow(x){const lk=locked();return`<div class="g ${x.done&&!TOKEN?'done':''}">
@@ -2200,6 +2200,116 @@ function xdISave(){
   if(i!=null)l[i]=o;else l.push(o);
   closeM();xdPut(d,l);
 }
+/* ---- Import a plan from a PDF or pasted text. Nothing is sent anywhere: the file is read on this device.
+   It finds lines with a time (moments) and lines with a UK postcode (locations), then you review before anything is added. ---- */
+const PDFJS=['https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'];
+const IMP_PC=/\b([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})\b/i;
+/* first clock time in a string: needs minutes or am/pm, so "5 guests" is not a time */
+function impTime(str){
+  const re=/(\d{1,2})(?:\s?[:.]\s?(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/gi;let m;
+  while((m=re.exec(str))){
+    if(!m[0].trim()){re.lastIndex++;continue}
+    const raw=m[0],len=raw.replace(/\s+$/,'').length,pre=str[m.index-1]||'',post=str[m.index+len]||'',ap=(m[3]||'').replace(/\./g,'').toLowerCase();
+    m[0]=raw.slice(0,len);
+    if((m[2]==null&&!ap)||/[\d£$€:.\/-]/.test(pre)||/[\d:\/A-Za-z]/.test(post)||(post==='.'&&/\d/.test(str[m.index+len+1]||''))||(!ap&&/\./.test(m[0])&&m.index>3))continue;
+    let h=+m[1];const mi=m[2]==null?0:+m[2];
+    if(mi>59||h>23||(ap&&(h<1||h>12)))continue;
+    if(ap==='pm'&&h<12)h+=12;if(ap==='am'&&h===12)h=0;
+    return{t:String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0'),i:m.index,n:m[0].length};
+  }
+  return null;
+}
+function planParse(text){
+  const lines=String(text||'').replace(/\r/g,'').split('\n').map(x=>x.replace(/[\u2022\u25CF\u25AA\u2023\u00B7*]+/g,' ').replace(/\s+/g,' ').trim()),ms=[],ls=[],used=new Set();
+  const trimSep=x=>x.replace(/^[\s\-–—:|,.>)]+/,'').replace(/[\s\-–—:|,(]+$/,'').trim();
+  const plain=i=>{const x=lines[i];return x&&x.length<=60&&!impTime(x)&&!IMP_PC.test(x)&&!used.has(i)?x:''};
+  lines.forEach((ln,i)=>{
+    if(!ln||used.has(i))return;
+    const tm=impTime(ln);let title='',loc='';
+    if(tm){
+      let before=trimSep(ln.slice(0,tm.i)),after=ln.slice(tm.i+tm.n);
+      /* "14:00 - 15:00 Ceremony": drop the end time of a range */
+      const rg=after.match(/^\s*(?:-|–|—|to|until|till)\s*/i);if(rg){const t2=impTime(after.slice(rg[0].length));if(t2&&t2.i===0)after=after.slice(rg[0].length+t2.n)}
+      after=trimSep(after);
+      if(before.length<3&&after)title=after;
+      else if(!after&&before.length>=3)title=before.replace(/\s+(at|from|@)$/i,'');
+      else if(before.length>=3&&after){title=before.replace(/\s+(at|from|@)$/i,'');loc=after.replace(/^(at|@|in)\s+/i,'')}
+      else if(!after&&before.length<3){const nx=plain(i+1);if(nx){title=nx;used.add(i+1)}}
+      if(title&&!loc){const sp=title.split(/\s+(?:at|@)\s+/i);if(sp.length===2&&sp[0].length>=3){title=sp[0];loc=sp[1]}}
+      if(title&&ms.length<80)ms.push({t:tm.t,title:title.slice(0,200),loc:trimSep(loc).slice(0,200)});
+    }
+    const pc=ln.match(IMP_PC);
+    if(pc&&ls.length<20){
+      const code=(pc[1]+' '+pc[2]).toUpperCase();let body=tm&&tm.i<12?trimSep(ln.slice(tm.i+tm.n)):ln,name='',addr='';
+      const lab=body.match(/^([A-Za-z][A-Za-z '’&\/]{1,40})\s*:\s*(.+)$/);
+      if(lab){addr=lab[2];name=/^(address|location|postcode|post code|where|venue address|full address)$/i.test(lab[1].trim())?'':lab[1].trim()}else addr=body;
+      if(addr.replace(IMP_PC,'').replace(/[\s,]/g,'').length<3){const pv=plain(i-1);if(pv){addr=pv+', '+code;used.add(i-1);if(!name)name=plain(i-2);if(name)used.add(i-2)}}
+      if(!name){const parts=addr.split(',').map(x=>x.trim()).filter(Boolean);if(parts.length>=3&&!/\d/.test(parts[0]))name=parts[0];else{const pv=plain(i-1);if(pv&&!/^\d/.test(pv)){name=pv.replace(/\s*:$/,'');used.add(i-1)}}}
+      addr=trimSep(addr.replace(IMP_PC,code));
+      if(!ls.some(x=>x.address===addr))ls.push({name:(name||'Location').slice(0,120),address:addr.slice(0,200),t:tm?tm.t:''});
+    }
+  });
+  /* a moment whose title is only the address of a location line is noise */
+  return{m:ms.filter(x=>!IMP_PC.test(x.title)||x.title.length<60),l:ls};
+}
+async function pdfText(file){
+  if(!window.pdfjsLib){for(const u of PDFJS){if(await loadScript(u)&&window.pdfjsLib)break}}
+  const lib=window.pdfjsLib;if(!lib)throw new Error('lib');
+  if(!lib.GlobalWorkerOptions.workerSrc)lib.GlobalWorkerOptions.workerSrc=PDFJS[0].replace('pdf.min.js','pdf.worker.min.js');
+  const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,out=[];
+  for(let p=1;p<=Math.min(doc.numPages,30);p++){
+    const pg=await doc.getPage(p),tc=await pg.getTextContent(),rows=[];
+    tc.items.forEach(it=>{if(!it.str||!it.str.trim())return;const x=it.transform[4],y=it.transform[5];let r=rows.find(q=>Math.abs(q.y-y)<3);if(!r){r={y,it:[]};rows.push(r)}r.it.push({x,w:it.width||0,s:it.str})});
+    rows.sort((a,b)=>b.y-a.y).forEach(r=>{r.it.sort((a,b)=>a.x-b.x);let ln='',end=null;r.it.forEach(k=>{ln+=(end!=null&&k.x-end>1.5&&!/\s$/.test(ln)&&!/^\s/.test(k.s)?' ':'')+k.s;end=k.x+k.w});out.push(ln)});
+    out.push('');
+  }
+  return out.join('\n');
+}
+function openImp(){
+  ui.modal={type:'imp'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Import a plan</h3>
+<p class="intro">Choose the PDF the client sent, or paste their plan as text. The planner picks out the moments with times and the addresses with postcodes. You check everything before it is added.</p>
+<div class="f"><span class="l">PDF file</span><input id="ipf" type="file" accept="application/pdf,.pdf"></div>
+<div class="f"><span class="l">Or paste the plan here</span><textarea id="ipt" rows="6" placeholder="14:00 Ceremony at St Mary’s Church&#10;15:30 Drinks reception&#10;Venue: The Old Hall, 1 High Street, London SW1A 1AA"></textarea></div>
+${XD().length?`<div class="f"><span class="l">Add the moments to</span><select id="ipd"><option value="">Main day timeline</option>${xdSort(XD()).map(d=>`<option value="${d.id}">${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</option>`).join('')}</select></div>`:''}
+<div class="bad" id="iperr"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="impRead">Read it</button></div></div></div>`;
+}
+async function impRead(){
+  const f=$('#ipf').files[0],err=m=>{$('#iperr').textContent=m},day=$('#ipd')?$('#ipd').value:'';let text=$('#ipt').value;
+  if(!f&&!text.trim())return err('Choose a PDF or paste some text first.');
+  if(f){
+    err('Reading the PDF…');
+    try{text=await pdfText(f)}catch(e){return err(e&&e.message==='lib'?'The PDF reader could not load. Check your internet connection, or paste the text instead.':'This file could not be read as a PDF. Paste the text instead.')}
+    if(text.replace(/\s/g,'').length<20)return err('This PDF is a scan or a photo, so there is no text in it to read. Open it, copy the text if you can, and paste it above.');
+  }
+  const r=planParse(text);
+  if(!r.m.length&&!r.l.length)return err('No times or postcodes were found. The planner looks for lines like “14:00 Ceremony” and addresses with a postcode.');
+  impReview(r,day);
+}
+function impReview(r,day){
+  const d=day&&XD().find(x=>x.id===day),have=d?xdItems(d).map(x=>(x.t||'')+'|'+String(x.title).toLowerCase()):T().map(x=>(x.at_time||'')+'|'+String(x.title).toLowerCase()),haveL=L().map(x=>String(x.address).toLowerCase());
+  ui.modal={type:'impr',day};
+  const box='width:24px;height:24px;flex:none;margin-top:12px';
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Check what was found</h3>
+<p class="intro">Untick anything that is wrong, and fix any wording. Items already in this event start unticked.</p>
+${r.m.length?`<div class="lbl" style="margin-top:8px">Moments · ${r.m.length}${d?' · for '+esc(d.kind):''}</div>${r.m.map(x=>{const dup=have.includes(x.t+'|'+x.title.toLowerCase());return`<div class="imr" data-k="m" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><input type="checkbox" class="imc" style="${box}" ${dup?'':'checked'}><div style="flex:1;min-width:0"><div style="display:flex;gap:8px"><input class="imt" type="time" value="${esc(x.t)}" style="flex:none;width:118px"><input class="imn" maxlength="200" value="${esc(x.title)}" style="flex:1;min-width:0;width:auto"></div><input class="iml" maxlength="200" placeholder="Location (optional)" value="${esc(x.loc)}" style="margin-top:6px"></div></div>`}).join('')}`:'<p class="empty">No moments with times were found.</p>'}
+${r.l.length?`<div class="lbl" style="margin-top:22px">Locations · ${r.l.length}</div>${r.l.map(x=>{const dup=haveL.includes(x.address.toLowerCase());return`<div class="imr" data-k="l" data-t="${esc(x.t)}" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px"><input type="checkbox" class="imc" style="${box}" ${dup?'':'checked'}><div style="flex:1;min-width:0"><input class="imn" maxlength="120" value="${esc(x.name)}"><input class="iml" maxlength="200" value="${esc(x.address)}" style="margin-top:6px"></div></div>`}).join('')}`:'<p class="empty" style="margin-top:16px">No addresses with a postcode were found.</p>'}
+<div class="bad" id="iperr"></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="impSave">Add the ticked ones</button></div></div></div>`;
+}
+async function impSave(){
+  const rows=[...document.querySelectorAll('.imr')].filter(r=>r.querySelector('.imc').checked),v=(r,c)=>(r.querySelector(c)||{value:''}).value.trim(),day=ui.modal.day,d=day&&XD().find(x=>x.id===day);
+  const ms=rows.filter(r=>r.dataset.k==='m'&&v(r,'.imn')).map(r=>({t:v(r,'.imt').slice(0,5),title:v(r,'.imn'),loc:v(r,'.iml')})),ls=rows.filter(r=>r.dataset.k==='l'&&v(r,'.imn')).map(r=>({name:v(r,'.imn'),address:v(r,'.iml'),arrive_time:/^[0-2]\d:[0-5]\d$/.test(r.dataset.t)?r.dataset.t:''}));
+  if(!ms.length&&!ls.length)return closeM();
+  $('#iperr').textContent='Adding…';
+  if(ms.length){
+    if(d){const{error}=await sb.from('event_days').update({items:[...(Array.isArray(d.items)?d.items:[]),...ms.map(x=>({...x,note:''}))]}).eq('id',d.id).select().single().then(q=>{if(!q.error)d.items=q.data.items;return q});if(error)return $('#iperr').textContent='Could not save: '+error.message}
+    else{const{data,error}=await sb.from('timeline_items').insert(ms.map(x=>({wedding_id:wed.id,at_time:x.t,title:x.title,location:x.loc,note:''}))).select();if(error)return $('#iperr').textContent='Could not save: '+error.message;T().push(...(data||[]));tsort()}
+  }
+  if(ls.length){const{data,error}=await sb.from('wedding_locations').insert(ls.map(x=>({wedding_id:wed.id,...x}))).select();if(error){closeM();render();return toast('Moments added, but not the locations: '+error.message)}L().push(...(data||[]));lsort()}
+  closeM();render();toast('Added '+ms.length+' moment'+(ms.length===1?'':'s')+' and '+ls.length+' location'+(ls.length===1?'':'s'));
+}
 function todayBlock(){
   const a=todayBlock0(),x=daysAll.filter(d=>d.day_date===today()&&weds.some(w=>w.id===d.wedding_id));
   if(!x.length)return a;
@@ -3240,6 +3350,9 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
+  else if(a==='impV'&&!TOKEN)openImp();
+  else if(a==='impRead'&&!TOKEN)impRead();
+  else if(a==='impSave'&&!TOKEN)impSave();
   else if(a==='xdTm'&&!TOKEN){ui.tmDay=id&&ui.tmDay!==id?id:null;render()}
   else if(a==='xdAdd'&&!TOKEN)xdForm();
   else if(a==='xdPre'&&!TOKEN)xdForm(null,true);
