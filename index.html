@@ -1707,7 +1707,34 @@ ${past.length?`<h2>Past jobs</h2>${past.map(evCard).join('')}`:''}
 <h2>Who you work for</h2>
 <p class="intro">Each person gets their own booking link. They fill in the event, date, start time and address, and it arrives here as a new request.</p>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addFc">+ Add a person</button></div>
-<div>${fcl.length?fcl.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div><div class="sub">${c.hourly_rate!=null?gbp(c.hourly_rate)+' per hour':'No hourly rate set'}${c.phone?' · '+esc(c.phone):''}</div>${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="copyFc" data-id="${c.id}">Copy booking link</button><button data-a="waFc" data-id="${c.id}">Send link on WhatsApp</button><button data-a="editFc" data-id="${c.id}">Edit</button><button data-a="delFc" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No one added yet.</p>'}</div>`}
+<div>${fcl.length?fcl.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div><div class="sub">${c.hourly_rate!=null?gbp(c.hourly_rate)+' per hour':'No hourly rate set'}${c.phone?' · '+esc(c.phone):''}</div>${c.note?`<div class="note">${esc(c.note)}</div>`:''}<div class="acts"><button data-a="copyFc" data-id="${c.id}">Copy booking link</button><button data-a="waFc" data-id="${c.id}">Send link on WhatsApp</button><button data-a="editFc" data-id="${c.id}">Edit</button><button data-a="delFc" data-id="${c.id}">Delete</button></div>${fjList(c.id)}</div></div>`).join(''):'<p class="empty">No one added yet.</p>'}</div>`}
+/* Bookings each person sent through their link (the list they see as "Your bookings"): edit or remove */
+function fjList(cid){
+  const l=fjobs.filter(j=>j.client_id===cid&&j.status!=='new').sort((a,b)=>String(b.job_date||'').localeCompare(String(a.job_date||'')));
+  if(!l.length)return'';
+  return`<div class="sub" style="margin-top:16px">Bookings on their link · ${l.length}</div>${l.map(j=>{const w=j.wedding_id&&weds.find(x=>x.id===j.wedding_id);return`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><div style="font-size:16px">${esc(j.title)}</div><div class="sub">${j.job_date?fmtD(j.job_date):'No date'}${j.start_time?' · '+esc(j.start_time):''}${w?'':' · no event in the planner'}</div><div class="acts">${w?`<button data-a="fjOpen" data-id="${j.id}">Open event</button>`:''}<button data-a="fjEdit" data-id="${j.id}">Edit</button><button data-a="fjRemove" data-id="${j.id}">Remove</button></div></div>`}).join('')}`}
+function openFjForm(id){
+  const j=fjobs.find(x=>x.id===id);if(!j)return;
+  ui.modal={type:'fj',id};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Edit booking</h3>
+<div class="f"><span class="l">What is the event?</span><input id="fjt" maxlength="160" value="${esc(j.title||'')}"></div>
+<div class="f"><span class="l">Date</span><input id="fjd" type="date" value="${esc(j.job_date||'')}"></div>
+<div class="f"><span class="l">Start time</span><input id="fjs" type="time" value="${esc(j.start_time||'')}"></div>
+<div class="f"><span class="l">Venue name</span><input id="fjv" maxlength="160" value="${esc(j.venue||'')}"></div>
+<div class="f"><span class="l">Address</span><input id="fja" maxlength="200" value="${esc(j.address||'')}"></div>
+<div class="f"><span class="l">Postcode</span><input id="fjp" maxlength="12" value="${esc(j.postcode||'')}"></div>
+<p class="sub" style="text-transform:none;letter-spacing:0">This changes what they see on their booking link. To change the job itself, open the event.</p>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveFj">Save</button></div></div></div>`;
+}
+async function saveFj(){
+  const j=fjobs.find(x=>x.id===ui.modal.id),v=id=>$('#'+id).value.trim(),title=v('fjt');
+  if(!j)return closeM();
+  if(!title){$('#fjt').classList.add('err');$('#fjt').focus();return}
+  const o={title,job_date:v('fjd')||null,start_time:v('fjs').slice(0,5),venue:v('fjv'),address:v('fja'),postcode:v('fjp').toUpperCase()};
+  const{error}=await sb.from('freelance_jobs').update(o).eq('id',j.id);
+  if(error)return toast('Could not save: '+error.message);
+  Object.assign(j,o);closeM();render();toast('Saved');
+}
 function openFcForm(id){
   const c=id?fcl.find(x=>x.id===id):null,d=c||{name:'',phone:'',hourly_rate:'',note:''};
   ui.modal={type:'fc',id};
@@ -3082,6 +3109,10 @@ document.addEventListener('click',async e=>{
   else if(a==='waFc'&&!TOKEN){const c=fcl.find(x=>x.id===id);window.open('https://wa.me/'+waNum(c.phone)+'?text='+encodeURIComponent(`Hi ${c.name}, here is your booking link for Zema Production. Add each job there with the date, start time and address:\n${hLink(c)}`),'_blank')}
   else if(a==='fjAccept'&&!TOKEN){const j=fjobs.find(x=>x.id===id);if(j)guard(j.job_date,id,()=>acceptFj(id))}
   else if(a==='fjDecline'&&!TOKEN)ask('Decline this request?',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render()});
+  else if(a==='fjOpen'&&!TOKEN){const j=fjobs.find(x=>x.id===id);if(j&&j.wedding_id)openWedding(j.wedding_id)}
+  else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
+  else if(a==='saveFj'&&!TOKEN)saveFj();
+  else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
   else if(a==='newFree'&&!TOKEN)openWForm(null,false,FREE);
   else if(a==='hjSend'&&HTOKEN)hjSend();
   else if(a==='tmBill'&&!TOKEN){const c=tmCalc(),r=Number(wed.bill.hourly_rate);if(!c||!(r>0))return toast('Set an hourly rate on the Payments tab first.');const h=Math.max(.25,Math.round(c.worked/900000)/4);if(await setB({hours:h,price:Math.round(h*r*100)/100}))toast(h+' hours at '+gbp(r)+' added to the invoice')}
