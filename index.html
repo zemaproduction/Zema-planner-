@@ -2268,7 +2268,7 @@ async function pdfText(file){
 function openImp(){
   ui.modal={type:'imp'};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Import a plan</h3>
-<p class="intro">Choose the PDF the client sent, or paste their plan as text. The planner picks out the moments with times and the addresses with postcodes. You check everything before it is added.</p>
+<p class="intro">${TOKEN?'Choose your plan as a PDF, or paste it as text.':'Choose the PDF the client sent, or paste their plan as text.'} The planner picks out the moments with times and the addresses with postcodes. You check everything before it is added.</p>
 <div class="f"><span class="l">PDF file</span><input id="ipf" type="file" accept="application/pdf,.pdf"></div>
 <div class="f"><span class="l">Or paste the plan here</span><textarea id="ipt" rows="6" placeholder="14:00 Ceremony at St Mary’s Church&#10;15:30 Drinks reception&#10;Venue: The Old Hall, 1 High Street, London SW1A 1AA"></textarea></div>
 ${XD().length?`<div class="f"><span class="l">Add the moments to</span><select id="ipd"><option value="">Main day timeline</option>${xdSort(XD()).map(d=>`<option value="${d.id}">${esc(d.kind)}${d.day_date?' · '+fmtD(d.day_date):''}</option>`).join('')}</select></div>`:''}
@@ -2303,6 +2303,14 @@ async function impSave(){
   const ms=rows.filter(r=>r.dataset.k==='m'&&v(r,'.imn')).map(r=>({t:v(r,'.imt').slice(0,5),title:v(r,'.imn'),loc:v(r,'.iml')})),ls=rows.filter(r=>r.dataset.k==='l'&&v(r,'.imn')).map(r=>({name:v(r,'.imn'),address:v(r,'.iml'),arrive_time:/^[0-2]\d:[0-5]\d$/.test(r.dataset.t)?r.dataset.t:''}));
   if(!ms.length&&!ls.length)return closeM();
   $('#iperr').textContent='Adding…';
+  if(TOKEN){
+    /* client link: the same saves the client's own Add buttons use */
+    let nm=0,nl=0,bad='';
+    if(ms.length&&d){const q=await sb.rpc('shared_day_save',{p_token:TOKEN,p_id:d.id,p_items:[...(Array.isArray(d.items)?d.items:[]),...ms.map(x=>({...x,note:''}))]});if(q.error)bad=q.error.message;else nm=ms.length}
+    else for(const x of ms){const q=await sb.rpc('shared_timeline_save',{p_token:TOKEN,p_id:null,p_time:x.t,p_title:x.title,p_location:x.loc,p_note:''});if(q.error){bad=q.error.message;break}nm++}
+    if(!bad)for(const x of ls){const q=await sb.rpc('shared_places_save',{p_token:TOKEN,p_id:null,p_name:x.name,p_address:x.address,p_time:x.arrive_time,p_note:''});if(q.error){bad=q.error.message;break}nl++}
+    closeM();await reload();toast(bad?'Some items were not added: '+bad:'Added '+nm+' moment'+(nm===1?'':'s')+' and '+nl+' location'+(nl===1?'':'s'));return;
+  }
   if(ms.length){
     if(d){const{error}=await sb.from('event_days').update({items:[...(Array.isArray(d.items)?d.items:[]),...ms.map(x=>({...x,note:''}))]}).eq('id',d.id).select().single().then(q=>{if(!q.error)d.items=q.data.items;return q});if(error)return $('#iperr').textContent='Could not save: '+error.message}
     else{const{data,error}=await sb.from('timeline_items').insert(ms.map(x=>({wedding_id:wed.id,at_time:x.t,title:x.title,location:x.loc,note:''}))).select();if(error)return $('#iperr').textContent='Could not save: '+error.message;T().push(...(data||[]));tsort()}
@@ -2795,7 +2803,7 @@ ${lk||!a.length?'':`<div class="cta"><button class="btn pri" data-a="approve">Co
 function clTl(lk){
   const a=T();
   return`<section class="card"><div class="lbl">Timeline</div><div class="big">${a.length} <small>moment${a.length==1?'':'s'}</small></div></section>
-${lk?'':`<div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn pri" data-a="approve">Confirm my plan</button></div>`}
+${lk?'':`<div class="cta"><button class="btn fill" data-a="addT">+ Add Moment</button><button class="btn" data-a="impV">Upload your plan · PDF or text</button><button class="btn pri" data-a="approve">Confirm my plan</button></div>`}
 ${tlList()}${xdTl(lk)}`}
 function clMh(lk){
   const a=M();
@@ -3350,9 +3358,9 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
-  else if(a==='impV'&&!TOKEN)openImp();
-  else if(a==='impRead'&&!TOKEN)impRead();
-  else if(a==='impSave'&&!TOKEN)impSave();
+  else if(a==='impV'&&!FTOKEN&&!locked())openImp();
+  else if(a==='impRead'&&!FTOKEN&&!locked())impRead();
+  else if(a==='impSave'&&!FTOKEN&&!locked())impSave();
   else if(a==='xdTm'&&!TOKEN){ui.tmDay=id&&ui.tmDay!==id?id:null;render()}
   else if(a==='xdAdd'&&!TOKEN)xdForm();
   else if(a==='xdPre'&&!TOKEN)xdForm(null,true);
