@@ -2917,12 +2917,29 @@ async function doApprove(){
 }
 
 /* ---- Wedding form (new / edit) ---- */
+/* Package picker on the event form: wedding packages, small event packages, hourly rate, custom, or none */
+const HRNAME='Hourly rate';
+const hrRate=()=>{const P=pk||PKDEF,m=P.hr&&String(P.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/);return m?Number(m[0]):0};
+function wpkField(cur,isNew){
+  const P=pk||PKDEF,names=[...P.wed,...P.ev].map(x=>x.n),sel=!cur?'':names.includes(cur)?cur:cur===HRNAME?'__hr':'__cu',opt=x=>`<option value="${esc(x.n)}" ${sel===x.n?'selected':''}>${esc(x.n)}${x.p?' · '+esc(x.p):''}</option>`;
+  return`<div class="f"><span class="l">Package</span><select id="wpk"><option value="">None</option><optgroup label="Wedding packages">${P.wed.filter(x=>x.n).map(opt).join('')}</optgroup><optgroup label="Small event packages">${P.ev.filter(x=>x.n).map(opt).join('')}</optgroup><option value="__hr" ${sel==='__hr'?'selected':''}>Hourly rate${P.hr&&P.hr.p?' · '+esc(P.hr.p):''}</option><option value="__cu" ${sel==='__cu'?'selected':''}>Custom</option></select></div>
+<div class="f" id="wphf" style="display:${sel==='__hr'?'block':'none'}"><span class="l">How many hours</span><input id="wph" type="number" inputmode="decimal" min="0" step="0.5"></div>
+<div id="wpcf" style="display:${sel==='__cu'?'block':'none'}"><div class="f"><span class="l">Custom package name</span><input id="wpn" maxlength="80" placeholder="e.g. Engagement shoot" value="${sel==='__cu'?esc(cur):''}"></div><div class="f"><span class="l">Price in £${isNew?'':' (leave empty to keep the current price)'}</span><input id="wpp" type="number" inputmode="decimal" min="0" step="0.01"></div></div>`}
+document.addEventListener('change',e=>{if(!e.target||e.target.id!=='wpk')return;const v=e.target.value;$('#wphf').style.display=v==='__hr'?'block':'none';$('#wpcf').style.display=v==='__cu'?'block':'none'});
+/* what the chosen package means for the event and its price */
+function wpkRead(){
+  const v=$('#wpk')?$('#wpk').value:'',h=parseFloat(($('#wph')||{}).value),cp=parseFloat(($('#wpp')||{}).value),rt=hrRate();
+  if(v==='__hr')return{name:HRNAME,bill:h>0&&rt>0?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:rt>0?{hourly_rate:rt}:null};
+  if(v==='__cu')return{name:($('#wpn').value.trim()||'Custom').slice(0,80),bill:cp>=0?{price:Math.round(cp*100)/100}:null};
+  const pr=v?pkPrice(v):null;return{name:v,bill:pr!=null?{price:pr}:null};
+}
 function openWForm(id,past,ty){
   const w=id?(wed&&wed.id===id?wed:weds.find(x=>x.id===id)):null,d=w||{couple:'',wedding_date:'',city:'London',services:ty?'Second shooter':'Photo + Video',event_type:ty||'Wedding'};
   ui.modal={type:'wform',id,past:!!past};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${w?'Edit event':past?'Add a past event':'New event'}</h3>
 ${past?'<p class="intro">For events you have already completed. It is saved as Delivered and counts in your yearly totals.</p>':''}
 <div class="f"><span class="l">Event type</span><select id="we">${ETYPES.map(x=>`<option ${x===etype(d)?'selected':''}>${x}</option>`).join('')}</select></div>
+${wpkField(d.package||'',!w)}
 <div class="f"><span class="l">Client or couple names</span><input id="wc" placeholder="Tinsay &amp; Joe" value="${esc(d.couple)}"></div>
 <div class="f"><span class="l">Event date</span><input id="wd" type="date" value="${d.wedding_date||''}"></div>
 <div class="f"><span class="l">Location</span><input id="wt" placeholder="London" value="${esc(d.city||'')}"></div>
@@ -2934,18 +2951,23 @@ async function saveW(){
   const couple=$('#wc').value.trim();
   if(!couple){$('#wc').classList.add('err');$('#wc').focus();return}
   const o={couple,wedding_date:$('#wd').value||null,city:$('#wt').value.trim()||null,services:$('#ws').value.trim()||null,event_type:$('#we').value};
+  const wp=wpkRead();o.package=wp.name;
   const id=ui.modal.id,past=ui.modal.past,sqlMsg=e=>/column|schema/i.test(e.message)?'Run the events SQL in Supabase first, then refresh.':'Could not save: '+e.message;
   if(id){
     const{error}=await sb.from('weddings').update(o).eq('id',id);
     if(error)return toast(sqlMsg(error));
     closeM();
-    if(wed&&wed.id===id){Object.assign(wed,o);if(!secsFor(wed).some(x=>SK[x]===ui.sec))ui.sec='overview';render();notifyFamily()}else loadDash();
+    const was=wed&&wed.id===id?wed:weds.find(x=>x.id===id),chg=was&&(was.package||'')!==o.package,has=wed&&wed.id===id?wed.bill.price!=null:was&&B(was).price!=null;
+    if(wed&&wed.id===id){Object.assign(wed,o);if(chg&&wp.bill&&!has)await setB(wp.bill);if(!secsFor(wed).some(x=>SK[x]===ui.sec))ui.sec='overview';render();notifyFamily()}
+    else{if(chg&&wp.bill&&!has)await sb.from('event_billing').upsert({wedding_id:id,...wp.bill});loadDash()}
+    if(chg&&wp.bill&&has)toast('Package changed. The price on the Payments tab was left as it is.');
     return;
   }
   if(past&&!o.wedding_date){$('#wd').classList.add('err');$('#wd').focus();return}
   const seed=$('#wseed')&&$('#wseed').checked&&o.event_type==='Wedding';
   const{data,error}=await sb.from('weddings').insert(past?{...o,stage:'delivered'}:o).select().single();
   if(error)return toast(sqlMsg(error));
+  if(wp.bill){const r=await sb.from('event_billing').upsert({wedding_id:data.id,...wp.bill});if(r.error)toast('Event created, but the price was not saved: '+r.error.message)}
   if(seed){const r=await sb.from('photo_groups').insert(demoRows(data.id));if(r.error)toast('Event created, but the starter list failed: '+r.error.message)}
   closeM();
   if(past){ui.year=+o.wedding_date.slice(0,4);loadDash('year')}else openWedding(data.id);
