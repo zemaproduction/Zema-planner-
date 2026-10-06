@@ -178,7 +178,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 // Runs in the free Scriptable app. It reads live figures from your planner
 // and opens the right part of the planner when you tap it.
 // Copy this from the planner (Menu > iPhone app & widget) so your private key is filled in.
-// Version 3 · 7 October 2026
+// Version 4 · 7 October 2026
 
 const API = "__SB_URL__/rest/v1/rpc/widget_summary";
 const KEY = "__SB_KEY__";
@@ -191,7 +191,7 @@ const SHOW_MONEY = true;
 const C = {
   bg: new Color("#0B0B0C"), card: new Color("#151516"), line: new Color("#2b2b2d"),
   tx: new Color("#F3EEE6"), soft: new Color("#C4BEB5"), mu: new Color("#8C8A86"),
-  ac: new Color("#B89B72"), bad: new Color("#D98A82")
+  ac: new Color("#C8A977"), bad: new Color("#D98A82"), gold: new Color("#C8A977", 0.45)
 };
 const go = k => APP + "?go=" + k;
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -336,60 +336,136 @@ function action(parent, text, url) {
 }
 
 // ---- Layouts ----
+// ---- Premium pieces: serif names, gold hairlines, soft gradient ----
+const SERIF = "Didot";
+function hairline(parent, color) {
+  const l = parent.addStack();
+  l.layoutHorizontally();
+  l.setPadding(0.5, 0, 0.5, 0);
+  l.backgroundColor = color || C.line;
+  l.addSpacer();
+}
+function caps(parent, text, color, size) {
+  const t = parent.addText(String(text).toUpperCase().split("").join(" "));
+  t.font = Font.semiboldSystemFont(size || 8);
+  t.textColor = color || C.mu;
+  t.lineLimit = 1;
+  return t;
+}
+function brandBar(w, res) {
+  const h = w.addStack();
+  h.layoutHorizontally();
+  h.centerAlignContent();
+  caps(h, "Zema Planner", C.ac, 9);
+  h.addSpacer();
+  const stamp = String((res.data && res.data.generated_at) || "").slice(11, 16);
+  const s = h.addText(res.stale ? "Offline · " + stamp : stamp);
+  s.font = Font.regularSystemFont(9);
+  s.textColor = res.stale ? C.bad : C.mu;
+}
 function small(w, res) {
   const d = res.data;
   const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
   const item = nx[0];
   w.url = APP;
-  header(w, res);
-  w.addSpacer(8);
-  const lab = w.addText("NEXT EVENT");
-  lab.font = Font.semiboldSystemFont(8.5);
-  lab.textColor = C.mu;
-  w.addSpacer(3);
+  brandBar(w, res);
+  w.addSpacer(10);
+  caps(w, item ? inDays(item.days) : "Next event", item ? C.ac : C.mu, 8);
+  w.addSpacer(4);
   const name = w.addText(item ? item.couple : "Nothing booked");
-  name.font = new Font("Georgia", 17);
+  name.font = new Font(SERIF, 19);
   name.textColor = C.tx;
   name.lineLimit = 2;
-  name.minimumScaleFactor = 0.7;
+  name.minimumScaleFactor = 0.65;
   if (item) {
     w.addSpacer(3);
-    const sub = w.addText(fmtDate(item.date) + " · " + inDays(item.days));
+    const sub = w.addText(fmtDate(item.date));
     sub.font = Font.regularSystemFont(11);
-    sub.textColor = C.ac;
+    sub.textColor = C.soft;
     sub.lineLimit = 1;
-    sub.minimumScaleFactor = 0.8;
   }
   w.addSpacer();
+  hairline(w, C.gold);
+  w.addSpacer(7);
   const where = item ? (item.address || item.city || "") : "";
   const foot = w.addText(item ? (where || "No address added yet") : "Tap to add an event");
   foot.font = Font.regularSystemFont(10);
   foot.textColor = where ? C.soft : C.mu;
-  foot.lineLimit = 3;
+  foot.lineLimit = 2;
   foot.minimumScaleFactor = 0.8;
 }
-function evLine(e, none) {
-  if (!e) return { text: none, quiet: true };
-  return { text: e.couple, sub: fmtDate(e.date) + " · " + inDays(e.days) + (e.stage === "pending" ? " · Pending" : "") };
+function eventRow(parent, e, none) {
+  const r = parent.addStack();
+  r.layoutHorizontally();
+  r.centerAlignContent();
+  r.url = APP;
+  const dt = r.addStack();
+  dt.layoutHorizontally();
+  dt.size = new Size(74, 0);
+  caps(dt, e ? fmtDate(e.date) : "—", e ? C.ac : C.mu, 8.5);
+  dt.addSpacer();
+  const n = r.addText(e ? e.couple : none);
+  n.font = new Font(SERIF, 16);
+  n.textColor = e ? C.tx : C.mu;
+  n.lineLimit = 1;
+  n.minimumScaleFactor = 0.7;
+  r.addSpacer(6);
+  r.addSpacer();
+  if (e) {
+    const c = r.addText(inDays(e.days).replace(/^In /, "") + (e.stage === "pending" ? " · pending" : ""));
+    c.font = Font.regularSystemFont(10);
+    c.textColor = C.mu;
+    c.lineLimit = 1;
+  }
+}
+function stat(parent, label, n, zero, unit, url) {
+  const s = parent.addStack();
+  s.layoutHorizontally();
+  s.centerAlignContent();
+  s.url = url;
+  caps(s, label, C.mu, 8);
+  s.addSpacer(7);
+  const v = s.addText(n ? String(n) + (unit ? " " + unit : "") : zero);
+  v.font = Font.mediumSystemFont(11.5);
+  v.textColor = n ? C.tx : C.mu;
+  v.lineLimit = 1;
 }
 function medium(w, res) {
-  const d = res.data;
+  const d = res.data, enq = enqLine(d);
   w.url = APP;
-  header(w, res);
+  brandBar(w, res);
+  w.addSpacer(9);
+
+  const top = w.addStack();
+  top.layoutHorizontally();
+  top.centerAlignContent();
+  top.url = go("enq");
+  caps(top, "Enquiries", C.mu, 8);
+  top.addSpacer(8);
+  const ev = top.addText(enq.text + (enq.sub ? "  ·  " + enq.sub : ""));
+  ev.font = Font.mediumSystemFont(11.5);
+  ev.textColor = enq.alert ? C.bad : enq.quiet ? C.mu : C.tx;
+  ev.lineLimit = 1;
+  ev.minimumScaleFactor = 0.8;
+  top.addSpacer();
+
   w.addSpacer(8);
-  row(w, "tray.and.arrow.down", "ENQUIRIES", enqLine(d), go("enq"));
-  w.addSpacer(6);
+  hairline(w, C.gold);
+  w.addSpacer(9);
   const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
-  row(w, "calendar", "NEXT", evLine(nx[0], "Nothing booked"), APP);
-  w.addSpacer(6);
-  row(w, "calendar.badge.clock", "THEN", evLine(nx[1], "Nothing else booked"), APP);
-  w.addSpacer(6);
-  const pend = Number(d.pending) || 0;
-  row(w, "hourglass", "PENDING", pend ? { text: plural(pend, "event", "events") + " not confirmed yet" } : { text: "Nothing pending", quiet: true }, go("pending"));
-  w.addSpacer(6);
-  const post = Number(d.post) || 0;
-  row(w, "film", "EDITING", post ? { text: plural(post, "event", "events") + " in post-production" } : { text: "Nothing in post-production", quiet: true }, go("post"));
+  eventRow(w, nx[0], "Nothing booked");
+  w.addSpacer(8);
+  eventRow(w, nx[1], "Nothing else booked");
+  w.addSpacer(9);
+  hairline(w);
   w.addSpacer();
+
+  const bot = w.addStack();
+  bot.layoutHorizontally();
+  bot.centerAlignContent();
+  stat(bot, "Pending", Number(d.pending) || 0, "None", "", go("pending"));
+  bot.addSpacer();
+  stat(bot, "Editing", Number(d.post) || 0, "None", "in post-production", go("post"));
 }
 function eventCard(w, label, e) {
   const card = w.addStack();
@@ -493,8 +569,13 @@ const family = config.widgetFamily || "medium";
 const widget = new ListWidget();
 const onLockScreen = String(family).indexOf("accessory") === 0;
 if (!onLockScreen) {
-  widget.backgroundColor = C.bg;
-  widget.setPadding(14, 16, 14, 16);
+  const bg = new LinearGradient();
+  bg.colors = [new Color("#1B1916"), new Color("#0B0B0C"), new Color("#0B0B0C")];
+  bg.locations = [0, 0.55, 1];
+  bg.startPoint = new Point(0, 0);
+  bg.endPoint = new Point(1, 1);
+  widget.backgroundGradient = bg;
+  widget.setPadding(15, 17, 15, 17);
 }
 widget.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
 
