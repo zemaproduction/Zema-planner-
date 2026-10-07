@@ -1125,7 +1125,7 @@ function evRow(w){
   const bits=[STG[s0],w.package].filter(Boolean).map(esc).join(' · '),left=wPrice(w)!=null&&!hideMoney&&wLeft(w)?gbp(wLeft(w))+' left':'',sm=x=>x?new Date(x+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'',xd=xdSort(daysAll.filter(x=>x.wedding_id===w.id)).map(x=>'+ '+esc(x.kind)+(x.day_date?' '+sm(x.day_date):'')).join(' · ');
   return`<button class="er" data-a="openW" data-id="${w.id}"><span class="erd">${d?`<b>${d.getDate()}</b><i>${d.toLocaleDateString('en-GB',{month:'short'})}${d.getFullYear()!==new Date().getFullYear()?' ’'+String(d.getFullYear()).slice(2):''}</i>`:'<b>—</b><i>No date</i>'}</span><span class="erb"><span class="nm">${esc(w.couple)}</span><span class="sub">${esc(etype(w))}${w.city?' · '+esc(w.city):''}</span>${xd?`<span class="sub" style="color:var(--ac)">${xd}</span>`:''}<span class="sub">${bits}</span></span><span class="erc">${cd}${left?`<b>${left}</b>`:''}</span></button>`}
 function dashView(){
-  const W=weds.filter(w=>!isFree(w)),fr=weds.filter(w=>isFree(w)&&['pending','confirmed'].includes(stg(w))).length,frNew=fjobs.filter(j=>j.status==='new').length;
+  const W=weds,fr=weds.filter(w=>isFree(w)&&['pending','confirmed'].includes(stg(w))).length,frNew=fjobs.filter(j=>j.status==='new').length;
   const act=W.filter(w=>['pending','confirmed'].includes(stg(w))),late=act.filter(w=>w.wedding_date&&w.wedding_date<today()),up=act.filter(w=>!late.includes(w));
   const post=W.filter(w=>stg(w)==='post'),del=W.filter(w=>stg(w)==='delivered').reverse(),cy=new Date().getFullYear();
   const owed=weds.filter(w=>stg(w)!=='pending'&&wLeft(w)>0),owedSum=owed.reduce((a,w)=>a+wLeft(w),0);
@@ -1144,7 +1144,7 @@ ${(d=>d.length?att('trav','Travel to sort',d.length,d.map(({w,x})=>`<button clas
 ${(d=>d.length?att('sel','Photo selections finished',d.length,d.map(x=>{const w=weds.find(q=>q.id===x.wedding_id);return w?`<button class="or" data-a="selNote" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">Finished choosing</span></button>`:''}).join('')):'')(sels.filter(x=>x.done_at&&x.seen===false))}
 ${cnotes.length?att('crew','Crew replies',cnotes.length,cnotes.map(n=>{const w=weds.find(x=>x.id===n.wedding_id);return`<button class="or" data-a="crewNote" data-id="${n.wedding_id}"><span class="nm">${esc((n.crew&&n.crew.name)||'Crew')} ${n.status==='accepted'?'accepted':'declined'}</span><span class="sub">${esc(w?w.couple:'')}</span></button>`}).join('')):''}
 ${(d=>d.length?att('fu','Follow-ups due',d.length,d.slice(0,3).map(enqCard).join('')+(d.length>3?`<div class="cta"><button class="btn" data-a="enqV">See all ${d.length} follow-ups</button></div>`:'')):'')(enqs.filter(enqDue).sort((a,b)=>a.follow_on.localeCompare(b.follow_on)))}
-${bks.length?att('bk','New bookings',bks.length,bks.map(bkCard).join('')):''}`)}
+${bks.length?att('bk','New bookings',bks.length,bks.map(bkCard).join('')):''}${(d=>d.length?att('fj','New freelance requests',d.length,d.map(fjCard).join('')):'')(fjobs.filter(j=>j.status==='new'))}`)}
 <h2>Your events</h2>
 <div class="stats s3">${st(act.filter(w=>stg(w)==='pending').length,'Pending','pending')}${st(act.filter(w=>stg(w)==='confirmed').length,'Confirmed','confirmed')}${st(post.length,'Editing','post')}</div>
 <section class="card" style="padding:2px 18px;margin-top:10px"><button class="or" style="border-top:0" data-a="year" data-k="${cy}"><span class="sub" style="text-align:left">Received in ${cy} · ${doneIn(cy).length} done</span><span>${mny(recvIn(cy))}</span></button><button class="or" data-a="flt" data-k="owed"><span class="sub" style="text-align:left">Still to come from clients</span><span>${mny(owedSum)}</span></button><button class="or" data-a="dueV"><span class="sub" style="text-align:left">Costs to pay</span><span>${mny(sum(costsAll.filter(c=>!c.paid)))}</span></button></section>
@@ -2139,6 +2139,44 @@ async function openCal(){
 <p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
 <div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
 }
+/* ---- Clear unused photos: finds uploaded images that nothing in the planner points to any more, and deletes them ---- */
+async function cleanScan(){
+  const B=sb.storage.from('covers'),files=[];
+  const top=await B.list('',{limit:1000});if(top.error)throw top.error;
+  for(const f of top.data||[]){
+    if(f.id){files.push({path:f.name,size:(f.metadata&&f.metadata.size)||0,at:f.created_at});continue}
+    let off=0;for(;;){const q=await B.list(f.name,{limit:1000,offset:off});if(q.error)throw q.error;(q.data||[]).forEach(x=>{if(x.id)files.push({path:f.name+'/'+x.name,size:(x.metadata&&x.metadata.size)||0,at:x.created_at})});if(!q.data||q.data.length<1000)break;off+=1000}
+  }
+  /* everything that can hold an uploaded image link */
+  const a=await sb.from('event_delivery').select('*'),b=await sb.from('location_ideas').select('*'),c=await sb.from('app_content').select('*');
+  if(a.error)throw a.error;
+  const hay=JSON.stringify([a.data||[],b.error?[]:b.data||[],c.error?[]:c.data||[]]),cut=Date.now()-3600000;
+  const un=files.filter(f=>!hay.includes(f.path)&&!hay.includes(encodeURI(f.path))&&(!f.at||Date.parse(f.at)<cut));
+  return{all:files,un};
+}
+const mb=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+async function openClean(){
+  ui.modal={type:'clean'};
+  $('#modal').innerHTML='<div class="ov"><div class="m"><h3>Clear unused photos</h3><p class="intro">Checking your stored photos…</p></div></div>';
+  let r;try{r=await cleanScan()}catch(e){if(ui.modal&&ui.modal.type==='clean')$('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Clear unused photos</h3><p class="intro">Could not check storage: ${esc(String(e&&e.message||e))}</p><div class="bt"><button class="btn" data-a="close">Close</button></div></div></div>`;return}
+  if(!ui.modal||ui.modal.type!=='clean')return;
+  ui.modal.un=r.un;const tot=r.all.reduce((x,f)=>x+f.size,0),us=r.un.reduce((x,f)=>x+f.size,0);
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Clear unused photos</h3>
+<section class="card"><div class="row2"><span>Stored photos</span><span>${r.all.length} · ${mb(tot)}</span></div><div class="row2" style="margin-top:8px"><span>No longer used</span><span style="color:var(--ac)">${r.un.length} · ${mb(us)}</span></div></section>
+<p class="intro" style="margin-top:14px">${r.un.length?'These are photos you removed from a cover, slideshow or thumbnail, or that belonged to a deleted event. Photos still shown anywhere in the planner are kept. This cannot be undone.':'Nothing to clear. Every stored photo is in use.'}</p>
+<p class="sub" style="text-transform:none;letter-spacing:0">Photos uploaded in the last hour are never removed, in case you are still working on them. The free plan includes about 1,000 MB.</p>
+<div class="bad" id="clerr"></div>
+<div class="bt"><button class="btn" data-a="close">Close</button>${r.un.length?`<button class="btn fill" data-a="cleanGo">Delete ${r.un.length} unused photo${r.un.length===1?'':'s'}</button>`:''}</div></div></div>`;
+}
+async function cleanGo(){
+  const un=(ui.modal&&ui.modal.un)||[],err=m=>{const e=$('#clerr');if(e)e.textContent=m};let n=0;
+  for(let i=0;i<un.length;i+=100){
+    err('Deleting '+Math.min(i+100,un.length)+' of '+un.length+'…');
+    const{error}=await sb.storage.from('covers').remove(un.slice(i,i+100).map(f=>f.path));
+    if(error)return err('Stopped after '+n+': '+error.message);n+=Math.min(100,un.length-i);
+  }
+  toast('Deleted '+n+' unused photo'+(n===1?'':'s'));openClean();
+}
 /* ---- Notifications on this device (Web Push). The sender lives in Supabase; this only switches a device on or off. ---- */
 const VAPID_PUB='BFwr351-m0vZ2ujck_gdKx9qew6O0fnTl78GLCsWQSsBlLpW02dd--p8qzPfkdaP9sXddwVpPTlS5wJMBq7MtC4';
 const PUSHK=[['enq','New enquiries and booking requests'],['free','Freelance bookings'],['client','Client notes, confirmed plans, signed agreements, photo selections, travel and reviews'],['crew','Crew accepting or declining'],['morning','Morning summary at 8am']];
@@ -2267,7 +2305,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
+${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('cleanV','Clear unused photos','Free up storage space')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -3731,6 +3769,8 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
+  else if(a==='cleanV'&&!TOKEN)openClean();
+  else if(a==='cleanGo'&&!TOKEN)cleanGo();
   else if(a==='pushV'&&!TOKEN)openPush();
   else if(a==='pushOn'&&!TOKEN)pushOn();
   else if(a==='pushOff'&&!TOKEN)pushOff();
