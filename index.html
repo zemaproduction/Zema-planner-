@@ -189,6 +189,15 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .ssm{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);text-align:center;color:#F3EEE6;font:400 12px var(--sans);letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 8px #000;pointer-events:none}
 .ssbar{position:absolute;left:0;right:0;bottom:0;height:2px;background:#ffffff1f}.ssbar i{display:block;height:100%;width:0;background:var(--ac)}
 .sse{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;background:#000d}.sse.on{display:flex}.sse .btn{min-width:200px}
+.hmv{margin:0 -20px;border-radius:0;aspect-ratio:4/5;max-height:78vh;width:auto}.hmv.hfilm{aspect-ratio:16/11}
+@media(min-width:700px){.hmv,.hmv.hfilm{aspect-ratio:16/8;border-radius:6px;margin:0}}
+.hmv:before{z-index:1;background:linear-gradient(to top,rgba(11,11,12,1) 0%,rgba(11,11,12,.72) 22%,rgba(11,11,12,.08) 58%,rgba(11,11,12,.28) 100%)}
+.hmv .hx{z-index:2;padding:24px 20px 26px}.hmv h1{font-size:44px;margin:10px 0 6px;text-shadow:0 2px 24px rgba(0,0,0,.5)}.hmv .btn.fill{min-width:190px}
+#hbg{position:absolute;inset:0;overflow:hidden}
+#hbg i{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.8s ease;will-change:transform,opacity}#hbg i.on{opacity:1}
+@keyframes hbz1{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,-1%)}}@keyframes hbz2{from{transform:scale(1.12) translate(1.5%,1%)}to{transform:scale(1) translate(0,0)}}
+#hbg iframe{position:absolute;inset:0;width:100%;height:100%;transform:scale(1.34);border:0;opacity:0;transition:opacity 1.2s ease;pointer-events:none}#hbg iframe.on{opacity:1}
+@media(prefers-reduced-motion:reduce){#hbg i{animation:none!important}}
 </style></head>
 <body>
 <main id="app" class="wrap"><div class="launch"><div class="z">Z</div><div class="brand">ZEMA PLANNER</div><div class="bar"><i></i></div></div></main>
@@ -897,7 +906,7 @@ const mins=m=>m+' min'+(m==1?'':'s');
 const locked=()=>TOKEN&&wed&&wed.approval_status==='approved';
 function stats(){const g=G(),d=g.filter(x=>x.done).length;return{d,n:g.length,p:g.length?Math.round(d/g.length*100):0,left:g.filter(x=>!x.done).reduce((a,x)=>a+x.minutes,0)}}
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',5000)}
-const setApp=h=>{$('#app').innerHTML=h};
+const setApp=h=>{$('#app').innerHTML=h;try{heroMount()}catch(_){}};
 
 /* ---- Live updates: the photographer sends a tiny "refresh" signal, family pages refetch ---- */
 function notifyFamily(){
@@ -1673,20 +1682,55 @@ ${dec?'':'<p class="intro" style="margin-top:16px;font-size:13px">Once you accep
 let dels=[];
 const safeU=u=>/^https:\/\//i.test(String(u||'').trim())?String(u).trim():'';
 const ytId=u=>{const m=String(u||'').match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);return m?m[1]:''};
+const isCover=f=>!!(f&&f.type==='cover');
 const isSS=f=>!!(f&&f.type==='slides'&&Array.isArray(f.photos));
 const fThumb=f=>safeU(f.cover)||(isSS(f)&&safeU(f.photos[0]))||(ytId(f.url)?'https://i.ytimg.com/vi/'+ytId(f.url)+'/hqdefault.jpg':'');
 const addMonths=(d,n)=>{const x=new Date(d+'T00:00:00'),day=x.getDate();x.setMonth(x.getMonth()+n);if(x.getDate()<day)x.setDate(0);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
-const delOf=d=>({expires_on:(d&&d.expires_on)||null,expired:!!(d&&d.expired),published:!!(d&&d.published),hero:safeU(d&&d.hero),films:Array.isArray(d&&d.films)?d.films:[],galleries:Array.isArray(d&&d.galleries)?d.galleries:[]});
+const delOf=d=>({expires_on:(d&&d.expires_on)||null,expired:!!(d&&d.expired),published:!!(d&&d.published),hero:safeU(d&&d.hero),films:Array.isArray(d&&d.films)?d.films.filter(x=>!isCover(x)):[],cover:(Array.isArray(d&&d.films)&&d.films.find(isCover))||null,galleries:Array.isArray(d&&d.galleries)?d.galleries:[]});
 const bgi=u=>u?`background-image:url('${esc(u)}')`:'';
 const cineLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=del';
+/* ---- Moving cover for the cinema page: slow-zooming photos that fade into each other, or a silent film preview.
+   Settings are kept as a hidden item in the films list (type "cover"). With no settings it uses whatever images the event already has. ---- */
+function heroOf(d){
+  const c=d.cover||{},own=(Array.isArray(c.photos)?c.photos:[]).map(safeU).filter(Boolean);
+  const ss=d.films.find(isSS),pool=[d.hero,...(ss?ss.photos.slice(0,6):[]),...d.films.map(fThumb),...d.galleries.map(g=>safeU(g.cover))].map(x=>safeU(x)).filter(Boolean);
+  const photos=(own.length?own:[...new Set(pool)]).slice(0,8),yt=ytId(c.film||'')||'';
+  const mode=c.mode==='film'&&yt?'film':c.mode==='still'?'still':photos.length>1?'photos':'still';
+  return{mode,photos:mode==='still'?photos.slice(0,1):photos,yt,start:Math.max(0,parseInt(c.start)||0)};
+}
+let HB={t:null};
+function heroMount(){
+  clearInterval(HB.t);HB.t=null;
+  const el=document.getElementById('hbg');if(!el)return;
+  const m=el.dataset.m;let ph=[];try{ph=JSON.parse(el.dataset.p||'[]')}catch(_){}
+  if(m==='photos'&&ph.length>1){
+    el.innerHTML='<i></i><i></i>';
+    const L=el.children;let n=0,top=0;
+    const show=()=>{const cur=L[top],u=ph[n%ph.length];cur.style.backgroundImage=`url('${u.replace(/'/g,'%27')}')`;cur.style.animation='none';void cur.offsetWidth;cur.style.animation=`${n%2?'hbz2':'hbz1'} 9s ease-out forwards`;cur.classList.add('on');L[1-top].classList.remove('on');top=1-top;n++;const p=new Image();p.src=ph[n%ph.length]};
+    show();HB.t=setInterval(()=>{if(!document.hidden&&document.getElementById('hbg')===el)show()},6500);
+  }else if(m==='film'&&el.dataset.y){
+    const id=el.dataset.y,st=+el.dataset.s||0,f=document.createElement('iframe');
+    f.setAttribute('allow','autoplay; encrypted-media');f.setAttribute('tabindex','-1');f.setAttribute('aria-hidden','true');f.title='Preview';
+    f.src=`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&playsinline=1&rel=0&modestbranding=1&disablekb=1&iv_load_policy=3&fs=0&enablejsapi=1${st?'&start='+st:''}`;
+    f.onload=()=>{try{f.contentWindow.postMessage('{"event":"listening","id":"hb","channel":"widget"}','*')}catch(_){}};
+    el.appendChild(f);
+  }
+}
+/* the preview only fades in once YouTube says it is really playing, so a blocked autoplay just leaves the still cover */
+window.addEventListener('message',e=>{
+  if(!/youtube(-nocookie)?\.com$/.test((()=>{try{return new URL(e.origin).hostname}catch(_){return''}})()))return;
+  let d=e.data;try{if(typeof d==='string')d=JSON.parse(d)}catch(_){return}
+  const st=d&&d.info&&d.info.playerState,f=document.querySelector('#hbg iframe');
+  if(f&&e.source===f.contentWindow&&st===1)f.classList.add('on');
+});
 function cineBody(){
   if(wed.del&&wed.del.expired)return`<section class="card ok" style="margin-top:8px"><div class="brand">ZEMA CINEMA</div><div class="nm" style="font-size:30px;margin-top:10px">Your access has ended</div>
 <p class="intro" style="margin:10px 0 18px">Your films and photos were available on this page until ${fmtD(wed.del.expires_on)}. To have them back here, get in touch and we’ll arrange it.</p>
 <a class="btn fill" style="width:100%" href="${esc(waLink('Hello Zema Production, I’d like to extend access to the films and photos for '+wed.couple+'.'))}" target="_blank" rel="noopener">Ask about extending</a></section>`;
-  const w=wed,d=delOf(w.del),f=d.films,g=d.galleries,pi=ui.play,cur=pi!=null?f[pi]:null,hero=d.hero||(f[0]&&fThumb(f[0]))||(g[0]&&safeU(g[0].cover))||'';
+  const w=wed,d=delOf(w.del),f=d.films,g=d.galleries,pi=ui.play,cur=pi!=null?f[pi]:null,hm=heroOf(d),hero=d.hero||(f[0]&&fThumb(f[0]))||(g[0]&&safeU(g[0].cover))||'';
   return`${cur&&ytId(cur.url)?`<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${ytId(cur.url)}?autoplay=1&rel=0&playsinline=1" title="${esc(cur.title||'Film')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
 <div style="margin-top:14px"><div class="brand">Now playing</div><div class="nm" style="font-size:28px;margin-top:6px">${esc(cur.title||'Film')}</div>${cur.desc?`<p class="intro" style="margin:6px 0 0">${esc(cur.desc)}</p>`:''}<p style="margin:10px 0 0"><button class="lnk" data-a="cstop">Close player</button></p></div>`
-:`<div class="hero" style="${bgi(hero)}"><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${d.expires_on?`<div class="sub" style="margin-top:8px;color:var(--ac)">Available until ${fmtD(d.expires_on)}</div>`:''}${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">${ytId(f[0].url)||isSS(f[0])?'▶ Play':'Open'} ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
+:`<div class="hero hmv ${hm.mode==='film'?'hfilm':''}" style="${bgi(hm.photos[0]||hero)}"><div id="hbg" data-m="${hm.mode}" data-p="${esc(JSON.stringify(hm.photos))}" data-y="${esc(hm.yt)}" data-s="${hm.start}"></div><div class="hx"><div class="brand">ZEMA CINEMA</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${d.expires_on?`<div class="sub" style="margin-top:8px;color:var(--ac)">Available until ${fmtD(d.expires_on)}</div>`:''}${f.length?`<button class="btn fill" style="margin-top:16px" data-a="cplay" data-i="0">${ytId(f[0].url)||isSS(f[0])?'▶ Play':'Open'} ${esc(f[0].title||'film')}</button>`:g.length&&safeU(g[0].url)?`<a class="btn fill" style="margin-top:16px" href="${esc(safeU(g[0].url))}" target="_blank" rel="noopener">View photos</a>`:''}</div></div>`}
 ${f.length?`<h2>Films</h2><div class="rowx">${f.map((x,i)=>`<button class="fc ${pi===i?'on':''}" data-a="cplay" data-i="${i}"><div class="th" style="${bgi(fThumb(x))}"></div><b>${esc(x.title||'Film')}</b><small>${esc(isSS(x)?'Slideshow · '+x.photos.length+' photos':[x.dur,pi===i?'Now playing':'',ytId(x.url)?'':'Opens in a new page'].filter(Boolean).join(' · '))}</small></button>`).join('')}</div>`:''}
 ${g.length?`<h2>Photos</h2><div class="cgrid">${g.filter(x=>safeU(x.url)).map(x=>`<a class="gcard" href="${esc(safeU(x.url))}" target="_blank" rel="noopener" style="${bgi(safeU(x.cover))}"><span><b class="nm">${esc(x.title||'Photo gallery')}</b><small>Open gallery</small></span></a>`).join('')}</div>${g.filter(x=>x.pw&&safeU(x.url)).map(x=>pwLine('Password for '+esc(x.title||'the gallery'),x.pw)).join('')}`:''}
 ${!f.length&&!g.length?'<p class="empty">Nothing has been added yet.</p>':''}`}
@@ -1717,7 +1761,7 @@ function delMain(){
   return`<h2>Delivery</h2>
 <section class="card"><div class="lbl">The client’s cinema page</div><button class="tab ${d.published?'on':''}" style="margin-top:12px" data-a="togPub">${d.published?'✓ Published · the client can see it':'Not published · tap to publish'}</button>
 <p class="intro" style="margin:12px 0 0;font-size:13px">Add films, photo galleries, or both. The page only shows what you add, so photo-only and video-only events work too.</p>
-<div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="askRev">Ask for a review</button><button data-a="editHero">Cover image</button></div></section>
+<div class="acts"><button data-a="cineOpen">Preview</button><button data-a="copyCine">Copy cinema link</button><button data-a="waCine">Send on WhatsApp</button><button data-a="askRev">Ask for a review</button><button data-a="editHero">Cover · moving or still</button></div></section>
 ${accessCard()}
 ${selCard()}
 <h2>Films</h2>
@@ -1727,6 +1771,7 @@ ${selCard()}
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addGal">+ Add gallery</button></div>
 <div>${d.galleries.length?d.galleries.map((x,i)=>`<div class="g"><div class="th2" style="${bgi(safeU(x.cover))}"></div><div class="bd"><div class="nm">${esc(x.title||'Photo gallery')}</div><div class="sub" style="text-transform:none;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.url||'')}</div>${x.pw?`<div class="sub">Password: ${esc(x.pw)}</div>`:''}<div class="acts">${mv('Gal',i)}</div></div></div>`).join(''):'<p class="empty">No galleries. Leave this empty for a video-only delivery.</p>'}</div>`}
 async function setD(o){
+  if(o.films&&!o.films.some(isCover)){const c=delOf(wed.del).cover;if(c)o={...o,films:[...o.films,c]}}
   const prev={...(wed.del||{})};wed.del={...prev,...o};render();
   const{error}=await sb.from('event_delivery').upsert({wedding_id:wed.id,...o,updated_at:new Date().toISOString()});
   if(error){wed.del=prev;render();toast(/relation|schema|find the table|column/i.test(error.message)?'Run the delivery SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
@@ -1772,17 +1817,17 @@ function openSSForm(i){
   ssGrid();
 }
 document.addEventListener('change',async e=>{
-  if(!e.target||e.target.id!=='ssf'||TOKEN||!ui.modal||ui.modal.type!=='ss')return;
+  if(!e.target||e.target.id!=='ssf'||TOKEN||!ui.modal||!ui.modal.photos)return;
   const files=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true})),err=m=>{const x=$('#sserr');if(x)x.textContent=m};let done=0;
   for(const f of files){
-    if(!ui.modal||ui.modal.type!=='ss')return;
-    if(ui.modal.photos.length>=SSMAX){err('That is the most a slideshow can hold ('+SSMAX+'). The rest were not added.');break}
+    if(!ui.modal||!ui.modal.photos)return;
+    if(ui.modal.photos.length>=(ui.modal.max||SSMAX)){err('That is the most this can hold ('+(ui.modal.max||SSMAX)+'). The rest were not added.');break}
     err('Uploading '+(done+1)+' of '+files.length+'…');
     try{
       const blob=await shrink(f),path=wed.id+'/ss-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
       const{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
       if(error)throw error;
-      if(!ui.modal||ui.modal.type!=='ss')return;
+      if(!ui.modal||!ui.modal.photos)return;
       ui.modal.photos.push(sb.storage.from('covers').getPublicUrl(path).data.publicUrl);done++;ssGrid();
     }catch(x){const msg=String((x&&x.message)||x);err(/bucket|not found|row-level|policy|unauthor/i.test(msg)?'Uploads aren’t set up yet. Run the upload SQL in Supabase first.':'One photo failed: '+msg);break}
   }
@@ -1874,11 +1919,18 @@ function openGalForm(i){
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveGal">Save gallery</button></div></div></div>`;
 }
 function openHeroForm(){
-  ui.modal={type:'hero'};
-  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Cover image</h3>
-<p class="intro">The large image at the top of the cinema page and on the card in your Cinema view. Leave empty to use the first film’s thumbnail.</p>
-<div class="f"><span class="l">Image</span><input id="hu" inputmode="url" autocapitalize="none" maxlength="400" placeholder="Upload below, or paste an image link" value="${esc((wed.del&&wed.del.hero)||'')}">${upBtn('hu')}</div>
+  const d=delOf(wed.del),c=d.cover||{},yts=d.films.filter(x=>ytId(x.url)),mode=c.mode==='film'||c.mode==='still'?c.mode:'photos';
+  ui.modal={type:'hero',max:8,photos:[...((Array.isArray(c.photos)&&c.photos.length?c.photos:(d.hero?[d.hero]:[])))]};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Cinema cover</h3>
+<p class="intro">The large picture at the top of the client’s cinema page. It can move: photos that slowly zoom and fade into each other, or a silent preview of one of the films.</p>
+<div class="f"><span class="l">Cover style</span><select id="hm"><option value="photos" ${mode==='photos'?'selected':''}>Moving photos</option><option value="film" ${mode==='film'?'selected':''} ${yts.length?'':'disabled'}>Silent film preview${yts.length?'':' · add a YouTube film first'}</option><option value="still" ${mode==='still'?'selected':''}>One still photo</option></select></div>
+<div class="f"><span class="l">Cover photos · up to 8, landscape works best</span><label class="btn" style="width:100%">Choose photos<input type="file" id="ssf" accept="image/*" multiple style="display:none"></label><div class="sub" id="ssn" style="text-transform:none;letter-spacing:0;margin-top:10px"></div><div id="ssg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px"></div>
+<span class="sub" style="display:block;text-transform:none;letter-spacing:0;margin-top:10px">Leave empty and the cover uses the event’s slideshow photos and film thumbnails. The first photo also shows while a film preview loads.</span></div>
+${yts.length?`<div class="f"><span class="l">Film to preview</span><select id="hf">${yts.map(x=>`<option value="${esc(x.url)}" ${ytId(c.film||'')===ytId(x.url)?'selected':''}>${esc(x.title||'Film')}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Start the preview at this many seconds in</span><input id="hs" type="number" inputmode="numeric" min="0" step="1" value="${esc(parseInt(c.start)||0)}"></div>`:''}
+<div class="bad" id="sserr"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveHero">Save</button></div></div></div>`;
+  ssGrid();
 }
 /* ---- Live timer for small events, photoshoots and freelance jobs. Saved as a record both sides can see ---- */
 const tmDay=()=>ui.tmDay&&wed&&Array.isArray(wed.days)&&wed.days.find(d=>d.id===ui.tmDay)||null;
@@ -3639,8 +3691,8 @@ document.addEventListener('click',async e=>{
   else if(a==='addFilm'&&!TOKEN)openFilmForm();
   else if(a==='editFilm'&&!TOKEN){if(isSS(delOf(wed.del).films[+t.dataset.i]))openSSForm(+t.dataset.i);else openFilmForm(+t.dataset.i)}
   else if(a==='addSS'&&!TOKEN)openSSForm();
-  else if(a==='ssRm'&&!TOKEN&&ui.modal&&ui.modal.type==='ss'){ui.modal.photos.splice(+t.dataset.i,1);ssGrid()}
-  else if(a==='ssMv'&&!TOKEN&&ui.modal&&ui.modal.type==='ss'){const l=ui.modal.photos,i=+t.dataset.i,j=i+(+t.dataset.d);if(l[j]){[l[i],l[j]]=[l[j],l[i]];ssGrid()}}
+  else if(a==='ssRm'&&!TOKEN&&ui.modal&&ui.modal.photos){ui.modal.photos.splice(+t.dataset.i,1);ssGrid()}
+  else if(a==='ssMv'&&!TOKEN&&ui.modal&&ui.modal.photos){const l=ui.modal.photos,i=+t.dataset.i,j=i+(+t.dataset.d);if(l[j]){[l[i],l[j]]=[l[j],l[i]];ssGrid()}}
   else if(a==='ssSave'&&!TOKEN)ssSave();
   else if(a==='ssPrev'&&!TOKEN&&ui.modal&&ui.modal.photos.length)ssOpen({title:$('#st').value.trim()||'Slideshow',photos:ui.modal.photos,secs:+$('#ss').value||5});
   else if(a==='saveFilm'&&!TOKEN){const o={title:$('#zt').value.trim()||'Film',url:$('#zu').value.trim(),desc:$('#zd').value.trim(),dur:$('#zl').value.trim(),cover:safeU($('#zc').value)};if(!ytId(o.url)&&!safeU(o.url)){$('#zu').classList.add('err');return toast('Paste the full link, starting with https://')}if(!ytId(o.url))o.url=safeU(o.url);const l=[...delOf(wed.del).films],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({films:l})}
@@ -3651,7 +3703,7 @@ document.addEventListener('click',async e=>{
   else if(a==='saveGal'&&!TOKEN){const o={title:$('#gt').value.trim()||'Photo gallery',url:safeU($('#gu').value),pw:$('#gw').value.trim(),cover:safeU($('#gc').value)};if(!o.url){$('#gu').classList.add('err');return toast('Paste the full gallery link, starting with https://')}const l=[...delOf(wed.del).galleries],i=ui.modal.i;if(i!=null)l[i]=o;else l.push(o);closeM();setD({galleries:l})}
   else if(a==='delGal'&&!TOKEN){const i=+t.dataset.i;ask('Remove this gallery from the delivery?',()=>setD({galleries:delOf(wed.del).galleries.filter((_,j)=>j!==i)}))}
   else if(a==='editHero'&&!TOKEN)openHeroForm();
-  else if(a==='saveHero'&&!TOKEN){const v=$('#hu').value.trim();if(v&&!safeU(v)){$('#hu').classList.add('err');return toast('The image link must start with https://')}closeM();setD({hero:safeU(v)})}
+  else if(a==='saveHero'&&!TOKEN){const ph=ui.modal.photos||[],cv={type:'cover',mode:$('#hm').value,photos:ph,film:$('#hf')?$('#hf').value:'',start:$('#hs')?Math.max(0,parseInt($('#hs').value)||0):0};closeM();setD({hero:safeU(ph[0]||''),films:[...delOf(wed.del).films,cv]})}
   else if(a==='copyCine'&&!TOKEN){const u=cineLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Cinema link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='waCine'&&!TOKEN){if(!delOf(wed.del).published)return toast('Publish the cinema page first, so the link works for the client.');const ph=waNum(wed.bill&&wed.bill.client_phone);window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hello, your films and photos from Zema Production are ready. You can watch and view them here:\n${cineLink()}`),'_blank')}
   else if(a==='tmStart'&&!TOKEN)setT({started_at:new Date().toISOString(),ended_at:null,paused_at:null,paused_ms:0,pauses:[],edited:false,booked_minutes:tmBooked()});
