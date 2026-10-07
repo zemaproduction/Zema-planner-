@@ -1972,6 +1972,60 @@ async function openCal(){
 <p class="intro" style="font-size:13px">Anyone with this link can read your bookings and client phone numbers, so don’t share it. If it ever gets out, reset it and subscribe again.</p>
 <div class="bt"><button class="dng" data-a="resetCal">Reset link</button><button class="btn" data-a="close">Done</button></div></div></div>`;
 }
+/* ---- Notifications on this device (Web Push). The sender lives in Supabase; this only switches a device on or off. ---- */
+const VAPID_PUB='BFwr351-m0vZ2ujck_gdKx9qew6O0fnTl78GLCsWQSsBlLpW02dd--p8qzPfkdaP9sXddwVpPTlS5wJMBq7MtC4';
+const PUSHK=[['enq','New enquiries and booking requests'],['free','Freelance bookings'],['client','Client notes, confirmed plans, signed agreements, photo selections, travel and reviews'],['crew','Crew accepting or declining'],['morning','Morning summary at 8am']];
+let pushPrefs={};
+const b64uU8=s=>{const t=s.replace(/-/g,'+').replace(/_/g,'/'),b=atob(t+'='.repeat((4-t.length%4)%4));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+async function pushInfo(){
+  const ok='serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+  if(!ok)return{ok:false};
+  const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),4000))]);
+  if(!reg||!reg.pushManager)return{ok:false};
+  let sub=null;try{sub=await reg.pushManager.getSubscription()}catch(_){}
+  return{ok:true,reg,sub,perm:Notification.permission};
+}
+async function openPush(){
+  ui.modal={type:'push'};
+  $('#modal').innerHTML='<div class="ov"><div class="m"><h3>Notifications</h3><p class="intro">Checking…</p></div></div>';
+  const st=await pushInfo(),pq=await sb.from('app_content').select('data').eq('key','push_prefs').maybeSingle(),dq=await sb.from('push_subs').select('id',{count:'exact',head:true});
+  if(!ui.modal||ui.modal.type!=='push')return;
+  pushPrefs=pq.data&&pq.data.data&&typeof pq.data.data==='object'?pq.data.data:{};
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),n=dq.count||0;
+  const body=dq.error?'<p class="intro">Notifications aren’t set up in Supabase yet. Run the notifications SQL once, then open this again.</p>'
+  :!st.ok?`<p class="intro">${ios&&!STANDALONE?'On iPhone, notifications only work when the planner is opened from its Home Screen icon. Close this, open Zema Planner from the icon on your Home Screen, then come back to Menu and Notifications.':'This browser can’t receive notifications from the planner. On iPhone, open the planner from its Home Screen icon (iOS 16.4 or later).'}</p>`
+  :st.perm==='denied'?'<p class="intro">Notifications are blocked for the planner on this device. On iPhone, open Settings, then Notifications, then Zema Planner, and turn on Allow Notifications. Then open this again.</p>'
+  :st.sub?`<section class="card ok"><div class="lbl">On for this device</div><p class="intro" style="margin:10px 0 0">You’ll be told when something happens, even when the planner is closed.</p></section><div class="cta"><button class="btn fill" data-a="pushTest">Send a test</button><button class="btn" data-a="pushOff">Turn off on this device</button></div>`
+  :`<p class="intro">Get an alert on this device the moment something happens: a new enquiry, a booking, a client note, a crew reply.</p><div class="cta"><button class="btn fill" data-a="pushOn">Turn on notifications</button></div>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Notifications</h3>${body}
+${dq.error?'':`<div class="lbl" style="margin-top:22px">What to be told about</div>${PUSHK.map(([k,l])=>`<label class="chk" style="margin-top:12px"><input type="checkbox" data-pk="${k}" ${pushPrefs[k]===false?'':'checked'}> ${l}</label>`).join('')}
+<p class="sub" style="text-transform:none;letter-spacing:0;margin-top:16px">${n} device${n===1?'':'s'} with notifications on. Things you do yourself in the planner never send an alert.</p>`}
+<div class="bad" id="pserr"></div>
+<div class="bt"><button class="btn" data-a="close">Done</button></div></div></div>`;
+}
+async function pushOn(){
+  const err=m=>{const e=$('#pserr');if(e)e.textContent=m};
+  let perm;try{perm=await Notification.requestPermission()}catch(_){perm='denied'}
+  if(perm!=='granted')return err('Notifications were not allowed. You can change this in your phone’s Settings, under Notifications, Zema Planner.');
+  err('Turning on…');
+  try{
+    const st=await pushInfo();if(!st.ok)return err('This device can’t receive notifications from the planner.');
+    const sub=st.sub||await st.reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uU8(VAPID_PUB)}),j=sub.toJSON();
+    const{error}=await sb.from('push_subs').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,app_url:location.origin+location.pathname,device:(/iPhone|iPad/.test(navigator.userAgent)?'iPhone':/Android/.test(navigator.userAgent)?'Android':'Computer')},{onConflict:'endpoint'});
+    if(error)return err(/relation|schema|find the table/i.test(error.message)?'Run the notifications SQL in Supabase first.':'Could not save: '+error.message);
+    toast('Notifications are on');openPush();
+  }catch(e){err('Could not turn on: '+(e&&e.message||e))}
+}
+async function pushOff(){
+  try{const st=await pushInfo();if(st.sub){await sb.from('push_subs').delete().eq('endpoint',st.sub.endpoint);await st.sub.unsubscribe()}}catch(_){}
+  toast('Notifications are off on this device');openPush();
+}
+document.addEventListener('change',async e=>{
+  const k=e.target&&e.target.dataset&&e.target.dataset.pk;if(!k||TOKEN)return;
+  pushPrefs={...pushPrefs,[k]:e.target.checked};
+  const{error}=await sb.from('app_content').upsert({key:'push_prefs',data:pushPrefs});
+  if(error)toast('Could not save: '+error.message);
+});
 /* ---- iPhone app and Home Screen widget ---- */
 let wdg=null;
 const widgetSrc=()=>$('#wsrc').textContent.trim().split('__SB_URL__').join(SB_URL).split('__SB_KEY__').join(SB_KEY).split('__TOKEN__').join(wdg.token).split('__APP_URL__').join(location.origin+location.pathname)+'\n';
@@ -2046,7 +2100,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
+${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -3505,6 +3559,10 @@ document.addEventListener('click',async e=>{
   else if(a==='fjEdit'&&!TOKEN)openFjForm(id);
   else if(a==='saveFj'&&!TOKEN)saveFj();
   else if(a==='fjRemove'&&!TOKEN)ask('Remove this booking from their list? If it has an event in the planner, that event stays; delete it separately from its Overview.',async()=>{const{error}=await sb.from('freelance_jobs').update({status:'declined'}).eq('id',id);if(error)return toast('Could not save: '+error.message);fjobs=fjobs.filter(x=>x.id!==id);render();toast('Removed')});
+  else if(a==='pushV'&&!TOKEN)openPush();
+  else if(a==='pushOn'&&!TOKEN)pushOn();
+  else if(a==='pushOff'&&!TOKEN)pushOff();
+  else if(a==='pushTest'&&!TOKEN){const{data,error}=await sb.rpc('push_test');const e=$('#pserr');if(e)e.textContent=error?'Could not send: '+error.message:'Sent to '+data+' device'+(data===1?'':'s')+'. It should arrive within a few seconds. Lock your phone or close the planner to see it.'}
   else if(a==='att'&&!TOKEN){ui.att=ui.att===t.dataset.k?'':t.dataset.k;render()}
   else if(a==='impV'&&!FTOKEN&&!locked())openImp();
   else if(a==='impRead'&&!FTOKEN&&!locked())impRead();
