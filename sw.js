@@ -69,3 +69,29 @@ self.addEventListener('fetch', event => {
     return network;
   })());
 });
+
+/* Notifications: show what the planner sends, and open the right page when it is tapped. */
+self.addEventListener('push', event => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (_) { d = { body: event.data ? event.data.text() : '' }; }
+  event.waitUntil(self.registration.showNotification(d.title || 'Zema Planner', {
+    body: d.body || '',
+    icon: 'zema-icon-192.png',
+    badge: 'zema-icon-192.png',
+    data: { url: d.url || './' }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || './';
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of all) {
+      if ('navigate' in c) {
+        try { const w = await c.navigate(url); return (w || c).focus(); } catch (_) { /* fall through */ }
+      }
+    }
+    return self.clients.openWindow(url);
+  })());
+});
