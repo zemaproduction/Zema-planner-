@@ -207,7 +207,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 // Runs in the free Scriptable app. It reads live figures from your planner
 // and opens the right part of the planner when you tap it.
 // Copy this from the planner (Menu > iPhone app & widget) so your private key is filled in.
-// Version 4 · 7 October 2026
+// Version 5 · 7 October 2026
 
 const API = "__SB_URL__/rest/v1/rpc/widget_summary";
 const KEY = "__SB_KEY__";
@@ -564,18 +564,35 @@ function large(w, res) {
 }
 function lockScreen(w, res) {
   const d = res.data;
-  const today = (d.today || [])[0];
-  const item = today || d.next_wedding || d.next;
-  w.url = today ? go("today") : APP;
-  const a = w.addText(today ? "ZEMA · TODAY" : "ZEMA · NEXT");
+  const nx = Array.isArray(d.next2) ? d.next2 : (d.next ? [d.next] : []);
+  const item = nx[0];
+  w.url = APP;
+  if (config.widgetFamily === "accessoryInline") {
+    const t = w.addText(item ? item.couple + " · " + fmtDate(item.date) : "Zema · nothing booked");
+    t.font = Font.mediumSystemFont(12);
+    t.lineLimit = 1;
+    return;
+  }
+  if (config.widgetFamily === "accessoryCircular") {
+    const n = w.addText(item ? String(Math.max(0, Number(item.days) || 0)) : "–");
+    n.font = Font.semiboldSystemFont(20);
+    n.centerAlignText();
+    const l = w.addText(item ? (Number(item.days) === 1 ? "day" : "days") : "Zema");
+    l.font = Font.regularSystemFont(9);
+    l.centerAlignText();
+    return;
+  }
+  const a = w.addText(item ? "ZEMA · " + inDays(item.days).toUpperCase() : "ZEMA · NEXT EVENT");
   a.font = Font.semiboldSystemFont(10);
+  a.lineLimit = 1;
   const b = w.addText(item ? item.couple : "Nothing booked");
-  b.font = Font.mediumSystemFont(13);
+  b.font = Font.mediumSystemFont(14);
   b.lineLimit = 1;
   b.minimumScaleFactor = 0.7;
-  const c = w.addText(item ? (today ? (today.start ? "Starts " + today.start : today.event_type) : fmtDate(item.date) + " · " + inDays(item.days)) : "");
+  const c = w.addText(item ? [fmtDate(item.date), item.event_type !== "Wedding" ? item.event_type : "", item.stage === "pending" ? "Pending" : ""].filter(Boolean).join(" · ") : "");
   c.font = Font.regularSystemFont(11);
   c.lineLimit = 1;
+  c.minimumScaleFactor = 0.8;
 }
 function problem(w, res) {
   w.url = APP;
