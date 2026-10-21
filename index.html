@@ -970,14 +970,21 @@ const B=w=>{const b=w.event_billing;return(Array.isArray(b)?b[0]:b)||{}};
 /* total = package price + extras (expenses, transport) - discount */
 const tot=b=>b.price==null?null:Math.max(0,Number(b.price)+sum(Array.isArray(b.extras)?b.extras:[])-Number(b.discount||0));
 const wPrice=w=>tot(B(w));
-const planOf=b=>{const p=Array.isArray(b.plan)?b.plan.map(Number).filter(x=>x>0):[];return p.length?p:[25,25,50]};
+/* Payment plan stages, stored in event_billing.plan as numbers:
+   25 = 25% of the total · -500 = a fixed £500 · 0 = whatever is left (last stage only) */
+const planSt=b=>{const p=Array.isArray(b.plan)?b.plan.map(Number).filter(x=>isFinite(x)):[],o=p.map((x,i)=>x>0?{k:'pc',v:x}:x<0?{k:'fix',v:-x}:i===p.length-1&&p.length>1?{k:'rest',v:0}:null).filter(Boolean);return o.length?o:[{k:'pc',v:25},{k:'pc',v:25},{k:'pc',v:50}]};
+const planOf=b=>planSt(b).filter(x=>x.k==='pc').map(x=>x.v);
+const r2=n=>Math.round(n*100)/100;
 function planRows(b,paid,date){
   if(date===undefined)date=wed&&wed.wedding_date?wed.wedding_date:null;
-  const t=tot(b)||0,pl=planOf(b),full=Math.abs(pl.reduce((a,x)=>a+x,0)-100)<.01;let acc=0;
-  return pl.map((pc,i)=>{const amt=full&&i===pl.length-1?Math.round((t-acc)*100)/100:Math.round(t*pc)/100,st=acc;acc+=amt;
+  const t=tot(b)||0,st0=planSt(b),allPc=st0.every(x=>x.k==='pc'),full=allPc&&Math.abs(st0.reduce((a,x)=>a+x.v,0)-100)<.01;
+  const base=st0.map(x=>x.k==='fix'?r2(x.v):x.k==='pc'?r2(t*x.v/100):0),rest=Math.max(0,r2(t-base.reduce((a,x)=>a+x,0)));let acc=0;
+  return st0.map((x,i)=>{const amt=x.k==='rest'?rest:full&&i===st0.length-1?r2(t-acc):base[i],st=acc;acc+=amt;
     const got=Math.max(0,Math.min(amt,paid-st));
-    return{label:pl.length===1?'Full payment':i===0?'Deposit':i===pl.length-1?'Final balance':'Payment '+(i+1),pc,amt,left:Math.max(0,Math.round((amt-got)*100)/100),due:(Array.isArray(b.plan_due)?b.plan_due[i]:null)||(i===1&&date?date:null)}})}
-const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label} · ${r.pc}%</span><span>${gbp(r.amt)} · ${r.left<=0?'Paid':r.left<r.amt?gbp(r.left)+' left':'Due'}</span></div>${r.due&&r.left>0?`<div class="row2" style="margin-top:6px"><span${r.due<today()?' style="color:var(--bad)"':''}>${r.due<today()?'Overdue · was due ':'Due '}${fmtD(r.due)}</span><span></span></div>`:''}</div>`).join('');
+    return{label:st0.length===1?'Full payment':i===0?'Deposit':i===st0.length-1?'Final balance':'Payment '+(i+1),kind:x.k,pc:x.k==='pc'?x.v:null,amt,left:Math.max(0,r2(amt-got)),due:(Array.isArray(b.plan_due)?b.plan_due[i]:null)||(i===1&&date?date:null)}})}
+/* " · 25%" for a percentage stage, " · fixed" for a fixed amount, " · the rest" for the balance */
+const pTag=r=>r.kind==='pc'?' · '+r.pc+'%':r.kind==='fix'?' · fixed':' · the rest';
+const planHtml=(b,paid)=>planRows(b,paid).map(r=>`<div class="pg"><div class="row2"><span class="lbl">${r.label}${pTag(r)}</span><span>${gbp(r.amt)} · ${r.left<=0?'Paid':r.left<r.amt?gbp(r.left)+' left':'Due'}</span></div>${r.due&&r.left>0?`<div class="row2" style="margin-top:6px"><span${r.due<today()?' style="color:var(--bad)"':''}>${r.due<today()?'Overdue · was due ':'Due '}${fmtD(r.due)}</span><span></span></div>`:''}</div>`).join('');
 const wPaid=w=>sum(w.payments||[]);
 const wLeft=w=>wPrice(w)==null?0:Math.max(0,wPrice(w)-wPaid(w));
 const recvIn=y=>weds.reduce((a,w)=>a+sum((w.payments||[]).filter(p=>String(p.paid_on||'').slice(0,4)===String(y))),0);
@@ -1502,7 +1509,7 @@ ${disc?`<tr><td>Discount</td><td>−${gbp(disc)}</td></tr>`:''}
 ${ex.length||disc?`<tr class="mid"><td>Total${disc?' after discount':''}</td><td>${gbp(t)}</td></tr>`:''}
 ${Y().map(x=>`<tr><td>${esc(x.label||'Payment')} received ${fmtD(x.paid_on)}${x.method?' · '+esc(x.method):''}${x.invoice_note?`<br><span class="ps">${br(x.invoice_note)}</span>`:''}</td><td>−${gbp(x.amount)}</td></tr>`).join('')}
 <tr class="tot"><td>Balance due</td><td>${gbp(left)}</td></tr></table>
-${pr.length>1?`<div class="pl">Payment plan</div><div class="pv">${pr.map(r=>`${r.label} (${r.pc}%): ${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' still to pay':'to pay'):'paid'}`).join('<br>')}</div>`:''}
+${pr.length>1?`<div class="pl">Payment plan</div><div class="pv">${pr.map(r=>`${r.label}${r.kind==='pc'?' ('+r.pc+'%)':''}: ${gbp(r.amt)} · ${r.left?(r.left<r.amt?gbp(r.left)+' still to pay':'to pay'):'paid'}`).join('<br>')}</div>`:''}
 <div class="pl">Payment</div><div class="pv">${esc(s.pay||'')}${s.an||s.sc||s.acn?`<br>Account name: ${esc(s.an||'')}<br>Sort code: ${esc(s.sc||'')}<br>Account number: ${esc(s.acn||'')}`:''}</div>
 ${s.note?`<div class="pn">${br(s.note)}</div>`:''}</div>`}
 async function setB(o){
@@ -1532,21 +1539,40 @@ function openXForm(){
 <div class="f"><span class="l">Amount in £</span><input id="yxa" type="number" inputmode="decimal" min="0" step="0.01"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveX">Add</button></div></div></div>`;
 }
-function openPlanForm(){
+function openPlanForm(keep){
   ui.modal={type:'plan'};
+  const st=keep||planSt(wed.bill).map((x,i)=>({...x,due:planRows(wed.bill,0)[i]?planRows(wed.bill,0)[i].due:''}));ui.plan=st;
+  const n=st.length,lab=i=>n===1?'Full payment':i===0?'First payment · deposit':i===n-1?'Final payment':'Payment '+(i+1);
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Payment plan</h3>
-<p class="intro">The percentage of the total due at each stage, separated by commas. The first is the deposit and the last is the final balance. They should add up to 100.</p>
-<div class="f"><span class="l">Percentages</span><input id="ypl" inputmode="decimal" placeholder="25, 25, 50" value="${esc(planOf(wed.bill).join(', '))}"></div>
-${planRows(wed.bill,0).map((r,i)=>`<div class="f"><span class="l">${r.label} · due date ${i===1?'(the event date unless you change it)':'(optional)'}</span><input id="ypd${i}" type="date" value="${esc(r.due||'')}"></div>`).join('')}
-<p class="intro" style="font-size:13px">Due dates appear on the client’s link, in your phone calendar and on your home page when they are close. If you change the number of stages, save, then open this again to set their dates.</p>
+<p class="intro">Set each payment as a percentage of the total or as a fixed amount in £. The final payment can simply be whatever is left.</p>
+${st.map((x,i)=>`<section class="qsum" style="margin:0 0 12px"><div class="lbl" style="margin-bottom:10px">${lab(i)}</div>
+<div class="pr2"><div class="f" style="margin:0"><span class="l">Type</span><select id="ypk${i}" data-pl="1"><option value="pc"${x.k==='pc'?' selected':''}>Percentage</option><option value="fix"${x.k==='fix'?' selected':''}>Fixed £</option>${i===n-1&&n>1?`<option value="rest"${x.k==='rest'?' selected':''}>What’s left</option>`:''}</select></div>
+<div class="f" style="margin:0${x.k==='rest'?';visibility:hidden':''}"><span class="l">${x.k==='fix'?'Amount in £':'Percent'}</span><input id="ypv${i}" data-pl="1" type="number" inputmode="decimal" min="0" step="0.01" value="${x.k==='rest'?'':esc(String(x.v||''))}"></div></div>
+<div class="f" style="margin:12px 0 0"><span class="l">Due date ${i===1?'(the event date unless you change it)':'(optional)'}</span><input id="ypd${i}" type="date" value="${esc(x.due||'')}"></div>
+${n>1?`<div class="acts" style="margin-top:10px"><button data-a="plDel" data-i="${i}">Remove this payment</button></div>`:''}</section>`).join('')}
+${n<6?`<div class="acts" style="margin:0 0 14px"><button data-a="plAdd">+ Add a payment</button></div>`:''}
+<div id="ypsum" class="hint">${planSum(st)}</div>
+<p class="intro" style="font-size:13px">Due dates appear on the client’s link, in your phone calendar and on your home page when they are close.</p>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="savePlan">Save plan</button></div></div></div>`;
 }
+/* read the sheet back into stages */
+function planRead(){const n=(ui.plan||[]).length;return Array.from({length:n},(_,i)=>{const k=($('#ypk'+i)||{}).value||'pc',v=parseFloat(($('#ypv'+i)||{}).value);return{k,v:k==='rest'?0:(isFinite(v)?v:0),due:($('#ypd'+i)||{}).value||''}})}
+/* live check: how the plan adds up against the event total */
+function planSum(given){
+  const st=given||planRead(),t=tot(wed.bill);
+  if(t==null){const pc=st.filter(x=>x.k==='pc').reduce((a,x)=>a+x.v,0);return st.some(x=>x.k!=='pc')?'Set the price to check the plan against the total.':'Adds up to '+r2(pc)+'%.'}
+  const set=st.reduce((a,x)=>a+(x.k==='fix'?x.v:x.k==='pc'?t*x.v/100:0),0),hasRest=st.some(x=>x.k==='rest'),left=r2(t-set);
+  if(hasRest)return left<0?`<span style="color:var(--bad)">The payments come to ${gbp(r2(set))}, more than the total of ${gbp(t)}.</span>`:`Total ${gbp(t)} · the final payment will be ${gbp(left)}.`;
+  return Math.abs(left)<.01?`Adds up to the total of ${gbp(t)}.`:`<span style="color:var(--bad)">Adds up to ${gbp(r2(set))}, the total is ${gbp(t)} (${left>0?gbp(left)+' short':gbp(-left)+' over'}).</span>`;
+}
+document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.pl){const el=$('#ypsum');if(el)el.innerHTML=planSum()}});
+document.addEventListener('change',e=>{if(e.target&&e.target.dataset&&e.target.dataset.pl&&/^ypk/.test(e.target.id)&&ui.modal&&ui.modal.type==='plan'){const st=planRead(),i=+e.target.id.slice(3);if(st[i])st[i].v='';openPlanForm(st)}});
 function openPayForm(id){
   const x=id?Y().find(y=>y.id===id):null,paid=sum(Y()),t=tot(wed.bill),rows=t==null?[]:planRows(wed.bill,paid).filter(r=>r.left>0),left=t==null?0:Math.max(0,t-paid);
   const d=x||{amount:rows[0]?rows[0].left:'',paid_on:today(),label:rows[0]?rows[0].label:(Y().length?'Balance':'Deposit'),method:'Bank transfer',note:''};
   ui.modal={type:'pay',id};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit payment':'Add payment'}</h3>
-${!x&&rows.length?`<div class="lbl">Quick fill</div><div class="chipsel" style="margin-bottom:18px">${rows.map(r=>`<button class="tab" data-a="fillPay" data-v="${r.left}" data-l="${esc(r.label)}">${r.label} ${r.pc}% · ${gbp(r.left)}</button>`).join('')}${rows.length>1?`<button class="tab" data-a="fillPay" data-v="${left}" data-l="Full balance">Everything left · ${gbp(left)}</button>`:''}</div>`:''}
+${!x&&rows.length?`<div class="lbl">Quick fill</div><div class="chipsel" style="margin-bottom:18px">${rows.map(r=>`<button class="tab" data-a="fillPay" data-v="${r.left}" data-l="${esc(r.label)}">${r.label}${r.kind==='pc'?' '+r.pc+'%':''} · ${gbp(r.left)}</button>`).join('')}${rows.length>1?`<button class="tab" data-a="fillPay" data-v="${left}" data-l="Full balance">Everything left · ${gbp(left)}</button>`:''}</div>`:''}
 <div class="f"><span class="l">Amount in £</span><input id="ya" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(d.amount)}"></div>
 <div class="f"><span class="l">Date paid</span><input id="yd" type="date" value="${esc(d.paid_on||'')}"></div>
 <div class="f"><span class="l">What it was for · shown on the invoice</span><input id="yl" list="yls" maxlength="80" value="${esc(d.label||'')}"><datalist id="yls"><option>Deposit</option><option>Payment 2</option><option>Final balance</option><option>Full payment</option><option>Extra hours</option></datalist></div>
@@ -2826,7 +2852,7 @@ const guard=(d,skip,go,plain)=>{const c=clash(d,skip);if(c.length)ask('You alrea
 function agrDoc(s){
   const b={price:s.price,discount:s.discount,extras:s.extras,plan:s.plan,plan_due:s.plan_due},t=tot(b),terms=Array.isArray(s.terms)&&s.terms.length?s.terms:TERMS,r=(a,v)=>v?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx);text-align:right">${esc(v)}</span></div>`:'';
   return`<section class="card"><div class="lbl">What is agreed</div>${r('Client',s.couple)}${r('Event',s.event_type)}${r('Date',s.wedding_date?fmtD(s.wedding_date):'')}${r('Package',s.package)}${r('Services',s.services)}${s.travel?r('Travel','Flights and accommodation for '+(Number(s.travel.people)===1?'one person':s.travel.people+' people')+(s.travel.dest?' to '+s.travel.dest:'')+', arranged and paid for by the client'):''}${s.hours&&s.hourly_rate?r('Hours',Number(s.hours)+' at '+gbp(s.hourly_rate)+' per hour'):''}${s.price!=null&&Number(s.discount)>0?r('Price',gbp(s.price))+r('Discount','−'+gbp(s.discount)):''}${(Array.isArray(s.extras)?s.extras:[]).map(e=>r(e.label||'Extra','+'+gbp(e.amount))).join('')}${t!=null?r('Total',gbp(t)):''}</section>
-${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0,s.wedding_date||null).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label} · ${x.pc}%</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
+${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0,s.wedding_date||null).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label}${pTag(x)}</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
 <h2 style="font-size:20px;margin-top:28px">Terms &amp; Conditions</h2><div class="tc">${terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`}
 function clAgr(){
   const a=wed.agr,signed=!!a.signed_at,s=(signed?a.snapshot:a.current)||{};
@@ -3984,7 +4010,10 @@ document.addEventListener('click',async e=>{
   else if(a==='saveX'&&!TOKEN){const l=$('#yxl').value.trim(),am=parseFloat($('#yxa').value);if(!l){$('#yxl').classList.add('err');return}if(!(am>0)){$('#yxa').classList.add('err');return}closeM();setB({extras:[...(Array.isArray(wed.bill.extras)?wed.bill.extras:[]),{label:l,amount:am}]})}
   else if(a==='delX'&&!TOKEN){const i=+t.dataset.i,l=Array.isArray(wed.bill.extras)?wed.bill.extras:[];ask(`Remove “${(l[i]||{}).label||'this extra'}”?`,()=>setB({extras:l.filter((_,j)=>j!==i)}))}
   else if(a==='editPlan'&&!TOKEN)openPlanForm();
-  else if(a==='savePlan'&&!TOKEN){const p=$('#ypl').value.split(/[,\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);if(!p.length){$('#ypl').classList.add('err');return}const tt=p.reduce((x,y)=>x+y,0),due=p.map((_,i)=>{const v=($('#ypd'+i)||{}).value||null;return i===1&&v===wed.wedding_date?null:v});closeM();await setB({plan:p,plan_due:due});if(Math.abs(tt-100)>.01)toast('Saved, but the plan adds up to '+tt+'%, not 100%.')}
+  else if(a==='plAdd'&&!TOKEN){const st=planRead();st.splice(Math.max(0,st.length-1),0,{k:'pc',v:'',due:''});openPlanForm(st)}
+  else if(a==='plDel'&&!TOKEN){const st=planRead();st.splice(+t.dataset.i,1);if(st.length&&st[st.length-1].k==='rest'&&st.length===1)st[0]={k:'pc',v:100,due:st[0].due};st.forEach((x,i)=>{if(x.k==='rest'&&i<st.length-1)x.k='pc'});openPlanForm(st)}
+  else if(a==='savePlan'&&!TOKEN){const st=planRead();let bad=false;st.forEach((x,i)=>{if(x.k!=='rest'&&!(x.v>0)){($('#ypv'+i)||{classList:{add(){}}}).classList.add('err');bad=true}});if(bad||!st.length)return;
+    const p=st.map(x=>x.k==='pc'?r2(x.v):x.k==='fix'?-r2(x.v):0),due=st.map((x,i)=>{const v=x.due||null;return i===1&&v===wed.wedding_date?null:v}),warn=$('#ypsum')&&/--bad/.test($('#ypsum').innerHTML);closeM();ui.plan=null;await setB({plan:p,plan_due:due});if(warn)toast('Saved, but the payments don’t add up to the total yet.')}
   else if(a==='fillPay'){$('#ya').value=t.dataset.v;$('#yl').value=t.dataset.l}
   else if(a==='togMoney'&&!TOKEN)setB({share_money:wed.bill.share_money===false})
   else if(a==='addPay'&&!TOKEN)openPayForm();
