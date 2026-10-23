@@ -1690,7 +1690,7 @@ function crewListView(){
 <p class="intro" style="margin-top:16px">Each person has one page of their own, showing every job they have with you, past and coming up, and their pay. You and they open the same link, so you both see the same thing. Their pay comes from the Costs tab of each event.</p>
 ${crewErr?'<p class="intro" style="margin-top:16px">Crew isn’t set up yet. Run the crew SQL in Supabase once, then refresh this page.</p>':''}
 <div class="cta"><button class="btn fill" data-a="addCrew">+ Add crew member</button></div>
-<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}${c.token?`<div class="sub">${cpOwed(c.id)?'Still to pay them: '+mny(cpOwed(c.id)):'Nothing to pay them'}</div>`:''}<div class="acts">${c.token?`<button data-a="openCp" data-id="${c.id}">Open their page</button><button data-a="copyCp" data-id="${c.id}">Copy link</button><button data-a="waCp" data-id="${c.id}">Send on WhatsApp</button>`:''}<button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>
+<div>${crew.length?crew.map(c=>`<div class="g"><div class="bd"><div class="nm">${esc(c.name)}</div>${c.role?`<div class="sub">${esc(c.role)}</div>`:''}${c.phone?`<a class="lnk" href="tel:${esc(tel(c.phone))}">${esc(c.phone)}</a>`:''}${c.note?`<div class="note">${esc(c.note)}</div>`:''}${c.token?`<div class="sub">${cpOwed(c.id)?'Still to pay them: '+mny(cpOwed(c.id)):'Nothing to pay them'}</div>`:''}<div class="acts">${c.token?`<button data-a="openCp" data-id="${c.id}">Open their page</button><button data-a="copyCp" data-id="${c.id}">Copy link</button><button data-a="waCp" data-id="${c.id}">Send on WhatsApp</button>`:''}<button data-a="crewToEv" data-id="${c.id}">Add to an event</button><button data-a="editCrew" data-id="${c.id}">Edit</button><button data-a="delCrew" data-id="${c.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No crew yet. Add your first second shooter, then add them to an event from that event’s Crew tab.</p>'}</div>
 ${tplSection()}`}
 function openCrewForm(id){
   const c=id?crew.find(x=>x.id===id):null,d=c||{name:'',phone:'',role:'Second shooter',note:''};
@@ -1753,24 +1753,49 @@ const ecKeys=()=>[{k:'main',n:'Main day',l:'Main day'+(wed.wedding_date?' · '+f
 const ecCost=(cid,k)=>cid?K().find(c=>c.crew_id===cid&&(c.day_ref===k||(k==='main'&&!c.day_ref))):null;
 function ecDays(x){
   const multi=XD().length>0,cid=x?x.crew_id:null,num=v=>v==null?'':esc(String(Number(v)));
-  return`<div class="f"><span class="l">${multi?'Which days are they working? Tick any, then add hours and pay':'Hours and pay'}</span>${ecKeys().map(y=>{const on=y.k==='main'?(!x||x.main_day!==false):!!(x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.k)),c=ecCost(cid,y.k);
+  return`<div class="f"><span class="l">${multi?'Which date(s) are they working? Tick one or more, then add hours and pay':'Date · '+esc(fmtD(wed.wedding_date))+' · hours and pay'}</span>${ecKeys().map(y=>{const on=y.k==='main'?(!x||x.main_day!==false):!!(x&&Array.isArray(x.day_ids)&&x.day_ids.includes(y.k)),c=ecCost(cid,y.k);
 return`<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">${multi?`<label style="display:flex;gap:10px;align-items:center;font-size:16px"><input type="checkbox" class="edk" value="${y.k}" style="width:22px;height:22px" ${on?'checked':''}> ${esc(y.l)}</label>`:''}
 <div style="display:flex;gap:10px;margin-top:${multi?10:0}px"><input class="eph" data-k="${y.k}" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Hours" value="${c?num(c.hours):''}"><input class="epa" data-k="${y.k}" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Pay in £" value="${c?num(c.amount):''}"></div>${c&&c.paid?'<div class="sub" style="margin-top:6px">Already marked as paid</div>':''}</div>`}).join('')}
 <p class="sub" style="text-transform:none;letter-spacing:0;margin-top:12px">The pay is saved on the Costs tab and shows on their personal page. Leave it empty if you have not agreed it yet.</p></div>`}
-function openEcForm(id,invite){
+/* Add a crew member to an event from the Crew list: pick the event, then the date(s) in the crew form */
+function evDates(w){const l=xdSort(daysAll.filter(d=>d.wedding_id===w.id));return[fmtD(w.wedding_date)+(l.length?' (main day)':''),...l.map(d=>(d.day_date?fmtD(d.day_date):'Date to be confirmed')+' ('+d.kind+')')]}
+function evLast(w){return[w.wedding_date,...daysAll.filter(d=>d.wedding_id===w.id).map(d=>d.day_date)].filter(Boolean).sort().pop()||''}
+function openCrewEvPick(cid){
+  const c=crew.find(x=>x.id===cid);if(!c)return;
+  const t=new Date(),today=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  const list=(weds||[]).slice(),up=list.filter(w=>!evLast(w)||evLast(w)>=today).sort((a,b)=>String(a.wedding_date||'9999').localeCompare(String(b.wedding_date||'9999'))),past=list.filter(w=>evLast(w)&&evLast(w)<today).sort((a,b)=>String(b.wedding_date).localeCompare(String(a.wedding_date))).slice(0,10);
+  const rowE=w=>`<button class="or" data-a="crewEvGo" data-id="${w.id}" data-k="${cid}"><span><span class="nm" style="display:block">${esc(w.couple||etype(w))}</span><span class="sub" style="display:block;text-align:left">${evDates(w).map(esc).join('<br>')}</span></span><span class="sub">${esc(etype(w))}</span></button>`;
+  ui.modal={type:'cep'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Add ${esc(c.name)} to an event</h3>
+<p class="intro">Pick the event. On the next screen you choose which date or dates they work, with hours and pay for each.</p>
+<label class="chk"><input type="checkbox" id="cepAsk" ${ui.cepAsk===false?'':'checked'}> Ask them on WhatsApp first (they accept or decline)</label>
+<div class="lbl" style="margin-top:6px">Upcoming</div>${up.length?up.map(rowE).join(''):'<p class="empty">No upcoming events.</p>'}
+${past.length?`<div class="lbl" style="margin-top:22px">Earlier</div>${past.map(rowE).join('')}`:''}
+<div class="bt"><button class="btn" data-a="close">Cancel</button></div></div></div>`;
+}
+async function crewEvGo(wid,cid){
+  const ask=!!($('#cepAsk')||{}).checked;ui.cepAsk=ask;closeM();
+  await openWedding(wid);if(!wed||wed.id!==wid)return;
+  ui.sec='crew';render();scrollTo(0,0);
+  const on=EC().find(e=>e.crew_id===cid);
+  if(on){toast('Already on this event. Tick any other dates for them here.');return openEcForm(on.id)}
+  openEcForm(null,ask,cid);
+}
+function openEcForm(id,invite,pre){
   const x=id?EC().find(y=>y.id===id):null;
   if(!x&&!crew.length){toast('Add someone to your crew list first.');ui.view='crew';render();return openCrewForm()}
   const free=crew.filter(c=>!EC().some(e=>e.crew_id===c.id));
   if(!x&&!free.length)return toast('Everyone on your crew list is already on this event.');
-  const d=x||{crew_id:free[0].id,role:free[0].role||'Second shooter',call_time:'',brief:'',tasks:[]},inv=x?x.status==='invited':!!invite;
+  const p0=(pre&&free.find(c=>c.id===pre))||free[0];
+  const d=x||{crew_id:p0.id,role:p0.role||'Second shooter',call_time:'',brief:'',tasks:[]},inv=x?x.status==='invited':!!invite;
   ui.modal={type:'ec',id,invite:!x&&!!invite};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${x?'Edit '+esc(cName(x)):invite?'Ask if available':'Add crew to this event'}</h3>
 ${!x&&invite?'<p class="intro">WhatsApp opens with the request written for you. They see the date, call time, area, role and your note, then accept or decline.</p>':''}
-${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`<option value="${c.id}">${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select></div>`}
+${x?'':`<div class="f"><span class="l">Who</span><select id="ec">${free.map(c=>`<option value="${c.id}" ${c.id===d.crew_id?'selected':''}>${esc(c.name)}${c.role?' · '+esc(c.role):''}</option>`).join('')}</select>${EC().length&&XD().length?'<div class="sub" style="text-transform:none;letter-spacing:0;margin-top:6px">Someone already on this event? Tap Edit on their name to add another date.</div>':''}</div>`}
+${ecDays(x)}
 <div class="f"><span class="l">Role on this event</span><input id="er" maxlength="80" placeholder="Second shooter" value="${esc(d.role||'')}"></div>
 <div class="f"><span class="l">Call time</span>${tpick('et',d.call_time||'')}</div>
 <div class="f"><span class="l">${inv?'Note for them · fee, what you need covered':'Brief · what they should know'}</span><textarea id="eb" rows="3" maxlength="1000" placeholder="${inv?'e.g. 8 hours, second angle and guest candids. £… for the day.':'e.g. Meet at the groom’s house. Black outfit. Bring the 85mm.'}">${esc(d.brief||'')}</textarea></div>
-${ecDays(x)}
 ${ctpl.length?`<div class="f"><span class="l">Start from a template</span><select id="etp"><option value="">Choose a template…</option>${ctpl.map((x,i)=>`<option value="${i}">${esc(x.n)}</option>`).join('')}</select></div>`:''}
 <div class="f"><span class="l">Their to-do list · one task per line${inv?' (shown after they accept)':''}</span><textarea id="ek" rows="5" maxlength="2000" placeholder="Groom getting ready&#10;Guests arriving&#10;Second angle for the ceremony">${esc((Array.isArray(d.tasks)?d.tasks:[]).map(t=>t.t).join('\n'))}</textarea></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveEc">${!x&&invite?'Save and open WhatsApp':'Save'}</button></div></div></div>`;
@@ -4033,6 +4058,8 @@ document.addEventListener('click',async e=>{
   else if(a==='crewV'&&!TOKEN){ui.view='crew';render();scrollTo(0,0)}
   else if(a==='addCrew'&&!TOKEN)openCrewForm();
   else if(a==='editCrew'&&!TOKEN)openCrewForm(id);
+  else if(a==='crewToEv'&&!TOKEN)openCrewEvPick(id);
+  else if(a==='crewEvGo'&&!TOKEN)crewEvGo(id,t.dataset.k);
   else if(a==='openCp'&&!TOKEN){const c=crew.find(x=>x.id===id);if(c)window.open(cpLink(c),'_blank')}
   else if(a==='copyCp'&&!TOKEN){const c=crew.find(x=>x.id===id),u=cpLink(c);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Link copied'),()=>prompt('Copy this link:',u))}
   else if(a==='waCp'&&!TOKEN){const c=crew.find(x=>x.id===id),ph=waNum(c.phone);if(!ph)return toast('Add a phone number for this person first.');window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(`Hi ${c.name}, this is your own page with Zema Production. It shows every job you have with us, past and coming up, and your pay. Keep the link, it always stays up to date.\n${cpLink(c)}`),'_blank')}
