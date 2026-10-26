@@ -2458,7 +2458,7 @@ function openMenu(){
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
 ${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('shotV','Shot lists','Must-haves for each type of event')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
-${r('themeV','Appearance',THEMES[themePref])}${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('cleanV','Clear unused photos','Free up storage space')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('reloadV','Reload the app','Fetch the latest version')}
+${r('themeV','Appearance',THEMES[themePref])}${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('cleanV','Clear unused photos','Free up storage space')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('impV','Import invoices','Past invoices from Zoho')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
 }
 /* ---- Enquiries and follow-ups ---- */
@@ -2931,6 +2931,130 @@ function rvView(){
 <p class="intro" style="font-size:13px">With your permission, we may show this review on our website with the name above.</p>
 <div class="bad" id="rwerr"></div><button class="btn fill" style="width:100%" data-a="rvSend">Send review</button></section>
 <footer><span>Zema Production · London</span></footer>`}
+/* ---- Import past invoices from Zoho (Invoices export, .xlsx or .csv). Shows every invoice first, flags ones already in the planner and likely duplicates. ---- */
+let impRows=null;
+const impLib=()=>window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Could not load the spreadsheet reader. Check your connection and try again.'));document.head.appendChild(s)});
+const impD=v=>{if(v instanceof Date&&!isNaN(v)){const d=new Date(v.getTime()+12*3600e3);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}const s=String(v||'').trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}return''};
+const impTxtDates=t=>{const out=[],re=/\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})\b/g;let m;while((m=re.exec(String(t||''))))if(+m[2]>=1&&+m[2]<=12&&+m[1]>=1&&+m[1]<=31){const y=m[3].length===2?'20'+m[3]:m[3];out.push(y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'))}return out};
+const impNum=v=>{const n=parseFloat(String(v==null?'':v).replace(/[£,\s]/g,''));return isNaN(n)?0:n};
+const impName=s=>String(s||'').replace(/\b\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}\b/g,'').replace(/^(mr|mrs|ms|miss|dr)\.?\s+/i,'').replace(/\s+/g,' ').trim();
+const impKey=s=>impName(s).toLowerCase().replace(/[^a-z& ]/g,'');
+const impFlat=s=>String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+const impKind=t=>/hamm?awi?ti/i.test(t)?'Hammawiti':/\bmels\b/i.test(t)?'Mels':/pre[- ]?wedding/i.test(t)?'Pre-wedding shoot':/church/i.test(t)?'Church':'';
+function impType(items,cust){
+  const all=items.map(x=>x.name+' '+x.desc).join(' ');
+  if(/leor\s*film/i.test(cust))return{type:FREE,pkg:''};
+  const p=(all.match(/\b(platinum|gold|silver)\s+package/i)||[])[1];
+  if(p)return{type:'Wedding',pkg:p[0].toUpperCase()+p.slice(1).toLowerCase()};
+  if(/baptism|christening/i.test(all))return{type:'Christening',pkg:''};
+  if(/birthday/i.test(all))return{type:'Birthday Party',pkg:''};
+  if(/pre[- ]?wedding/i.test(all))return{type:'Pre-Wedding Shoot',pkg:''};
+  if(/2nd shooter|second shooter/i.test(all))return{type:FREE,pkg:''};
+  if(items.some(x=>/photoshoot/i.test(x.name)))return{type:'Photoshoot',pkg:''};
+  return{type:'Other Small Event',pkg:''};
+}
+function impParse(rows){
+  const by=new Map();
+  for(const r of rows){const id=String(r['Invoice ID']||r['Invoice Number']||'').trim();if(!id||!r['Invoice Number'])continue;if(!by.has(id))by.set(id,{r,lines:[],keys:new Set()});const g=by.get(id),k=[r['Item Name'],r['Item Desc'],r['Quantity'],r['Item Price'],r['Item Total']].join('|');if(!g.keys.has(k)){g.keys.add(k);g.lines.push(r)}}
+  const out=[];
+  for(const{r,lines}of by.values()){
+    const items=lines.map(x=>({name:String(x['Item Name']||'').trim(),desc:String(x['Item Desc']||'').trim(),qty:impNum(x['Quantity'])||1,price:impNum(x['Item Price']),total:impNum(x['Item Total']),unit:String(x['Usage unit']||'').toLowerCase()})).filter(x=>x.name||x.desc);
+    const cust=String(r['Customer Name']||r['Company Name']||'').trim(),t=impType(items,cust),free=t.type===FREE;
+    const total=impNum(r['Total']),bal=impNum(r['Balance']),wo=impNum(r['WriteOff Amount']),invDate=impD(r['Invoice Date']);
+    const money=items.filter(x=>x.qty*x.price>0||x.total>0);
+    const main=money.slice().sort((a,b)=>b.qty*b.price-a.qty*a.price)[0]||items[0]||{name:'',desc:'',qty:1,price:0,total:0};
+    const dated=items.map(x=>({x,d:impTxtDates(x.name+' '+x.desc)})).filter(y=>y.d.length);
+    const nameDates=impTxtDates(cust);
+    let date=(dated.find(y=>y.x===main)||{d:[]}).d[0]||nameDates[0]||(dated[0]&&dated[0].d[0])||'';
+    const guessed=!date;if(!date)date=invDate;
+    const days=[];for(const y of dated)for(const d of y.d)if(d!==date&&!days.some(z=>z.day_date===d))days.push({day_date:d,kind:impKind(y.x.name+' '+y.x.desc)||y.x.name||'Extra day'});
+    const hourly=free&&(main.unit==='hour'||/2nd shooter|second shooter|videograph|photograph/i.test(main.name));
+    const price=Math.round(main.qty*main.price*100)/100;
+    const extras=money.filter(x=>x!==main).map(x=>({label:x.name+(x.desc?' · '+x.desc.split('\n')[0].trim():''),amount:Math.round(x.qty*x.price*100)/100}));
+    let disc=Math.round((price+extras.reduce((a,x)=>a+x.amount,0)-total)*100)/100;
+    if(disc<0){extras.push({label:'Adjustment',amount:-disc});disc=0}
+    const paid=Math.max(0,Math.round((total-bal-wo)*100)/100);
+    const all=items.map(x=>x.name+' '+x.desc).join(' '),both=/photo/i.test(all)&&/video/i.test(all);
+    out.push({id:String(r['Invoice ID']||r['Invoice Number']),no:String(r['Invoice Number']).trim(),cust,name:free?(impName(cust)||'Freelance')+' · '+(main.name||'Second shooter'):impName(cust)||cust,
+      date,guessed,invDate,type:t.type,pkg:t.pkg,free,total,bal,paid,paidOn:impD(r['Last Payment Date'])||invDate,status:String(r['Invoice Status']||''),
+      phone:String(r['Primary Contact Mobile']||r['Primary Contact Phone']||r['Billing Phone']||'').replace(/[‪‬]/g,'').trim(),city:String(r['Billing City']||'').trim(),
+      services:free?'Second shooter':(both||(t.type==='Wedding'&&!/only photo/i.test(all)))?'Photo + Video':/video/i.test(all)?'Videography':'Photography',
+      price,disc,extras,hourly:hourly?{hours:main.qty,rate:main.price}:null,days,
+      note:'Imported from Zoho invoice '+String(r['Invoice Number']).trim()+(guessed?' (event date taken from the invoice date)':'')+'.\n'+items.map(x=>'• '+x.name+(x.desc?': '+x.desc.replace(/\s*\n\s*/g,' / '):'')).join('\n'),
+      flags:[],on:true,mainKey:impFlat(main.name+main.desc).slice(0,40)});
+  }
+  out.sort((a,b)=>a.date.localeCompare(b.date)||a.no.localeCompare(b.no));
+  // already in the planner: same invoice number, or same name on (nearly) the same date
+  const dist=(a,b)=>Math.abs((Date.parse(a)-Date.parse(b))/864e5);
+  for(const x of out){
+    const k=impKey(x.free?'':x.cust),tok=k.split(/[ &]+/).filter(t=>t.length>2);
+    const hit=weds.find(w=>{const b=B(w);if(b&&b.invoice_no&&String(b.invoice_no).trim().toLowerCase()===x.no.toLowerCase())return true;if(x.free)return isFree(w)&&w.wedding_date===x.date&&/leor/i.test(w.couple)&&Math.abs((tot(b||{})||0)-x.total)<1;const wn=impKey(w.couple);if(!w.wedding_date||!tok.some(t=>wn.includes(t)))return false;const ds=[w.wedding_date,...daysAll.filter(d=>d.wedding_id===w.id).map(d=>d.day_date).filter(Boolean)];return[x.date,...x.days.map(d=>d.day_date)].some(d=>ds.some(e=>dist(d,e)<=3))});
+    if(hit){x.flags.push({k:'have',t:'Already in the planner: '+hit.couple+(hit.wedding_date?' · '+fmtD(hit.wedding_date):'')});x.on=false}
+  }
+  // likely duplicates inside the file
+  for(let i=0;i<out.length;i++)for(let j=0;j<i;j++){const a=out[j],b=out[i];if(a.free!==b.free)continue;
+    const near=dist(a.invDate,b.invDate)<=14,sameMoney=Math.abs(a.total-b.total)<1,ka=impKey(a.cust),kb=impKey(b.cust),simName=ka&&kb&&(ka.startsWith(kb)||kb.startsWith(ka));
+    const dup=a.free?(sameMoney&&a.date===b.date&&a.mainKey===b.mainKey):(near&&((sameMoney&&a.mainKey===b.mainKey)||(simName&&a.date===b.date)));
+    if(dup){b.flags.push({k:'dup',t:'Looks like a duplicate of '+a.no+' ('+a.cust+', '+gbp(a.total)+')'});if(!a.flags.some(f=>f.k==='dup'))a.flags.push({k:'dup',t:'Possible duplicate: see '+b.no+' ('+b.cust+')'});b.on=false}}
+  return out;
+}
+async function impPick(files){
+  if(!files||!files.length)return;
+  toast('Reading '+(files.length>1?files.length+' files':'the file')+'…');
+  try{
+    await impLib();let rows=[];
+    for(const f of files){const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];rows=rows.concat(XLSX.utils.sheet_to_json(ws,{defval:'',raw:true}))}
+    if(!rows.length||!('Invoice Number' in rows[0]))return toast('This doesn’t look like a Zoho invoices export. In Zoho, open Invoices › ☰ › Export Invoices.');
+    impRows=impParse(rows);openImp();
+  }catch(e){toast(e.message||String(e))}
+}
+function openImp(){
+  ui.modal={type:'imp'};
+  const L=impRows;
+  if(!L){
+    $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Import invoices</h3>
+<p class="intro">Bring in your past invoices from Zoho. Each invoice becomes an event with its price, extras, discount and what has been paid, so it counts in your money and Progress. Leor Film and other second-shooting work goes to Freelance.</p>
+<ol class="steps"><li>In Zoho Invoice on a computer, open <b>Invoices</b>, tap <b>☰</b> › <b>Export Invoices</b>, choose <b>All Items</b> and <b>XLSX</b>.</li><li>Choose the file below. You can pick more than one; invoices that appear twice are counted once.</li><li>Check the list, untick anything you don’t want, then import.</li></ol>
+<label class="btn fill" style="display:flex;align-items:center;justify-content:center;cursor:pointer">Choose the Zoho file<input id="impF" type="file" accept=".xlsx,.xls,.csv" multiple hidden></label>
+<div class="bt"><button class="btn" data-a="close">Cancel</button></div></div></div>`;
+    $('#impF').addEventListener('change',e=>impPick([...e.target.files]));return;
+  }
+  const on=L.filter(x=>x.on),fr=on.filter(x=>x.free).length,owed=on.reduce((a,x)=>a+Math.max(0,x.total-x.paid),0),val=on.reduce((a,x)=>a+x.total,0);
+  const nHave=L.filter(x=>x.flags.some(f=>f.k==='have')).length,nDup=L.filter(x=>x.flags.some(f=>f.k==='dup')).length;
+  const row=(x,i)=>`<label class="g" style="cursor:pointer;align-items:flex-start${x.on?'':';opacity:.55'}"><input type="checkbox" class="impc" data-i="${i}" ${x.on?'checked':''} style="width:22px;height:22px;margin-top:4px;flex:none;accent-color:var(--ac)"><span class="bd"><span class="nm" style="display:block;font-size:19px">${esc(x.name)}</span>
+<span class="sub" style="display:block">${esc(x.no)} · ${esc(x.type===FREE?'Freelance':x.type)}${x.pkg?' · '+esc(x.pkg):''} · ${x.guessed?'about ':''}${fmtD(x.date)}${x.days.length?' · + '+x.days.map(d=>esc(d.kind)+' '+fmtD(d.day_date)).join(', '):''}</span>
+<span class="sub" style="display:block">${gbp(x.total)}${x.total-x.paid>0.009?` · <b style="color:var(--bad)">${gbp(x.total-x.paid)} still owed</b>`:' · paid'}</span>
+${x.flags.map(f=>`<span class="tag ${f.k==='dup'?'approved':''}" style="display:block;width:fit-content">${esc(f.t)}</span>`).join('')}</span></label>`;
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Check before importing</h3>
+<p class="intro">${L.length} invoices found. Ticked ones are imported. ${nHave?nHave+' already in your planner and '+'':''}${nDup?nDup+' possible duplicate'+(nDup>1?'s':'')+' ':''}${nHave||nDup?'are flagged; the planner left the repeats unticked. Tick any you still want.':''}</p>
+<div class="qsum"><div class="row2"><span>Importing</span><span>${on.length} invoices (${on.length-fr} events, ${fr} freelance)</span></div><div class="row2"><span>Total value</span><span>${gbp(val)}</span></div><div class="row2"><span>Still owed</span><span>${gbp(owed)}</span></div></div>
+<div class="acts" style="margin:0 0 6px"><button data-a="impAll">Tick all</button><button data-a="impNone">Untick all</button><button data-a="impOwed">Tick only unpaid</button></div>
+<div id="impL">${L.map(row).join('')}</div>
+<div class="bt" style="position:sticky;bottom:calc(-26px - env(safe-area-inset-bottom,0px));background:var(--s);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px))"><button class="btn" data-a="impReset">Choose another file</button><button class="btn fill" data-a="impGo" ${on.length?'':'disabled'}>Import ${on.length}</button></div></div></div>`;
+  document.querySelectorAll('.impc').forEach(c=>c.addEventListener('change',e=>{L[+e.target.dataset.i].on=e.target.checked;const sc=$('.m').scrollTop;openImp();$('.m').scrollTop=sc}));
+}
+async function impGo(){
+  const L=(impRows||[]).filter(x=>x.on);if(!L.length)return;
+  const btn=document.querySelector('[data-a="impGo"]');if(btn){btn.disabled=true;btn.textContent='Importing…'}
+  let ok=0;const bad=[];
+  for(const x of L){
+    try{
+      const past=x.date<today();
+      const w=await sb.from('weddings').insert({couple:x.name,wedding_date:x.date||null,city:x.city||null,services:x.services,event_type:x.type,package:x.pkg||'',stage:past?'delivered':'confirmed'}).select().single();
+      if(w.error)throw w.error;const wid=w.data.id;
+      const bill={wedding_id:wid,bill_to:x.cust,client_phone:x.phone,price:x.price,discount:x.disc||0,extras:x.extras,invoice_no:x.no,invoice_date:x.invDate||null,invoice_sent:true,invoice_sent_on:x.invDate||null,...(x.hourly?{hours:x.hourly.hours,hourly_rate:x.hourly.rate}:{})};
+      let q=await sb.from('event_billing').upsert(bill);
+      if(q.error&&/column|schema/i.test(q.error.message)){const{invoice_sent,invoice_sent_on,invoice_date,...b2}=bill;q=await sb.from('event_billing').upsert(b2)}
+      if(q.error)throw q.error;
+      if(x.paid>0){const p=await sb.from('payments').insert({wedding_id:wid,amount:x.paid,paid_on:x.paidOn||x.invDate||x.date,label:x.paid>=x.total-0.009?'Paid in full':'Paid so far',method:'',note:'Imported from Zoho '+x.no});if(p.error)throw p.error}
+      await sb.from('wedding_notes').upsert({wedding_id:wid,private_note:x.note});
+      for(const d of x.days)await sb.from('event_days').insert({wedding_id:wid,kind:d.kind,day_date:d.day_date,price:null});
+      ok++;if(btn)btn.textContent='Importing… '+ok+' / '+L.length;
+    }catch(e){bad.push(x.no+': '+(e.message||e))}
+  }
+  impRows=null;closeM();await loadDash(ui.view==='free'?'free':'dash');
+  toast('Imported '+ok+' invoice'+(ok===1?'':'s')+(bad.length?'. Not imported: '+bad.slice(0,3).join('; ')+(bad.length>3?' and '+(bad.length-3)+' more':''):'.'));
+}
 /* ---- Backup: every table saved to one file on this device ---- */
 const BKT=['event_messages','event_travel','location_ideas','event_gear','event_selection','weddings','photo_groups','timeline_items','must_haves','wedding_party','wedding_locations','wedding_notes','event_billing','payments','event_costs','event_crew','crew','event_delivery','event_timer','event_agreement','bookings','enquiries','freelance_clients','freelance_jobs','reviews','app_content'];
 async function doBackup(){
@@ -4217,6 +4341,11 @@ document.addEventListener('click',async e=>{
   else if(a==='rvStar'&&RVTOKEN){const n=$('#rwn').value,b=$('#rwb').value;rvStars=+t.dataset.v;setApp(rvView());$('#rwn').value=n;$('#rwb').value=b}
   else if(a==='rvSend'&&RVTOKEN){const n=$('#rwn').value.trim(),b=$('#rwb').value.trim(),er=m=>{$('#rwerr').textContent=m};if(!n)return er('Please add your name.');if(b.length<10)return er('Please write a few words.');er('Sending…');const{error}=await sb.rpc('review_submit',{p_token:RVTOKEN,p_name:n,p_rating:rvStars,p_text:b});if(error)return er(error.message||'Could not send. Please try again.');rvDone=true;setApp(rvView());scrollTo(0,0)}
   else if(a==='backup'&&!TOKEN)doBackup();
+  else if(a==='impV'&&!TOKEN){impRows=null;openImp()}
+  else if(a==='impReset'&&!TOKEN){impRows=null;openImp()}
+  else if(a==='impGo'&&!TOKEN)impGo();
+  else if((a==='impAll'||a==='impNone')&&impRows){impRows.forEach(x=>x.on=a==='impAll');openImp()}
+  else if(a==='impOwed'&&impRows){impRows.forEach(x=>x.on=x.total-x.paid>0.009);openImp()}
   else if(a==='postV'&&!TOKEN){ui.view='post';render();scrollTo(0,0)}
   else if(a==='postDel'&&!TOKEN){await openWedding(id);ui.sec='del';render()}
   else if(a==='selEdit'&&!TOKEN)openSelForm();
