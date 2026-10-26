@@ -1485,6 +1485,7 @@ ${t==null?'':`<div class="row2"><span>Package price</span><span>${gbp(b.price)}<
 <div class="acts"><button data-a="editPrice">${t==null?'Set price':'Price &amp; discount'}</button><button data-a="addX">Add expense or transport</button></div></section>
 <h2>Payment plan</h2>
 <section class="card">${t==null?'<p class="intro" style="margin:0">Set the price to see each instalment.</p>':planHtml(b,paid)}<div class="acts"><button data-a="editPlan">Change plan</button></div></section>
+${depCard()}
 <div class="cta"><button class="btn fill" data-a="addPay">+ Add payment</button></div>
 <div>${Y().length?Y().map(x=>`<div class="g"><div class="bd"><div class="num" style="font-size:22px;margin:0">${gbp(x.amount)}</div><div class="sub">${esc(x.label||'Payment')}${x.method?' · '+esc(x.method):''} · ${fmtD(x.paid_on)}</div>${x.invoice_note?`<div class="note fam"><b>On the invoice:</b> ${esc(x.invoice_note)}</div>`:''}${x.note?`<div class="note"><b>Private:</b> ${esc(x.note)}</div>`:''}<div class="acts"><button data-a="editPay" data-id="${x.id}">Edit</button><button data-a="delPay" data-id="${x.id}">Delete</button></div></div></div>`).join(''):'<p class="empty">No payments recorded yet.</p>'}</div>
 <h2>Invoice</h2>
@@ -1611,6 +1612,46 @@ ${msg?`<p class="intro">${esc(msg)}</p>`:''}
 <div class="f"><span class="l">Bill to · name, then address if needed</span><textarea id="vb" rows="4" maxlength="400">${esc(b.bill_to||wed.couple)}</textarea></div>
 <div class="f"><span class="l">Client’s WhatsApp number</span><input id="vp" type="tel" maxlength="30" placeholder="07…" value="${esc(b.client_phone||'')}"></div>
 <div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="saveInv">Save</button></div></div></div>`;
+}
+/* ---- Ask the client to pay the deposit: WhatsApp message with the amount, pay-by date and bank details ---- */
+const depRow=()=>{const t=tot(wed.bill);if(t==null||!t)return null;const r=planRows(wed.bill,sum(Y()));return r.length>1?r[0]:null};
+const depAsked=()=>(Array.isArray(wed.msgs)?wed.msgs:[]).filter(m=>m.who==='auto'&&/^Deposit requested/.test(m.body||'')).pop();
+function depCard(){
+  const r=depRow();if(!r)return'';
+  const a=depAsked();
+  if(r.left<=0)return`<section class="card ok" style="margin-top:14px"><div class="lbl">Deposit</div><p class="intro" style="margin:8px 0 0">Deposit of ${gbp(r.amt)} paid.</p></section>`;
+  return`<section class="card" style="margin-top:14px"><div class="lbl">Deposit</div><div class="num" style="font-size:30px;margin:6px 0 4px">${gbp(r.left)}</div>
+<div class="sub" style="margin:0">${r.left<r.amt?'Still to pay of the '+gbp(r.amt)+' deposit':'Not paid yet'}${r.due?' · '+(r.due<today()?'was due ':'due ')+fmtD(r.due):''}</div>
+${a?`<div class="sub" style="margin-top:6px;color:var(--ac)">Requested on ${fmtD(String(a.created_at||'').slice(0,10))}</div>`:''}
+<div class="cta" style="margin-bottom:0"><button class="btn fill" data-a="depReq">${a?'Ask again on WhatsApp':'Request deposit on WhatsApp'}</button></div></section>`}
+function depMsg(amt,by){
+  const s=inv||INVDEF,w=wed,first=String(w.bill.bill_to||w.couple||'').split('\n')[0].trim(),link=location.origin+location.pathname+'?w='+w.share_token+'&s=overview';
+  const bank=s.an||s.sc||s.acn?`\n\nBank transfer\nAccount name: ${s.an||''}\nSort code: ${s.sc||''}\nAccount number: ${s.acn||''}\nReference: ${w.couple}`:s.pay?'\n\nHow to pay: '+s.pay:'';
+  return`Hello ${first}, thank you for choosing ${s.biz||'Zema Production'} for your ${etype(w).toLowerCase()}${w.wedding_date?' on '+fmtD(w.wedding_date):''}.\n\nTo secure your date, please pay the deposit of ${gbp(amt)}${by?' by '+fmtD(by):''}.${bank}\n\nOnce it’s paid, send us a quick message and we’ll confirm your booking. You can see your booking and payment plan here:\n${link}`}
+function openDepReq(){
+  const r=depRow();if(!r)return toast('Set the price and a payment plan with a deposit first.');
+  const s=inv||INVDEF,by=r.due&&r.due>=today()?r.due:addDays(today(),7);
+  ui.modal={type:'dep'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Request the deposit</h3>
+<p class="intro">WhatsApp opens with this message to ${esc(wed.bill.client_phone||'the client')}. Change anything before you send it.</p>
+<div class="pr2"><div class="f"><span class="l">Deposit in £</span><input id="dpa" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(String(r.left))}"></div>
+<div class="f"><span class="l">Pay by</span><input id="dpd" type="date" value="${esc(by)}"></div></div>
+<div class="f"><span class="l">Message</span><textarea id="dpm" rows="11" maxlength="2000">${esc(depMsg(r.left,by))}</textarea></div>
+${s.an||s.sc||s.acn?'':'<p class="intro" style="font-size:13px">Your bank details aren’t in Invoice settings yet, so the message doesn’t include them. <button class="lnk" style="font-size:13px" data-a="invSet">Add them</button></p>'}
+${wed.bill.client_phone?'':'<p class="intro" style="font-size:13px;color:var(--bad)">No WhatsApp number for this client yet. Add it on the invoice details first.</p>'}
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="depSend">Open WhatsApp</button></div></div></div>`;
+  const re=()=>{$('#dpm').value=depMsg(parseFloat($('#dpa').value)||0,$('#dpd').value)};
+  $('#dpa').addEventListener('input',re);$('#dpd').addEventListener('change',re);
+}
+async function depSend(){
+  const ph=waNum(wed.bill.client_phone);if(!ph){closeM();return openInvForm('Add the client’s WhatsApp number, save, then request the deposit again.')}
+  const amt=parseFloat($('#dpa').value)||0,by=$('#dpd').value,msg=$('#dpm').value;
+  window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');
+  closeM();
+  const pd=Array.isArray(wed.bill.plan_due)?wed.bill.plan_due.slice():[];
+  if(by&&pd[0]!==by){pd[0]=by;await setB({plan_due:pd})}
+  logUpdate('Deposit requested: '+gbp(amt)+(by?', to pay by '+fmtD(by):''));
+  setTimeout(render,800);toast('Deposit request opened in WhatsApp');
 }
 function shareInv(){
   const b=wed.bill,t=tot(b)||0,paid=sum(Y()),ph=String(b.client_phone||'').replace(/\D/g,'').replace(/^00/,'').replace(/^0/,'44');
@@ -4182,6 +4223,8 @@ document.addEventListener('click',async e=>{
   else if(a==='editInv'&&!TOKEN)openInvForm();
   else if(a==='saveInv'&&!TOKEN){const o={invoice_no:$('#vn').value.trim(),invoice_date:$('#vd').value||null,bill_to:$('#vb').value.trim(),client_phone:$('#vp').value.trim()};closeM();setB(o)}
   else if(a==='shareInv'&&!TOKEN)shareInv();
+  else if(a==='depReq'&&!TOKEN)openDepReq();
+  else if(a==='depSend'&&!TOKEN)depSend();
   else if(a==='togSent'&&!TOKEN)setB({invoice_sent:!wed.bill.invoice_sent,invoice_sent_on:wed.bill.invoice_sent?null:today()});
   else if(a==='invSet'&&!TOKEN)openSetForm();
   else if(a==='saveSet'&&!TOKEN)saveSet();
