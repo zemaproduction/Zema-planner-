@@ -1439,9 +1439,10 @@ ${row('del','Delivery',!(d.films.length||d.galleries.length)?'Nothing added yet'
 function searchHtml(){
   const q=(ui.q||'').trim().toLowerCase();if(q.length<2)return'';
   const ws=q.split(/\s+/),hit=h=>ws.every(x=>h.includes(x)),dt=d=>d?fmtD(d)+' '+d+' '+d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4):'';
-  const ev=weds.filter(w=>hit([w.couple,etype(w),dt(w.wedding_date),w.city,w.package,w.services,STG[stg(w)],B(w).bill_to].join(' ').toLowerCase())).slice(0,15);
-  const en=enqs.filter(e=>hit([e.name,e.event_type,dt(e.event_date),e.phone,e.note,'enquiry'].join(' ').toLowerCase())).slice(0,8);
-  const bk=bks.filter(b=>hit([b.name,b.event_type,dt(b.event_date),b.phone,b.email,b.package,'booking request'].join(' ').toLowerCase())).slice(0,8);
+  const nw=k=>(a,b)=>String(b[k]||'').localeCompare(String(a[k]||''));   /* newest date first */
+  const ev=weds.filter(w=>hit([w.couple,etype(w),dt(w.wedding_date),w.city,w.package,w.services,STG[stg(w)],B(w).bill_to].join(' ').toLowerCase())).sort(nw('wedding_date')).slice(0,15);
+  const en=enqs.filter(e=>hit([e.name,e.event_type,dt(e.event_date),e.phone,e.note,'enquiry'].join(' ').toLowerCase())).sort(nw('event_date')).slice(0,8);
+  const bk=bks.filter(b=>hit([b.name,b.event_type,dt(b.event_date),b.phone,b.email,b.package,'booking request'].join(' ').toLowerCase())).sort(nw('event_date')).slice(0,8);
   const n=ev.length+en.length+bk.length;
   return`<div class="lbl" style="margin:4px 0 14px">${n?n+' result'+(n==1?'':'s'):'Nothing found'} for “${esc(ui.q.trim())}”</div>${ev.map(evCard).join('')}${bk.map(bkCard).join('')}${en.map(enqCard).join('')}<div style="height:10px;border-bottom:1px solid var(--line);margin-bottom:24px"></div>`}
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='sq'){ui.q=e.target.value;const r=$('#sres');if(r)r.innerHTML=searchHtml()}});
