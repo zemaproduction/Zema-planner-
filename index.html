@@ -953,7 +953,7 @@ const M=()=>wed.musts;
 const P=()=>wed.party;
 const L=()=>wed.places;
 const N=()=>wed.notes;
-const STG={pending:'Pending',confirmed:'Confirmed',post:'Post-production',delivered:'Delivered'};
+const STG={pending:'Pending',confirmed:'Confirmed',post:'Post-production',delivered:'Completed'};
 let PKG=['Platinum','Gold','Silver'];
 const ALB={none:'Not ordered',ordered:'Ordered',delivered:'Delivered',na:'No album'};
 const stg=w=>STG[w.stage]?w.stage:'pending';
@@ -1128,6 +1128,7 @@ async function loadWedding(id){
   const dq=await sb.from('event_delivery').select('*').eq('wedding_id',id).maybeSingle();
   const tq=await sb.from('event_timer').select('*').eq('wedding_id',id).maybeSingle();
   const aq=await sb.from('event_agreement').select('*').eq('wedding_id',id).maybeSingle();
+  const acq=await sb.from('event_agreement_custom').select('data').eq('wedding_id',id).maybeSingle();
   const sq=await sb.from('event_selection').select('*').eq('wedding_id',id).maybeSingle();
   const gq=await sb.from('event_gear').select('items').eq('wedding_id',id).maybeSingle();
   let gear0=gq.data&&Array.isArray(gq.data.items)?gq.data.items:null;
@@ -1137,6 +1138,7 @@ async function loadWedding(id){
   const vq=await sb.from('event_travel').select('*').eq('wedding_id',id).maybeSingle();
   const dyq=await sb.from('event_days').select('*').eq('wedding_id',id).order('day_date');
   wed={...w,days:dyq.error?[]:(dyq.data||[]),dayErr:!!dyq.error,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed.agrC=acq.error||!acq.data?{}:(acq.data.data||{});wed.agrCErr=!!acq.error;
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -1152,6 +1154,7 @@ async function loadShared(){
   const dv=await sb.rpc('shared_delivery_get',{p_token:TOKEN}),dl=dv.error?null:dv.data;
   const tr=await sb.rpc('shared_timer_get',{p_token:TOKEN});
   const ag=await sb.rpc('shared_agreement_get',{p_token:TOKEN});
+  const agc=await sb.rpc('shared_agreement_custom_get',{p_token:TOKEN});
   const sg2=await sb.rpc('shared_selection_get',{p_token:TOKEN});
   const ms=await sb.rpc('shared_messages_get',{p_token:TOKEN});
   const tv=await sb.rpc('shared_travel_get',{p_token:TOKEN});
@@ -1160,6 +1163,7 @@ async function loadShared(){
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
   wed={...data,days:dz.error?[]:(dz.data||[]),msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error};tsort();lsort();render();
+  wed.agrC=agc.error||!agc.data?{}:agc.data;
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -1229,7 +1233,7 @@ function evCard(w){
 const att=(k,title,n,body)=>`<button class="at ${ui.att===k?'on':''}" data-a="att" data-k="${k}"><span>${title}</span><b>${n} ${ui.att===k?'−':'+'}</b></button>${ui.att===k?`<div class="atb">${body}</div>`:''}`;
 function evRow(w){
   const dd=daysTo(w.wedding_date),s0=stg(w),d=w.wedding_date?new Date(w.wedding_date+'T00:00:00'):null;
-  const cd=s0==='post'?'Editing':s0==='delivered'?'Delivered':dd===null?'':dd>1?dd+' days':dd===1?'Tomorrow':dd===0?'Today':(-dd)+'d ago';
+  const cd=s0==='post'?'Editing':s0==='delivered'?'Completed':dd===null?'':dd>1?dd+' days':dd===1?'Tomorrow':dd===0?'Today':(-dd)+'d ago';
   const bits=[STG[s0],w.package].filter(Boolean).map(esc).join(' · '),left=wPrice(w)!=null&&!hideMoney&&wLeft(w)?gbp(wLeft(w))+' left':'',sm=x=>x?new Date(x+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'',xd=xdSort(daysAll.filter(x=>x.wedding_id===w.id)).map(x=>'+ '+esc(x.kind)+(x.day_date?' '+sm(x.day_date):'')).join(' · ');
   return`<button class="er" data-a="openW" data-id="${w.id}"><span class="erd">${d?`<b>${d.getDate()}</b><i>${d.toLocaleDateString('en-GB',{month:'short'})}${d.getFullYear()!==new Date().getFullYear()?' ’'+String(d.getFullYear()).slice(2):''}</i>`:'<b>—</b><i>No date</i>'}</span><span class="erb"><span class="nm">${esc(w.couple)}</span><span class="sub">${esc(etype(w))}${w.city?' · '+esc(w.city):''}</span>${xd?`<span class="sub" style="color:var(--ac)">${xd}</span>`:''}<span class="sub">${bits}</span></span><span class="erc">${cd}${left?`<b>${left}</b>`:''}</span></button>`}
 function dashView(){
@@ -1261,7 +1265,7 @@ ${fl?`<h2 style="font-size:22px;margin-top:28px">${ui.flt==='owed'?'Money still 
 ${up.length?up.map(evRow).join(''):'<p class="empty">Nothing upcoming. Tap “New Event” to add one.</p>'}
 ${late.length?`<h2>Date passed</h2><p class="intro">These dates have passed but the event hasn’t moved on. Confirmed events move to Post-production by themselves the day after their last date; pending events and freelance jobs stay as they are.</p>${late.map(evRow).join('')}`:''}
 ${post.length?`<h2>In post-production</h2>${post.map(evRow).join('')}`:''}
-${del.length?`<h2>Delivered</h2>${ui.showDel?del.map(evRow).join(''):`<div class="cta"><button class="btn" data-a="showDel">Show ${del.length} delivered event${del.length==1?'':'s'}</button></div>`}`:''}`}
+${del.length?`<h2>Completed</h2>${ui.showDel?del.map(evRow).join(''):`<div class="cta"><button class="btn" data-a="showDel">Show ${del.length} completed event${del.length==1?'':'s'}</button></div>`}`:''}`}
 <footer><span>Signed in · ${esc(user.email)}</span><span><button data-a="out">Sign out</button></span></footer>`}
 /* ---- Progress: events done and money received per year ---- */
 function yearView(){
@@ -1269,17 +1273,23 @@ function yearView(){
   const ys=[...new Set([cy,...weds.filter(isDone).map(w=>+w.wedding_date.slice(0,4)),...py])].sort((a,b)=>b-a);
   const y=ys.includes(ui.year)?ui.year:cy,list=doneIn(y),by={};
   list.forEach(w=>{by[etype(w)]=(by[etype(w)]||0)+1});
-  const cats=Object.entries(by).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...ys.map(v=>doneIn(v).length));
+  const GRP=t=>t==='Wedding'?'Weddings':/Freelance/.test(t)?'Freelance':'Small events',inY=p=>String(p.paid_on||'').slice(0,4)===String(y),money={},gm={Weddings:0,'Small events':0,Freelance:0};
+  weds.forEach(w=>{const v=sum((w.payments||[]).filter(inY));if(v){money[etype(w)]=(money[etype(w)]||0)+v;gm[GRP(etype(w))]+=v}});
+  Object.keys(money).forEach(k=>{if(!by[k])by[k]=0});
+  const cats=Object.entries(by).sort((a,b)=>(money[b[0]]||0)-(money[a[0]]||0)||b[1]-a[1]),mx=Math.max(1,...ys.map(v=>doneIn(v).length));
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Progress</h1><div class="meta">Events and income, year by year</div>
 <div class="tabs" style="margin-top:22px">${ys.map(v=>`<button class="tab ${v===y?'on':''}" data-a="year" data-k="${v}">${v}</button>`).join('')}</div>
 <div class="stats" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="st"><b>${list.length}</b><span>Events done in ${y}</span></div><div class="st"><b>${mny(recvIn(y))}</b><span>Received in ${y}</span></div><div class="st" style="grid-column:1/-1"><b>${hideMoney?'£ ••••':sg(profitIn(y))}</b><span>Profit on events done in ${y} · income minus costs</span></div></div>
 ${monthCard(y)}
+<h2>Money by category</h2>
+<section class="card">${Object.entries(gm).map(([k,v])=>`<div class="row2" style="padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline"><span class="lbl">${k}</span><b style="font-size:24px;font-weight:500">${mny(v)}</b></div>`).join('')}<div class="row2" style="padding:12px 0 0"><span class="lbl">Total received in ${y}</span><b style="font-size:24px;font-weight:500">${mny(recvIn(y))}</b></div></section>
 <section class="card" style="margin-top:12px"><div class="lbl" style="margin-bottom:16px">By category in ${y}</div>
-${cats.length?cats.map(([k,n])=>`<div class="pg"><div class="row2"><span class="lbl">${esc(k)}</span><span>${n}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/list.length*100)}%"></i></div></div>`).join(''):'<p class="intro" style="margin:0">No completed events in this year yet.</p>'}</section>
+${cats.length?cats.map(([k,n])=>{const m=money[k]||0,tm=recvIn(y)||1;return`<div class="pg"><div class="row2"><span class="lbl">${esc(k)}</span><span>${mny(m)} · ${n} done</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(m/tm*100)}%"></i></div></div>`}).join(''):'<p class="intro" style="margin:0">No completed events or payments in this year yet.</p>'}
+<p class="intro" style="margin:14px 0 0;font-size:13px">Money is what you received in ${y}, by the date each payment was made. Small events covers christenings, birthdays, photoshoots, pre-wedding shoots and other small events.</p></section>
 <h2>Year by year</h2>
 <section class="card">${ys.map(v=>{const n=doneIn(v).length;return`<div class="pg"><div class="row2"><span class="lbl">${v}</span><span>${n} event${n==1?'':'s'} · ${mny(recvIn(v))}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/mx*100)}%"></i></div></div>`}).join('')}</section>
-<p class="intro" style="margin-top:16px">An event counts as done once its date has passed and it is Confirmed, in Post-production or Delivered. Income is the total of payments you have recorded, by the date each was paid.</p>
+<p class="intro" style="margin-top:16px">An event counts as done once its date has passed and it is Confirmed, in Post-production or Completed. Income is the total of payments you have recorded, by the date each was paid.</p>
 <div class="cta"><button class="btn" data-a="newPast">+ Add a past event</button></div>
 ${list.length?`<h2>Events in ${y}</h2>${list.map(w=>`<button class="or" data-a="openW" data-id="${w.id}"><span class="nm">${esc(w.couple)}</span><span class="sub">${esc(etype(w))} · ${fmtD(w.wedding_date)}</span></button>`).join('')}`:''}`}
 function row(g){const lk=locked();return`<div class="g ${g.done&&!TOKEN?'done':''}" data-id="${g.id}" ${ui.tab==='all'&&!lk?'draggable="true"':''}>
@@ -2921,22 +2931,44 @@ function payDues(){
 const clash=(d,skip)=>!d?[]:[...weds.filter(w=>w.wedding_date===d).map(w=>w.couple+' ('+STG[stg(w)]+')'),...daysAll.filter(x=>x.day_date===d&&x.id!==skip).map(x=>((weds.find(w=>w.id===x.wedding_id)||{}).couple||'Event')+' ('+x.kind+')'),...bks.filter(b=>b.event_date===d&&b.id!==skip).map(b=>b.name+' (new booking request)'),...fjobs.filter(j=>j.status==='new'&&j.job_date===d&&j.id!==skip).map(j=>j.title+' (freelance request)')];
 const guard=(d,skip,go,plain)=>{const c=clash(d,skip);if(c.length)ask('You already have something on '+fmtD(d)+': '+c.join(', ')+'. Accept this as well?',go);else if(plain)ask(plain,go);else go()};
 /* ---- Booking agreement: the client confirms package, price, plan and terms by typing their name ---- */
-function agrDoc(s){
+function agrDoc(s,c){
+  c=c&&typeof c==='object'?c:{};s={...s};if(c.package)s.package=c.package;if(c.services)s.services=c.services;if(Array.isArray(c.terms)&&c.terms.length)s.terms=c.terms;
   const b={price:s.price,discount:s.discount,extras:s.extras,plan:s.plan,plan_due:s.plan_due},t=tot(b),terms=Array.isArray(s.terms)&&s.terms.length?s.terms:TERMS,r=(a,v)=>v?`<div class="row2" style="margin-top:8px"><span>${a}</span><span style="color:var(--tx);text-align:right">${esc(v)}</span></div>`:'';
   return`<section class="card"><div class="lbl">What is agreed</div>${r('Client',s.couple)}${r('Event',s.event_type)}${r('Date',s.wedding_date?fmtD(s.wedding_date):'')}${r('Package',s.package)}${r('Services',s.services)}${s.travel?r('Travel','Flights and accommodation for '+(Number(s.travel.people)===1?'one person':s.travel.people+' people')+(s.travel.dest?' to '+s.travel.dest:'')+', arranged and paid for by the client'):''}${s.hours&&s.hourly_rate?r('Hours',Number(s.hours)+' at '+gbp(s.hourly_rate)+' per hour'):''}${s.price!=null&&Number(s.discount)>0?r('Price',gbp(s.price))+r('Discount','−'+gbp(s.discount)):''}${(Array.isArray(s.extras)?s.extras:[]).map(e=>r(e.label||'Extra','+'+gbp(e.amount))).join('')}${t!=null?r('Total',gbp(t)):''}</section>
 ${t!=null?`<section class="card" style="margin-top:16px"><div class="lbl" style="margin-bottom:14px">Payment plan</div>${planRows(b,0,s.wedding_date||null).map(x=>`<div class="pg"><div class="row2"><span class="lbl">${x.label}${pTag(x)}</span><span>${gbp(x.amt)}${x.due?' · due '+fmtD(x.due):''}</span></div></div>`).join('')}</section>`:''}
+${c.notes?`<h2 style="font-size:20px;margin-top:28px">Additional terms for this booking</h2><div class="tc">${String(c.notes).split(/\n+/).filter(x=>x.trim()).map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:''}
 <h2 style="font-size:20px;margin-top:28px">Terms &amp; Conditions</h2><div class="tc">${terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`}
 function clAgr(){
   const a=wed.agr,signed=!!a.signed_at,s=(signed?a.snapshot:a.current)||{};
   return`<h2>Booking Agreement</h2>
 ${signed?`<section class="card ok" style="margin-bottom:16px"><div class="lbl">Signed</div><p class="intro" style="margin:10px 0 0">Signed by ${esc(a.signed_name)} on ${fmtDT(Date.parse(a.signed_at))}. This is the record of what was agreed.</p></section>`:'<p class="intro">Please read the details below. If everything is right, type your full name and tap Sign to confirm your booking.</p>'}
-${agrDoc(s)}
+${agrDoc(s,wed.agrC)}
 ${signed?'':`<section class="card ok" style="margin-top:20px"><div class="f"><span class="l">Your full name</span><input id="agn" maxlength="120" autocomplete="name"></div><label class="chk" style="color:var(--tx);align-items:flex-start"><input type="checkbox" id="agc" style="flex:none;margin-top:2px"> I have read and agree to the details and the Terms &amp; Conditions above</label><div class="bad" id="agerr"></div><button class="btn fill" style="width:100%" data-a="agrSign">Sign agreement</button></section>`}`}
 function agrCard(){
-  if(wed.agrErr)return'';const a=wed.agr;
-  return`<h2>Booking agreement</h2><section class="card">${!a?`<div class="lbl">Not requested</div><p class="intro" style="margin:10px 0 0">Ask the client to confirm their package, price, payment plan and your terms by typing their name. You both get a dated record.</p><div class="acts"><button data-a="agrReq">Request agreement</button></div>`
-:a.signed_at?`<div class="lbl">Signed</div><p class="intro" style="margin:10px 0 0">Signed by ${esc(a.signed_name)} on ${fmtDT(Date.parse(a.signed_at))}.</p><div class="acts"><button data-a="agrView">View what was signed</button><button data-a="agrReset">Clear and ask again</button></div>`
-:`<div class="lbl">Waiting for the client</div><p class="intro" style="margin:10px 0 0">Requested on ${fmtD(String(a.requested_at||'').slice(0,10))}. They sign from the Agreement tab on their link. Changes you make to the price or plan show there until they sign.</p><div class="acts"><button data-a="agrWa">Send on WhatsApp</button><button data-a="agrCopy">Copy link</button><button data-a="agrCancel">Cancel request</button></div>`}</section>`}
+  if(wed.agrErr)return'';const a=wed.agr,c=wed.agrC||{},ed=!!(c.package||c.services||c.notes||(Array.isArray(c.terms)&&c.terms.length)),eb=wed.agrCErr?'':`<button data-a="agrEdit">Edit agreement</button><button data-a="agrPrev">Preview</button>`;
+  return`<h2>Booking agreement</h2><section class="card">${ed?'<div class="lbl" style="margin-bottom:10px;color:var(--ac)">Edited for this event</div>':''}${!a?`<div class="lbl">Not requested</div><p class="intro" style="margin:10px 0 0">Ask the client to confirm their package, price, payment plan and your terms by typing their name. You both get a dated record.</p><div class="acts"><button data-a="agrReq">Request agreement</button>${eb}</div>`
+:a.signed_at?`<div class="lbl">Signed</div><p class="intro" style="margin:10px 0 0">Signed by ${esc(a.signed_name)} on ${fmtDT(Date.parse(a.signed_at))}.</p><p class="intro" style="margin:8px 0 0;font-size:13px">To change a signed agreement, clear it and ask again. The client then signs the new version.</p><div class="acts"><button data-a="agrView">View what was signed</button><button data-a="agrReset">Clear and ask again</button></div>`
+:`<div class="lbl">Waiting for the client</div><p class="intro" style="margin:10px 0 0">Requested on ${fmtD(String(a.requested_at||'').slice(0,10))}. They sign from the Agreement tab on their link. Changes you make to the price or plan show there until they sign.</p><div class="acts"><button data-a="agrWa">Send on WhatsApp</button><button data-a="agrCopy">Copy link</button>${eb}<button data-a="agrCancel">Cancel request</button></div>`}</section>${wed.agrCErr?'<p class="intro" style="font-size:13px">To edit agreements per event, run the agreement SQL in Supabase once, then refresh.</p>':''}`}
+/* the agreement as it stands now, built from this event, for the preview */
+const agrNow=()=>{const b=wed.bill||{};return{couple:wed.couple,event_type:etype(wed),wedding_date:wed.wedding_date,package:wed.package,services:wed.services,travel:wed.travel&&wed.travel.data?wed.travel.data:null,hours:b.hours,hourly_rate:b.hourly_rate,price:b.price,discount:b.discount,extras:b.extras,plan:b.plan,plan_due:b.plan_due,terms:pkd&&pkd.terms.length?pkd.terms:TERMS}};
+async function openAgrEdit(){
+  if(!pkd){try{const r=await loadPk();pkd=r.d}catch(_){}}
+  const c=wed.agrC||{},std=pkd&&pkd.terms.length?pkd.terms:TERMS,terms=Array.isArray(c.terms)&&c.terms.length?c.terms:std;
+  ui.modal={type:'agre'};
+  $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Edit agreement for ${esc(wed.couple)}</h3>
+<p class="intro">Changes here apply to this event only. Your standard terms stay the same for everyone else. Leave a box empty to use what is already on the event.</p>
+<div class="f"><span class="l">Package</span><input id="age_p" maxlength="120" value="${esc(c.package||'')}" placeholder="${esc(wed.package||'')}"></div>
+<div class="f"><span class="l">Services</span><input id="age_s" maxlength="240" value="${esc(c.services||'')}" placeholder="${esc(wed.services||'')}"></div>
+<div class="f"><span class="l">Additional terms for this booking</span><textarea id="age_n" rows="4" placeholder="For example: the client provides a meal for the crew on the day.">${esc(c.notes||'')}</textarea></div>
+<div class="f"><span class="l">Terms &amp; Conditions · one paragraph per line</span><textarea id="age_t" rows="12">${esc(terms.join('\n'))}</textarea></div>
+<div class="acts" style="margin-top:4px"><button data-a="agrStd">Put back my standard terms</button></div>
+<div class="bt"><button class="btn" data-a="close">Cancel</button><button class="btn fill" data-a="agrSave">Save</button></div></div></div>`;
+}
+async function saveAgrC(d){
+  const{error}=await sb.from('event_agreement_custom').upsert({wedding_id:wed.id,data:d,updated_at:new Date().toISOString()});
+  if(error){toast(/relation|schema|find the table/i.test(error.message)?'Run the agreement SQL in Supabase first, then refresh.':'Could not save: '+error.message);return false}
+  wed.agrC=d;render();return true;
+}
 const agrLink=()=>location.origin+location.pathname+'?w='+wed.share_token+'&s=agr';
 async function setAgr(o){
   const{data,error}=await sb.from('event_agreement').upsert({wedding_id:wed.id,...o}).select().single();
@@ -3626,7 +3658,7 @@ function openWForm(id,past,ty){
   const w=id?(wed&&wed.id===id?wed:weds.find(x=>x.id===id)):null,d=w||{couple:'',wedding_date:'',city:'London',services:ty?'Second shooter':'Photo + Video',event_type:ty||'Wedding'};
   ui.modal={type:'wform',id,past:!!past};
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>${w?'Edit event':past?'Add a past event':'New event'}</h3>
-${past?'<p class="intro">For events you have already completed. It is saved as Delivered and counts in your yearly totals.</p>':''}
+${past?'<p class="intro">For events you have already completed. It is saved as Completed and counts in your yearly totals.</p>':''}
 <div class="f"><span class="l">Event type</span><select id="we">${ETYPES.map(x=>`<option ${x===etype(d)?'selected':''}>${x}</option>`).join('')}</select></div>
 ${wpkField(d.package||'',!w)}
 ${past?'':`<div class="f"><span class="l">Status</span><select id="wst">${Object.entries(STG).map(([k,v])=>`<option value="${k}" ${(w?stg(w):'pending')===k?'selected':''}>${v}</option>`).join('')}</select></div>`}
@@ -4377,7 +4409,11 @@ document.addEventListener('click',async e=>{
   else if(a==='agrCancel'&&!TOKEN)ask('Cancel the agreement request?',async()=>{const{error}=await sb.from('event_agreement').delete().eq('wedding_id',wed.id);if(error)return toast('Could not save: '+error.message);wed.agr=null;render()});
   else if(a==='agrWa'&&!TOKEN)window.open('https://wa.me/'+waNum(wed.bill.client_phone)+'?text='+encodeURIComponent(`Hello, here is your booking agreement with Zema Production for ${wed.couple}. Please read it and sign to confirm your booking:\n${agrLink()}`),'_blank');
   else if(a==='agrCopy'&&!TOKEN){const u=agrLink();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Agreement link copied'),()=>prompt('Copy this link:',u))}
-  else if(a==='agrView'&&!TOKEN){ui.modal={type:'agrv'};$('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Signed agreement</h3><p class="intro">Signed by ${esc(wed.agr.signed_name)} on ${fmtDT(Date.parse(wed.agr.signed_at))}.</p>${agrDoc(wed.agr.snapshot||{})}<div class="bt" style="margin-top:16px"><button class="btn" data-a="close">Close</button></div></div></div>`}
+  else if(a==='agrEdit'&&!TOKEN){if(wed.agr&&wed.agr.signed_at)return toast('Clear the signed agreement first, then edit it.');openAgrEdit()}
+  else if(a==='agrStd'&&!TOKEN){const el=$('#age_t');if(el)el.value=(pkd&&pkd.terms.length?pkd.terms:TERMS).join('\n')}
+  else if(a==='agrSave'&&!TOKEN){const std=(pkd&&pkd.terms.length?pkd.terms:TERMS).join('\n'),tv=$('#age_t').value.split('\n').map(x=>x.trim()).filter(Boolean),d={package:$('#age_p').value.trim(),services:$('#age_s').value.trim(),notes:$('#age_n').value.trim(),terms:tv.join('\n')===std.split('\n').map(x=>x.trim()).filter(Boolean).join('\n')?[]:tv};Object.keys(d).forEach(k=>{if(!d[k]||(Array.isArray(d[k])&&!d[k].length))delete d[k]});if(await saveAgrC(d)){closeM();toast(wed.agr&&wed.agr.requested_at?'Saved. The client sees the new version on their link.':'Saved')}}
+  else if(a==='agrPrev'&&!TOKEN){if(!pkd){try{const r=await loadPk();pkd=r.d}catch(_){}}ui.modal={type:'agrv'};$('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Agreement preview</h3><p class="intro">This is what the client sees for ${esc(wed.couple)}.</p>${agrDoc(agrNow(),wed.agrC)}<div class="bt" style="margin-top:16px"><button class="btn" data-a="close">Close</button></div></div></div>`}
+  else if(a==='agrView'&&!TOKEN){ui.modal={type:'agrv'};$('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Signed agreement</h3><p class="intro">Signed by ${esc(wed.agr.signed_name)} on ${fmtDT(Date.parse(wed.agr.signed_at))}.</p>${agrDoc(wed.agr.snapshot||{},wed.agrC)}<div class="bt" style="margin-top:16px"><button class="btn" data-a="close">Close</button></div></div></div>`}
   else if(a==='agrSign'&&TOKEN){const n=$('#agn').value.trim(),er=m=>{$('#agerr').textContent=m};if(n.length<3)return er('Please type your full name.');if(!$('#agc').checked)return er('Please tick the box to agree.');er('Saving…');const{error}=await sb.rpc('shared_agreement_sign',{p_token:TOKEN,p_name:n});if(error)return er(error.message||'Could not save. Please try again.');await loadShared();scrollTo(0,0);toast('Thank you. Your agreement is signed.')}
   else if(a==='revV'&&!TOKEN){ui.view='rev';render();scrollTo(0,0)}
   else if(a==='addRev'&&!TOKEN)openRevForm();
