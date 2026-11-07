@@ -303,6 +303,18 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .cbp{display:none;padding:16px 18px 18px;max-height:min(62vh,480px);overflow:auto;border-bottom:1px solid var(--line)}.cbar.open .cbp{display:block;animation:fadein .3s var(--ease)}
 .cbp .cgo{margin-top:14px}
 body.hasbar #app{padding-bottom:150px}
+.cmain{min-width:0}
+.cdy{background:var(--s);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:14px;animation:fadein .35s var(--ease);transition:border-color .4s var(--ease)}
+.cdy.nudge{animation:nudge .9s var(--ease)}
+.cdh{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.cdr{background:none;border:0;color:var(--mu);font:500 13px var(--sans);cursor:pointer;padding:6px 0;text-decoration:underline;text-underline-offset:3px}.cdr:hover{color:var(--tx)}
+.cdk{display:flex;flex-wrap:wrap;gap:8px}.cdk .tab.on{background:var(--ac);color:#0A0A0B}
+.cdp{display:grid;gap:10px}
+.cdo{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;background:var(--s2);border:1px solid transparent;border-radius:var(--r2);padding:14px 16px;cursor:pointer;color:var(--tx);transition:border-color .3s var(--ease),background .3s var(--ease)}
+.cdo:hover{border-color:var(--line2)}.cdo.on{border-color:var(--ac);background:var(--act)}
+.cdon{font:400 22px/1.1 var(--serif)}.cdod{font-size:13px;color:var(--mu);line-height:1.45}.cdop{font:500 15px var(--sans);color:var(--ac2);margin-top:auto;padding-top:6px;font-variant-numeric:tabular-nums}
+.cdadd{width:100%;border:1px dashed rgba(201,171,127,.45);background:transparent;color:var(--ac2)}.cdadd:hover{background:var(--act)}
+@media(min-width:700px){.cdp{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .cbk{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;border:1px solid rgba(201,171,127,.3);border-radius:var(--r2);background:var(--act)}
 .cbkn{font:400 19px/1.3 var(--serif);margin-top:3px}.cbkr{text-align:right;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:4px}.cbkr b{font:600 17px var(--sans);font-variant-numeric:tabular-nums}
 .cbkr .lnk{background:none;border:0;color:var(--ac2);font:500 13px var(--sans);cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
@@ -803,6 +815,7 @@ Script.complete();
 const SB_URL='https://emhunzaxnzmqgueryczl.supabase.co';
 const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d'),CPTOKEN=QS.get('cp'),LOCPAGE=QS.get('loc')!==null;
+const PKMODE=PKPAGE?(/^w/i.test(QS.get('p')||'')?'wed':/^e/i.test(QS.get('p')||'')?'ev':'all'):'all';
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
 const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery'];
 const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Travel':'trav','Notes':'notes','Updates':'msg','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
@@ -859,9 +872,9 @@ const ADDONS=[
 {id:'usb',n:'Personalised USB Presentation Box',p:'£70',ic:'usb',img:'',pre:false,d:'Your wedding film presented in a personalised keepsake box with USB.',f:[]},
 {id:'prewedding',n:'Pre-wedding Experience',p:'£600',ic:'pre',img:'',pre:true,d:'A relaxed shoot before your wedding day, at a location that means something to you.',f:['Pre-wedding photoshoot','20–50 professionally edited photographs','Cinematic pre-wedding highlight film']}];
 const EPK=[
-{n:'Essential',p:'£1,000',d:'5 hours of photography and videography coverage.'},
-{n:'Signature',p:'£1,400',d:'8 hours of photography and videography coverage.'},
-{n:'Premium',p:'£1,800',d:'10 hours of photography and videography coverage, including a luxury photo album.'}];
+{n:'Essential',p:'£1,000',h:5,d:'5 hours of photography and videography coverage.'},
+{n:'Signature',p:'£1,400',h:8,d:'8 hours of photography and videography coverage.'},
+{n:'Premium',p:'£1,800',h:10,d:'10 hours of photography and videography coverage, including a luxury photo album.'}];
 const TERMS=[
 'Please note that all bookings are subject to confirmation and are not officially secured until approved by Zema Production.',
 'A booking fee is required to secure your date and is strictly non-refundable. This payment acts as a commitment fee and covers pre-production planning, scheduling, preparation, crew arrangements, equipment reservations, location planning, camera setup, and other production-related expenses undertaken prior to your event or photoshoot.',
@@ -873,7 +886,7 @@ const waLink=t=>CONTACT.wa+'?text='+encodeURIComponent(t);
 /* ---- Booking form (public, at the end of the packages page) ---- */
 let pkd=null,bk={step:0,v:{},done:false,fail:false},bks=[],bkErr=false;
 const BKQ=[
-{k:'event_type',q:'What are you booking?',t:'choice',req:1,o:['Pre-Wedding Shoot','Wedding','Christening','Birthday Party','Other Small Event','Photoshoot']},
+{k:'event_type',q:'What are you booking?',t:'choice',req:1,when:()=>PKMODE!=='wed',o:['Pre-Wedding Shoot','Wedding','Christening','Birthday Party','Other Small Event','Photoshoot']},
 {k:'package',q:'Which package are you interested in?',t:'choice'},
 {k:'hours',q:'How many hours would you like to book?',sub:'The minimum booking is 3 hours.',t:'choice',req:1,o:['3 hours','4 hours','5 hours','6 hours','7 hours','8 hours','More than 8 hours'],when:v=>String(v.package||'').startsWith('Hourly rate')},
 {k:'name',q:'Your name',sub:'For weddings, both names please.',t:'text',req:1},
@@ -893,15 +906,15 @@ function bkPkgs(){
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
   return o;
 }
-function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
+function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&sc.days&&sc.days.length&&('Extra days: '+sc.days.map(x=>x.n+(x.date?', '+fmtD(x.date):'')+(pkd.hide?'':' ('+gbp(x.amt)+')')).join('; ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
 function bkInner(){
   if(bk.done)return`<div class="lbl">${bk.fail?'Almost there':'Request sent'}</div><div class="nm" style="font-size:28px;margin-top:10px">${bk.fail?'We couldn’t send the form':'Thank you, '+esc((bk.v.name||'').split(/[ ,&]/)[0])}</div>
 <p class="intro" style="margin:12px 0 20px">${bk.fail?'Your answers are saved in the message below. Please send it to us on WhatsApp and we’ll take it from there.':'We’ve received your booking request and will be in touch soon. Your date is not secured until we confirm it. To reach us straight away, send the same details on WhatsApp.'}</p>
-${bk.sentCol?`<div class="cbk" style="margin-top:0"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(bk.sentCol.n)}${bk.sentCol.lines.length?' + '+bk.sentCol.lines.map(x=>esc(x.n)).join(', '):''}</div></div>${pkd.hide?'':`<div class="cbkr"><b>${gbp(bk.sentCol.total)}</b></div>`}</div>`:''}
+${bk.sentCol?`<div class="cbk" style="margin-top:0"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(bk.sentCol.n)}${[...bk.sentCol.lines,...(bk.sentCol.days||[])].length?' + '+[...bk.sentCol.lines,...(bk.sentCol.days||[])].map(x=>esc(x.n)).join(', '):''}</div></div>${pkd.hide?'':`<div class="cbkr"><b>${gbp(bk.sentCol.total)}</b></div>`}</div>`:''}
 <a class="btn fill" style="width:100%" href="${esc(waLink(bkSummary()))}" target="_blank" rel="noopener">Send on WhatsApp</a>`;
   const A=bkAct();bk.step=Math.min(bk.step,A.length-1);
   const q=A[bk.step],v=bk.v[q.k]||'',n=A.length;let f;
-  if(q.t==='choice')f=`<div>${(q.k==='package'?bkPkgs():q.o).map(x=>`<button class="dr ${v===x?'nx':''}" data-a="bkSet" data-v="${esc(x)}" style="min-height:0;padding:15px 16px"><span class="ck" style="width:26px;height:26px;font-size:14px;${v===x?'background:var(--ac);border-color:var(--ac)':''}">${v===x?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x)}</b></span></button>`).join('')}</div>`;
+  if(q.t==='choice')f=`<div>${(q.k==='package'?bkPkgs():q.k==='event_type'&&PKMODE==='ev'?q.o.filter(x=>x!=='Wedding'):q.o).map(x=>`<button class="dr ${v===x?'nx':''}" data-a="bkSet" data-v="${esc(x)}" style="min-height:0;padding:15px 16px"><span class="ck" style="width:26px;height:26px;font-size:14px;${v===x?'background:var(--ac);border-color:var(--ac)':''}">${v===x?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x)}</b></span></button>`).join('')}</div>`;
   else if(q.t==='locs')f=bkLocs.map(([k,l],i)=>{const L=(bk.loc||[])[i]||{};return`<div class="lbl" style="margin:${i?20:0}px 0 10px;color:var(--ac)">${l}</div><div class="f"><span class="l">Address</span><input id="bkl${i}" maxlength="160" value="${esc(L.a||'')}" placeholder="${i?'':'Venue name, street and town'}" autocomplete="off"></div><div class="f"><span class="l">Postcode</span><input id="bkp${i}" maxlength="10" value="${esc(L.p||'')}" placeholder="${i?'':'SW1A 1AA'}" autocapitalize="characters" autocomplete="off" style="max-width:190px"></div>`}).join('');
   else if(q.t==='area')f=`<div class="f"><textarea id="bkf" rows="5" maxlength="1500">${esc(v)}</textarea></div>`;
   else if(q.t==='agree')f=`<div class="tc" style="max-height:220px;overflow:auto;border:1px solid var(--line);padding:14px 14px 0;border-radius:3px">${pkd.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div><label class="chk" style="margin-top:16px;color:var(--tx)"><input type="checkbox" id="bkf" ${v?'checked':''}> I have read and agree to the Terms &amp; Conditions</label>`;
@@ -929,15 +942,15 @@ async function bkNext(){
   err('Sending…');
   let fail=false;
   /* the wedding extras go as ids only; the server prices them from your saved price list */
-  const cw=colActive(),cc=cw?colCalc():null,pl=cw?{...bk.v,addons:cc.lines.map(x=>x.id),client_total:cc.total}:bk.v;
-  bk.sentCol=cw?{n:cc.k.n,lines:cc.lines,total:cc.total,inc:cc.inc?cc.inc.n:''}:null;
+  const cw=colActive(),cc=cw?colCalc():null,pl=cw?{...bk.v,addons:cc.lines.map(x=>x.id),days:cc.days.map(x=>({kind:x.kind,pkg:x.pkg,date:x.date})),client_total:cc.total}:bk.v;
+  bk.sentCol=cw?{n:cc.k.n,lines:cc.lines,days:cc.days,total:cc.total,inc:cc.inc?cc.inc.n:''}:null;
   try{const{error}=await sb.rpc('booking_submit',{p:pl});fail=!!error}catch(_){fail=true}
   if(!fail)try{sessionStorage.removeItem('zemaCol')}catch(_){}
   bk.done=true;bk.fail=fail;bkDraw(1);colBar();
 }
 /* ---- Bookings on the photographer's dashboard ---- */
 /* wedding extras on a booking, as priced by the server when it came in */
-const bkEx=b=>Array.isArray(b&&b.extras)?b.extras.filter(x=>x&&x.label).map(x=>({id:String(x.id||''),label:String(x.label),amount:Number(x.amount)||0})):[];
+const bkEx=b=>Array.isArray(b&&b.extras)?b.extras.filter(x=>x&&x.label).map(x=>({...x,id:String(x.id||''),label:String(x.label),amount:Number(x.amount)||0,day:x.day===true})):[];
 function bkCard(b){return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(b.name)}</div><div class="sub">${esc(b.event_type||'Booking')} · ${fmtD(b.event_date)}</div>
 ${[b.location,b.location2,b.location3].filter(Boolean).map((x,i)=>`<div class="sub">Location ${i+1} · ${esc(x)}</div>`).join('')}
 <div><span class="tag approved">New request</span>${b.package?`<span class="tag">${esc(b.package)}</span>`:''}${b.hours?`<span class="tag">${esc(b.hours)}</span>`:''}${b.services?`<span class="tag">${esc(b.services)}</span>`:''}${bkEx(b).map(x=>`<span class="tag">+ ${esc(x.label)}</span>`).join('')}</div>
@@ -953,7 +966,14 @@ async function acceptBk(id){
   if(ty==='Wedding')await sb.from('photo_groups').insert(demoRows(data.id));
   await applyShots(data.id,ty);
   const ex=bkEx(b),pp=b.pkg_price!=null&&isFinite(+b.pkg_price)?+b.pkg_price:null,pr=pp!=null?pp:known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
-  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{}),...(ex.some(x=>x.amount>0)?{extras:ex.filter(x=>x.amount>0).map(x=>({label:x.label,amount:x.amount}))}:{})});
+  /* extra days become days on the event, each with its own line on the invoice */
+  const bl=ex.filter(x=>!x.day&&x.amount>0).map(x=>({label:x.label,amount:x.amount}));
+  for(const x of ex.filter(x=>x.day&&ty==='Wedding')){
+    const d={kind:String(x.kind||'Extra day').slice(0,60),day_date:/^\d{4}-\d{2}-\d{2}$/.test(x.date||'')?x.date:null,hours:Number(x.hours)>0?Number(x.hours):null,price:x.amount};
+    let r=null;try{r=await sb.from('event_days').insert({...d,wedding_id:data.id}).select().single()}catch(_){}
+    bl.push({label:xdLabel(d)+(x.pkg?' · '+x.pkg:''),amount:x.amount,...(r&&!r.error&&r.data?{day:r.data.id}:{})});
+  }
+  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{}),...(bl.length?{extras:bl}:{})});
   if(ty==='Wedding'){
     /* things to bring go to the top of the equipment checklist */
     const ids=ex.map(x=>x.id),gi=[ids.includes('signboard')&&'Guest sign board',ids.includes('drone')&&'Drone'].filter(Boolean);
@@ -987,6 +1007,7 @@ function pkNorm(d){
   if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];if(!Array.isArray(o.addons))o.addons=[];
   if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
   o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
+  o.ev.forEach(k=>{k.h=Number(k.h)||Number((String(k.d||'').match(/(\d+(?:\.\d+)?)\s*hours?/i)||[])[1])||null});
   o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||''});
   return o}
 /* "£4,000" -> 4000 (the same rule the server uses) */
@@ -998,11 +1019,13 @@ async function loadPk(){
 function pkgView(d){
   pkd=d;colCheck();
   const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
-  return`<div class="brand">ZEMA PRODUCTION</div><h1>Packages</h1><div class="meta">Photography &amp; videography · London</div>
-<nav class="sec"><a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a></nav>
-${d.wed.filter(k=>k.n).length?colView():'<div id="wed"></div>'}
+  if(PKMODE==='wed'&&!bk.done)bk.v.event_type='Wedding';
+  const W=PKMODE!=='ev'&&d.wed.some(k=>k.n);
+  return`<div class="brand">ZEMA PRODUCTION</div><h1>${PKMODE==='wed'?'Weddings':PKMODE==='ev'?'Events &amp; Photoshoots':'Packages'}</h1><div class="meta">Photography &amp; videography · London</div>
+<nav class="sec">${PKMODE==='wed'?'<a href="#wed">Collections</a><a href="#book">Book</a><a href="#tc">Terms</a>':PKMODE==='ev'?'<a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>':'<a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>'}</nav>
+${W?colView():'<div id="wed"></div>'}
 <div class="pkn">
-<h2 id="ev">Small Events</h2>
+${PKMODE==='wed'?'':`<h2 id="ev">Small Events</h2>
 ${d.evIntro?`<p class="intro">${esc(d.evIntro)}</p>`:''}
 ${d.ev.map(k=>`<section class="card pk"><div class="nm" style="font-size:26px">${esc(k.n)}</div>${prc(k.p)}<p class="intro" style="margin:0 0 18px">${esc(k.d||'')}</p>
 <button class="btn pri" style="width:100%" data-a="bkPick" data-t="" data-p="${esc(k.n)}">Book ${esc(k.n)}</button></section>`).join('')}
@@ -1010,18 +1033,23 @@ ${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
 <h2 id="hr">Hourly Rate</h2>
 <section class="card pk"><div class="nm" style="font-size:26px">By the hour</div>${prc(d.hr.p)}<p class="intro" style="margin:0 0 18px">${esc(d.hr.d||'')}</p>
 <button class="btn pri" style="width:100%" data-a="bkPick" data-t="" data-p="Hourly rate">Book by the hour</button></section>
+`}
 <h2 id="book">Book with us</h2>
-<p class="intro">Tell us about your event and we’ll get back to you. It takes about two minutes.</p>
+<p class="intro">${PKMODE==='wed'?'Tell us about your wedding and we’ll get back to you. It takes about two minutes.':'Tell us about your event and we’ll get back to you. It takes about two minutes.'}</p>
 <section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkcol">${colHead()}</div><div id="bkbox">${bkInner()}</div></section>
 <h2 id="tc">Terms &amp; Conditions</h2>
 <div class="tc">${d.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>
 <div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
 <footer><span>Zema Production · London</span></footer></div>
-${d.wed.filter(k=>k.n).length?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
+${W?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
 /* ---- Wedding collection builder (packages page): one package, optional extras, a live total, carried into the booking form.
    The total is always worked out from the price list (pkd), and the server works it out again when the booking is sent. ---- */
-let col={pkg:'',add:[]},colOpen=false,colSeen=false;
-try{const v=JSON.parse(sessionStorage.getItem('zemaCol')||'null');if(v&&typeof v==='object')col={pkg:String(v.pkg||''),add:Array.isArray(v.add)?v.add.map(String):[]}}catch(_){}
+let col={pkg:'',add:[],days:[]},colOpen=false,colSeen=false;
+try{const v=JSON.parse(sessionStorage.getItem('zemaCol')||'null');if(v&&typeof v==='object')col={pkg:String(v.pkg||''),add:Array.isArray(v.add)?v.add.map(String):[],days:Array.isArray(v.days)?v.days.slice(0,3).map(x=>({k:String((x&&x.k)||'Church'),o:String((x&&x.o)||''),pkg:String((x&&x.pkg)||''),date:String((x&&x.date)||'')})):[]}}catch(_){}
+/* extra wedding days: the day, and one of the small event packages as its coverage */
+const DAYK=['Church','Mels','Hammawiti','Other'];
+const dayName=x=>x.k==='Other'?(String(x.o||'').trim()||'Extra day'):x.k;
+const colEv=()=>pkd?pkd.ev.filter(k=>k.n):[];
 const colSave=()=>{try{sessionStorage.setItem('zemaCol',JSON.stringify(col))}catch(_){}};
 const pkName=x=>String(x||'').split(' · ')[0];
 const colPk=()=>pkd&&col.pkg?pkd.wed.find(k=>k.n&&k.n===col.pkg)||null:null;
@@ -1030,11 +1058,14 @@ const colIncl=a=>{const k=colPk();return!!(a&&a.pre&&k&&k.pre)};
 function colCheck(){
   if(!pkd)return;if(!colPk())col.pkg='';
   col.add=[...new Set(col.add)].filter(id=>{const a=pkd.addons.find(x=>x.id===id);return a&&!colIncl(a)});
+  if(!Array.isArray(col.days))col.days=[];col.days.forEach(x=>{if(!colEv().some(k=>k.n===x.pkg))x.pkg='';if(!DAYK.includes(x.k))x.k='Church'});
 }
 function colCalc(){
   const k=colPk(),lines=(pkd?pkd.addons:[]).filter(a=>col.add.includes(a.id)&&!colIncl(a)).map(a=>({id:a.id,n:a.n,amt:pkNum(a.p)||0}));
   const base=k?pkNum(k.p):null;
-  return{k,lines,base,total:base==null?null:Math.round(lines.reduce((t,x)=>t+x.amt,base)*100)/100,inc:k&&k.pre?(pkd.addons.find(a=>a.pre)||null):null};
+  const days=(col.days||[]).map((x,i)=>{const e=colEv().find(k=>k.n===x.pkg);return e?{i,kind:dayName(x),pkg:e.n,n:dayName(x)+' · '+e.n,amt:pkNum(e.p)||0,date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:'',h:e.h}:null}).filter(Boolean);
+  const miss=(col.days||[]).findIndex(x=>!colEv().some(k=>k.n===x.pkg));
+  return{k,lines,days,miss,base,total:base==null?null:Math.round([...lines,...days].reduce((t,x)=>t+x.amt,base)*100)/100,inc:k&&k.pre?(pkd.addons.find(a=>a.pre)||null):null};
 }
 /* the form is booking this collection: a wedding, with the same package as the builder */
 const colActive=()=>!!(pkd&&bk.v.event_type==='Wedding'&&colPk()&&pkName(bk.v.package)===col.pkg);
@@ -1063,37 +1094,53 @@ function colAds(){return pkd.addons.filter(a=>a.n).map(a=>{const inc=colIncl(a),
 <div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
 <div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
 function colSum(inBar){
-  const c=colCalc(),head=inBar?'':'<div class="cst"><span>03</span>Your collection</div>';
+  const c=colCalc(),head=inBar?'':`<div class="cst"><span>${colEv().length?'04':'03'}</span>Your collection</div>`;
   if(!c.k)return head+`<p class="cse">Choose a wedding package to begin. Your extras and total appear here as you go.</p>`;
   return`${head}<div>
 <div class="csr"><span><b>${esc(c.k.n)}</b><small>Wedding collection</small></span><span class="v">${colM(c.base)}</span></div>
 ${c.inc?`<div class="csr inc"><span>${esc(c.inc.n)}<small>Part of ${esc(c.k.n)}</small></span><span class="v">Included</span></div>`:''}
 ${c.lines.map(x=>`<div class="csr"><span>${esc(x.n)}</span><span class="v">${colM(x.amt)}<button type="button" class="csx" data-c="rm" data-k="${esc(x.id)}" aria-label="Remove ${esc(x.n)}">×</button></span></div>`).join('')}
-${c.lines.length?'':`<p class="cse" style="margin:6px 0 10px">No extras added. Everything in step two is optional.</p>`}
+${c.days.map(x=>`<div class="csr"><span>${esc(x.n)}<small>Extra day · ${x.date?fmtD(x.date):'date to be confirmed'}${x.h?' · '+x.h+' hours':''}</small></span><span class="v">${colM(x.amt)}<button type="button" class="csx" data-c="dayrm" data-i="${x.i}" aria-label="Remove ${esc(x.n)}">×</button></span></div>`).join('')}
+${c.miss>=0?`<div class="csr"><span>${esc(dayName(col.days[c.miss]))}<small>Choose the coverage for this day</small></span><span class="v"><button type="button" class="lnk" style="background:none;border:0;color:var(--ac2);cursor:pointer;font:500 13px var(--sans);text-decoration:underline" data-c="dayfix" data-i="${c.miss}">Choose</button></span></div>`:''}
+${c.lines.length||c.days.length?'':`<p class="cse" style="margin:6px 0 10px">No extras added. Everything in step two is optional.</p>`}
 </div>
 <div class="cstt"><span class="lbl">Total</span><span class="ctot ${pkd.hide?'por':''}">${pkd.hide?'Price on request':gbp(c.total)}</span></div>
 <button type="button" class="btn fill cgo" data-c="go">Continue booking</button>
 <p class="csn">Nothing is paid now. Your date is secured once Zema Production confirms your booking.</p>`}
+function colDays(){
+  const E=colEv();
+  return`${col.days.map((x,i)=>`<div class="cdy" id="cdy${i}">
+<div class="cdh"><div class="lbl">Extra day ${i+1}</div><button type="button" class="cdr" data-c="dayrm" data-i="${i}">Remove day</button></div>
+<div class="cdk" role="group" aria-label="Which day">${DAYK.map(k=>`<button type="button" class="tab ${x.k===k?'on':''}" data-c="dayk" data-i="${i}" data-k="${k}" aria-pressed="${x.k===k}">${k==='Other'?'Something else':k}</button>`).join('')}</div>
+${x.k==='Other'?`<div class="f" style="margin:14px 0 0"><span class="l">What is the day?</span><input id="cdo${i}" data-cd="o" data-i="${i}" maxlength="60" value="${esc(x.o)}" placeholder="e.g. Henna night"></div>`:''}
+<div class="lbl" style="margin:18px 0 10px">Coverage for this day</div>
+<div class="cdp">${E.map(k=>`<button type="button" class="cdo ${x.pkg===k.n?'on':''}" data-c="dayp" data-i="${i}" data-k="${esc(k.n)}" aria-pressed="${x.pkg===k.n}"><span class="cdon">${esc(k.n)}</span>${k.d?`<span class="cdod">${esc(k.d)}</span>`:''}${pkd.hide?'':`<span class="cdop">${esc(k.p)}</span>`}</button>`).join('')}</div>
+<div class="f" style="margin:16px 0 0"><span class="l">Date of this day · optional</span><input type="date" id="cdd${i}" data-cd="date" data-i="${i}" value="${esc(x.date)}" min="${today()}"></div>
+</div>`).join('')}
+${col.days.length<3?`<button type="button" class="btn cdadd" data-c="dayadd">+ Add an extra day</button>`:''}`}
+function colDaysDraw(){const el=$('#coldays');if(el)el.innerHTML=colDays();colPaint(1)}
 function colView(){
   const d=pkd,ad=d.addons.filter(a=>a.n);
   return`<section id="wed" class="col">
-<div class="colh"><div class="lbl colk">Wedding collections</div><h2>Create your Zema wedding collection</h2>${d.wedNote?`<p class="intro" style="max-width:640px">${esc(d.wedNote)}</p>`:''}</div>
+<div class="colh"><div class="lbl colk">Wedding collections</div><h2>Create your Zema wedding collection</h2><p class="intro" style="max-width:640px">Choose your coverage, add only the extras you want, and see your total as you go.</p></div>
 ${d.hero?`<div class="colhero" style="background-image:url('${esc(d.hero)}')" role="img" aria-label="Wedding photograph by Zema Production"></div>`:''}
 <div class="cst"><span>01</span>Choose your coverage</div>
 <div class="cpg" id="colpk">${colCards()}</div>
-${ad.length?`<div class="cst"><span>02</span>Optional extras</div><h2 class="cah">Personalise Your Zema Experience</h2>${d.adIntro?`<p class="intro" style="max-width:640px">${esc(d.adIntro)}</p>`:''}`:''}
-<div class="cgrid" ${ad.length?'':'style="display:block"'}>${ad.length?`<div class="cag" id="colad">${colAds()}</div>`:''}<aside class="csd" id="colside" aria-label="Your collection">${colSum()}</aside></div>
+<div class="cgrid"><div class="cmain">
+${ad.length?`<div class="cst"><span>02</span>Optional extras</div><h2 class="cah">Personalise Your Zema Experience</h2>${d.adIntro?`<p class="intro" style="max-width:640px">${esc(d.adIntro)}</p>`:''}<div class="cag" id="colad">${colAds()}</div>`:''}
+${colEv().length?`<div class="cst" id="coldh"><span>${ad.length?'03':'02'}</span>Additional days</div><h2 class="cah">Celebrating over more than one day?</h2><p class="intro" style="max-width:640px">${esc(d.wedNote||'Each wedding package covers one wedding day.')} Add a day for a church ceremony on another date, Mels or Hammawiti, and choose the coverage for it.</p><div id="coldays">${colDays()}</div>`:''}
+</div><aside class="csd" id="colside" aria-label="Your collection">${colSum()}</aside></div>
 </section>`}
 function colHead(){
   if(!pkd||bk.done||!colActive())return'';const c=colCalc();
-  return`<div class="cbk"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(c.k.n)}${c.lines.length?' + '+c.lines.map(x=>esc(x.n)).join(', '):''}</div></div><div class="cbkr">${pkd.hide?'':`<b>${gbp(c.total)}</b>`}<button type="button" class="lnk" data-c="edit">Change</button></div></div>`}
+  return`<div class="cbk"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(c.k.n)}${[...c.lines,...c.days].length?' + '+[...c.lines,...c.days].map(x=>esc(x.n)).join(', '):''}</div></div><div class="cbkr">${pkd.hide?'':`<b>${gbp(c.total)}</b>`}<button type="button" class="lnk" data-c="edit">Change</button></div></div>`}
 function colBar(){
   const bar=$('#colbar');if(!bar||!pkd)return;const c=colCalc();
   document.body.classList.toggle('hasbar',!!c.k);
   const off=!c.k||colSeen;if(off)colOpen=false;
   bar.classList.toggle('off',off);bar.classList.toggle('open',colOpen);
   if(!c.k){bar.innerHTML='';return}
-  const n=c.lines.length;
+  const n=c.lines.length+c.days.length;
   bar.innerHTML=`<div class="cbx"><div class="cbp" id="colbp">${colSum(1)}</div><button type="button" class="cbh" data-c="bar" aria-expanded="${colOpen}" aria-controls="colbp"><span class="cbl"><b>${esc(c.k.n)}</b>${n?' + '+n+(n>1?' extras':' extra'):''}</span><span class="cbr">${pkd.hide?'Your collection':gbp(c.total)}<i class="cbc"></i></span></button></div>`;
 }
 /* update the page in place so the selected states animate */
@@ -1117,8 +1164,9 @@ function colTog(id){
 function colGo(){
   const c=colCalc();
   if(!c.k){const g=$('#colpk');if(g){g.scrollIntoView({behavior:'smooth',block:'start'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}return}
+  if(c.miss>=0){colOpen=false;colBar();const g=$('#cdy'+c.miss);if(g){g.scrollIntoView({behavior:'smooth',block:'center'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}return}
   colOpen=false;bk.done=false;bk.fail=false;bk.sentCol=null;bk.v.event_type='Wedding';
-  const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n;bk.step=Math.max(bk.step,2);bkDraw(1);colBar();
+  const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n;bk.step=Math.max(bk.step,bkAct().findIndex(q=>q.k==='name'));bkDraw(1);colBar();
 }
 /* the floating bar hides while the full summary or the booking form is on screen */
 function colWatch(){
@@ -1138,7 +1186,13 @@ document.addEventListener('click',e=>{
   else if(c==='go')colGo();
   else if(c==='bar'){colOpen=!colOpen;colBar()}
   else if(c==='edit'){const w=$('#wed');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(c==='dayadd'){if(col.days.length<3){col.days.push({k:'Church',o:'',pkg:'',date:''});colSave();colDaysDraw();const n=$('#cdy'+(col.days.length-1));if(n)n.scrollIntoView({behavior:'smooth',block:'center'})}}
+  else if(c==='dayrm'){col.days.splice(+t.dataset.i,1);colSave();colDaysDraw()}
+  else if(c==='dayk'){const x=col.days[+t.dataset.i];if(x){x.k=k;colSave();colDaysDraw()}}
+  else if(c==='dayp'){const x=col.days[+t.dataset.i];if(x){x.pkg=k;colSave();colDaysDraw()}}
+  else if(c==='dayfix'){colOpen=false;colBar();const g=$('#cdy'+t.dataset.i);if(g)g.scrollIntoView({behavior:'smooth',block:'center'})}
 });
+document.addEventListener('input',e=>{const t=e.target;if(!PKPAGE||!t||!t.dataset||!t.dataset.cd)return;const x=col.days[+t.dataset.i];if(!x)return;x[t.dataset.cd]=t.value;colSave();colPaint()});
 document.addEventListener('keydown',e=>{if(!PKPAGE||(e.key!=='Enter'&&e.key!==' '))return;const t=e.target;if(t&&t.matches&&t.matches('article[data-c="pk"]')){e.preventDefault();t.click()}});
 /* ---- Packages editor (photographer only) ---- */
 function pkEdit(){
@@ -1166,7 +1220,7 @@ ${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-b
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="addons">+ Add extra</button></div>
 <h2>Small events</h2>
 ${TA('Introduction','evIntro',d.evIntro,3)}
-${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
+${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${F('Hours · also offered as an extra wedding day','ev.'+i+'.h',k.h,'8')}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="ev">+ Add small events package</button></div>
 ${TA('Note below the small events packages','evNote',d.evNote,4)}
 <h2>Hourly rate</h2>
@@ -1294,7 +1348,7 @@ function loadScript(src){return new Promise(r=>{const s=document.createElement('
 const STANDALONE=(()=>{try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches}catch(_){return false}})();
 async function init(){
   try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
-  if(PKPAGE){document.title='Zema Production · Packages';document.documentElement.classList.add('noir');document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content='#0A0A0B');const ap=$('#app');if(ap)ap.classList.add('pkw')}
+  if(PKPAGE){document.title='Zema Production · '+(PKMODE==='wed'?'Weddings':PKMODE==='ev'?'Events':'Packages');document.documentElement.classList.add('noir');document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content='#0A0A0B');const ap=$('#app');if(ap)ap.classList.add('pkw')}
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
   sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||CPTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
@@ -2758,7 +2812,7 @@ function openMenu(){
   const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Menu</h3>
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
-${r('editPk','Edit packages','Prices and wording')}${r('copyP','Copy packages link','For enquiries')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('shotV','Shot lists','Must-haves for each type of event')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
+${r('editPk','Edit packages','Prices and wording')}${r('copyPW','Wedding packages link','Weddings only, with extra days')}${r('copyPE','Events packages link','Small events and hourly rate')}${r('copyP','All packages link','Everything on one page')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('shotV','Shot lists','Must-haves for each type of event')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
 ${r('themeV','Appearance',THEMES[themePref])}${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('cleanV','Clear unused photos','Free up storage space')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('impV','Import invoices','Past invoices from Zoho')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
@@ -2821,7 +2875,7 @@ async function setE(id,o){
 }
 function openEnqWa(id){
   const e=enqs.find(x=>x.id===id);if(!e)return;
-  const ph=waNum(e.phone),first=(e.name||'').split(/[ ,&]/)[0],dt=e.event_date?fmtD(e.event_date):'your date',ty=e.event_type?e.event_type.toLowerCase():'event',pkl=location.origin+location.pathname+'?p=1';
+  const ph=waNum(e.phone),first=(e.name||'').split(/[ ,&]/)[0],dt=e.event_date?fmtD(e.event_date):'your date',ty=e.event_type?e.event_type.toLowerCase():'event',pkl=location.origin+location.pathname+'?p='+(e.event_type==='Wedding'?'wedding':e.event_type?'events':'1');
   const M=[['Available · send packages',`Hi ${first}, thank you for your enquiry. Yes, ${dt} is currently available. You can see my packages and book here:\n${pkl}\n\nLet me know if you have any questions.`],
 ['Not available that day',`Hi ${first}, thank you for your enquiry. Unfortunately I’m already booked on ${dt}. If your date is flexible, let me know and I’ll check for you.`],
 ['Are you still interested?',`Hi ${first}, just checking in about your ${ty}${e.event_date?' on '+dt:''}. Are you still interested in going ahead? Happy to answer any questions.`],
@@ -4252,7 +4306,7 @@ function qSumHtml(q){
   return`${r(esc(qName(q)),gbp(qBase(q)))}${(q.addons||[]).filter(x=>x.label).map(x=>r(esc(x.label),'+'+gbp(x.amount))).join('')}${+q.discount?r('Discount','−'+gbp(q.discount)):''}${r('Total',gbp(qTot(q)),1)}`;
 }
 function qMsg(e,q){
-  const first=(e.name||'').split(/[ ,&]/)[0],ty=e.event_type?e.event_type.toLowerCase():'event',until=addDays(today(),q.valid_days||14),pkl=location.origin+location.pathname+'?p=1';
+  const first=(e.name||'').split(/[ ,&]/)[0],ty=e.event_type?e.event_type.toLowerCase():'event',until=addDays(today(),q.valid_days||14),pkl=location.origin+location.pathname+'?p='+(e.event_type==='Wedding'?'wedding':e.event_type?'events':'1');
   return[`Hi ${first}, thank you for your enquiry. Here is your quote from ${(inv||INVDEF).biz||'Zema Production'} for your ${ty}${e.event_date?' on '+fmtD(e.event_date):''}:`,'',
 `${qName(q)}: ${gbp(qBase(q))}`,...(q.addons||[]).filter(x=>x.label).map(x=>`${x.label}: ${gbp(x.amount)}`),...(+q.discount?[`Discount: −${gbp(q.discount)}`]:[]),
 `Total: ${gbp(qTot(q))}`,'','Payment plan:',qPlanTxt(q),...(q.note?['',q.note]:[]),'',
@@ -4453,6 +4507,8 @@ document.addEventListener('click',async e=>{
   else if(a==='copy')copyLink(wed.share_token);
   else if(a==='copyF')copyLink(wed.family_token,'f');
   else if(a==='copyP')copyLink('1','p');
+  else if(a==='copyPW')copyLink('wedding','p');
+  else if(a==='copyPE')copyLink('events','p');
   else if(a==='editPk'&&!TOKEN&&pk){ui.view='pkgs';render();scrollTo(0,0)}
   else if(a==='savePk'&&!TOKEN)savePk();
   else if(a==='togHide'&&!TOKEN){collectPk();pk.hide=!pk.hide;if(!await savePk()){pk.hide=!pk.hide;render()}}
