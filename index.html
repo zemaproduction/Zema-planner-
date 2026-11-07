@@ -232,6 +232,85 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .tc p{color:var(--mu);font-size:14px;margin:0 0 14px}
 .stand .or{padding:15px 0;align-items:center}.stand .or:first-of-type{border-top:0;padding-top:0}.stand .or:last-of-type{padding-bottom:0}
 .gp{padding:6px 0;color:var(--tx2)}.gp:before{content:"·";color:var(--ac);margin-right:10px}
+/* ---------- wedding collection builder (packages page) ---------- */
+#app.pkw{max-width:1120px}.pkn{max-width:720px}
+.colh{margin:56px 0 4px}.colh h2{margin:10px 0 14px}.colk{color:var(--ac)!important;letter-spacing:.2em!important}
+.colhero{height:clamp(220px,40vw,440px);border-radius:var(--r);background:center/cover no-repeat var(--s2);margin:26px 0 6px;position:relative;overflow:hidden}
+.colhero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(10,10,11,.7))}
+.cst{display:flex;align-items:baseline;gap:12px;margin:44px 0 18px;font:600 11.5px/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mu)}
+.cst span{font:300 30px/1 var(--serif);letter-spacing:0;color:var(--ac)}
+.col h2.cah{margin:-6px 0 10px}
+.cpg{display:grid;gap:16px}
+.cp{position:relative;display:flex;flex-direction:column;background:var(--s);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease)}
+.cp:hover{transform:translateY(-3px);border-color:var(--line2)}
+.cp.star{border-color:rgba(201,171,127,.34);background:linear-gradient(180deg,rgba(201,171,127,.075),rgba(201,171,127,0) 160px),var(--s)}
+.cp.star:before{content:"";position:absolute;top:0;left:24px;right:24px;height:1px;background:linear-gradient(90deg,transparent,var(--ac),transparent);z-index:1}
+.cp.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac),0 22px 60px rgba(201,171,127,.13)}
+.cpi{aspect-ratio:16/10;background:center/cover no-repeat var(--s2)}
+.cpb{padding:26px 24px 22px;display:flex;flex-direction:column;flex:1}
+.cpt{font:600 10.5px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--ac);margin-bottom:10px}
+.cpn{font:300 42px/1 var(--serif);letter-spacing:-.01em}
+.cpp{font:500 20px/1.2 var(--sans);letter-spacing:-.02em;color:var(--ac2);margin-top:10px;font-variant-numeric:tabular-nums}
+.cpd{color:var(--tx2);font-size:15px;line-height:1.55;margin:14px 0 2px}
+.cpl{list-style:none;margin:14px 0 0;padding:0}
+.cpl li{position:relative;padding:8px 0 8px 20px;font-size:14px;line-height:1.45;color:var(--tx2);border-top:1px solid var(--line)}
+.cpl li:before{content:"";position:absolute;left:2px;top:15px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+.cpm summary{list-style:none;cursor:pointer;padding:12px 0 2px;font:500 13.5px var(--sans);color:var(--ac2);width:max-content}
+.cpm summary::-webkit-details-marker{display:none}.cpm summary:after{content:"  +"}.cpm[open] summary:after{content:"  −"}
+.cpm .cpl{margin-top:8px}.cpm[open] .cpl{animation:fadein .35s var(--ease)}
+.cpf{margin-top:auto;padding-top:22px}
+.cps{display:flex;align-items:center;justify-content:center;gap:10px;min-height:50px;border-radius:var(--r2);background:var(--s2);font:500 15px var(--sans);color:var(--tx);transition:background .35s var(--ease),color .35s var(--ease)}
+.cp:hover .cps{background:var(--s3)}.cp.on .cps{background:var(--ac);color:#0A0A0B;font-weight:600}
+.cpk{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:11px;opacity:.7}.cp.on .cpk{opacity:1}
+.cpg.nudge .cp{animation:nudge .9s var(--ease)}@keyframes nudge{30%{border-color:var(--ac)}}
+.cag{display:flex;align-items:flex-start;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -20px;padding:4px 20px 18px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cag::-webkit-scrollbar{display:none}
+.ca{flex:0 0 80%;scroll-snap-align:start;display:flex;flex-direction:column;background:var(--s);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease)}
+.ca:hover{border-color:var(--line2);transform:translateY(-2px)}
+.ca.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}.ca.inc{cursor:default}.ca.inc:hover{transform:none}
+.cai{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;color:var(--ac);background:radial-gradient(120% 95% at 28% 18%,#2B261E 0%,#18171A 52%,#0E0E0F 100%)}
+.cai img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1s var(--ease)}.ca:hover .cai img{transform:scale(1.04)}
+.cai svg{width:58px;height:58px;fill:none;stroke:currentColor;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;opacity:.92}
+.cai:after{content:"✓";position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:var(--ac);color:#0A0A0B;display:flex;align-items:center;justify-content:center;font:600 14px var(--sans);transform:scale(.4);opacity:0;transition:transform .35s var(--ease),opacity .35s var(--ease)}
+.ca.on .cai:after{transform:scale(1);opacity:1}
+.cab{padding:18px 18px 16px;display:flex;flex-direction:column;flex:1}
+.can{font:400 24px/1.15 var(--serif)}
+.cad{color:var(--mu);font-size:14px;line-height:1.5;margin:8px 0 0}
+.cab .cpl li{font-size:13px;padding:6px 0 6px 18px}.cab .cpl li:before{top:12px}
+.caf{margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cap{font:500 16px var(--sans);color:var(--ac2);font-variant-numeric:tabular-nums}.ca.inc .cap{font-size:13px;color:var(--ac)}
+.cbt{border:1px solid var(--line2);background:transparent;color:var(--tx);border-radius:999px;padding:9px 18px;min-height:42px;font:500 14px var(--sans);cursor:pointer;white-space:nowrap;transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease)}
+.ca:hover .cbt{border-color:var(--ac)}.ca.on .cbt{background:var(--ac);border-color:var(--ac);color:#0A0A0B;font-weight:600}.ca.inc .cbt{border-color:var(--line);color:var(--mu);cursor:default}
+.csd{background:var(--s);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-top:22px}
+.csd .cst{margin:0 0 12px}
+.csr{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid var(--line);font-size:15px;align-items:baseline}
+.csr:first-child{border-top:0}.csr small{display:block;color:var(--mu);font-size:12px;margin-top:3px}
+.csr b{font:400 24px/1.1 var(--serif)}.csr .v{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--tx2);display:flex;align-items:center}
+.csr.inc .v{color:var(--ac);font-size:13px}
+.csx{border:0;background:none;color:var(--mu);margin-left:6px;cursor:pointer;font-size:20px;line-height:1;padding:4px 6px;border-radius:8px}.csx:hover{color:var(--tx);background:var(--s2)}
+.cstt{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line2);margin-top:4px;padding-top:16px}
+.ctot{font:500 30px/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}.ctot.fl{animation:ctf .7s var(--ease)}@keyframes ctf{0%{color:var(--ac)}100%{color:var(--tx)}}
+.ctot.por{font:400 22px var(--serif);letter-spacing:0}
+.cgo{width:100%;margin-top:18px}
+.csn{color:var(--mu);font-size:12.5px;line-height:1.5;margin:12px 0 0}.cse{color:var(--mu);font-size:14px;margin:4px 0 0;line-height:1.5}
+.cbar{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));pointer-events:none;transition:transform .45s var(--ease),opacity .45s var(--ease)}
+.cbar.off{transform:translateY(130%);opacity:0}.cbar.off .cbx{pointer-events:none}
+.cbx{max-width:560px;margin:0 auto;pointer-events:auto;background:rgba(22,22,24,.97);-webkit-backdrop-filter:saturate(1.4) blur(18px);backdrop-filter:saturate(1.4) blur(18px);border:1px solid rgba(201,171,127,.3);border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.55);overflow:hidden}
+.cbh{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:none;border:0;color:var(--tx);cursor:pointer;min-height:60px;text-align:left}
+.cbl{min-width:0;font-size:13.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cbl b{font:400 21px var(--serif);color:var(--tx);margin-right:4px}
+.cbr{display:flex;align-items:center;gap:10px;font:600 18px var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cbc{display:inline-block;width:9px;height:9px;border-top:1.5px solid var(--ac);border-left:1.5px solid var(--ac);transform:translateY(2px) rotate(45deg);transition:transform .35s var(--ease)}.cbar.open .cbc{transform:translateY(-2px) rotate(225deg)}
+.cbp{display:none;padding:16px 18px 18px;max-height:min(62vh,480px);overflow:auto;border-bottom:1px solid var(--line)}.cbar.open .cbp{display:block;animation:fadein .3s var(--ease)}
+.cbp .cgo{margin-top:14px}
+body.hasbar #app{padding-bottom:150px}
+.cbk{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;margin:0 0 22px;border:1px solid rgba(201,171,127,.3);border-radius:var(--r2);background:var(--act)}
+.cbkn{font:400 19px/1.3 var(--serif);margin-top:3px}.cbkr{text-align:right;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:4px}.cbkr b{font:600 17px var(--sans);font-variant-numeric:tabular-nums}
+.cbkr .lnk{background:none;border:0;color:var(--ac2);font:500 13px var(--sans);cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:699px){.cag{display:grid;overflow:visible;margin:0;padding:0;gap:12px}.ca{flex-direction:row}.cai{flex:0 0 104px;aspect-ratio:auto;min-height:100%}.cai svg{width:42px;height:42px}.cai:after{top:8px;right:8px;width:24px;height:24px;font-size:12px}.cab{padding:14px 14px 12px}.can{font-size:21px}.cad{font-size:13.5px;margin-top:5px}.caf{padding-top:12px}.cbt{min-height:38px;padding:7px 15px}}
+@media(min-width:700px){.cag{display:grid;align-items:stretch;grid-template-columns:1fr 1fr;overflow:visible;margin:0;padding:0}.ca{flex:auto}.cbar{display:flex;justify-content:flex-end;padding-right:24px}.cbx{width:420px;margin:0}}
+@media(min-width:980px){.cpg{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:18px}.cgrid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:28px;align-items:start}.csd{position:sticky;top:24px;margin-top:0}.cpn{font-size:44px}}
+@media(max-width:979px){#app.pkw{max-width:720px}}
+@media(prefers-reduced-motion:reduce){.cp,.ca,.cai img,.cai:after,.cbar,.cps,.cbt{transition:none!important}.cp:hover,.ca:hover{transform:none}.ctot.fl,.cpg.nudge .cp{animation:none}}
 /* ---------- home rows ---------- */
 .er{display:flex;gap:16px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:16px 0;cursor:pointer;color:inherit;transition:opacity .2s}
 .er:hover{opacity:.8}
@@ -738,36 +817,47 @@ const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],peo
 
 /* ---- Packages page content (shown at ?p=1). Edit prices and wording here. ---- */
 const CONTACT={tel:'+447449727801',wa:'https://wa.me/447449727801',ig:'https://www.instagram.com/zemaproduction_'};
+/* Wedding packages. star = the flagship collection, pre = includes the pre-wedding experience (so that extra is free) */
 const WPK=[
-{n:'Platinum',p:'£3,800',d:'The complete wedding experience, with cinematic videography, timeless photography and a pre-wedding shoot.',f:[
-'Pre-wedding photoshoot with 20–50 edited images, delivered before your wedding day',
+{n:'Platinum',p:'£4,000',star:true,pre:true,tag:'The flagship collection',img:'',d:'Our most complete wedding experience, combining full-day photography and filmmaking with a personalised pre-wedding shoot and cinematic film.',f:[
+'Up to 15 hours of wedding-day coverage',
+'One professional photographer',
+'Two professional videographers',
+'Pre-wedding photoshoot',
+'20–50 professionally edited pre-wedding photographs',
 'Cinematic pre-wedding highlight film',
-'Two videographers on the wedding day',
-'Drone filming',
-'Short cinematic highlight film',
-'Full wedding film of 1–3 hours, with personal messages from your guests',
-'Wedding film delivered on a personalised USB keepsake',
-'Wedding highlight photos within 1–2 weeks of the wedding',
-'Up to 200 professionally edited photos in a luxury photo book',
-'All remaining unedited images in an online gallery',
-'Custom guest signing board']},
-{n:'Gold',p:'£3,400',d:'Elegant full wedding day photography and cinematic videography coverage.',f:[
-'Two videographers',
-'Drone filming',
 'Cinematic wedding highlight film',
-'Full wedding film of 1–2 hours',
-'Wedding film delivered in a custom USB presentation box',
-'Wedding highlight photos delivered after the wedding',
-'Up to 200 professionally edited photos, printed in a luxury photo book',
-'All remaining unedited images in an online gallery']},
-{n:'Silver',p:'£2,800',d:'Half-day coverage for intimate weddings, registry ceremonies, or couples who want the most important moments captured.',f:[
-'Half-day coverage',
-'One photographer and one videographer',
-'Professionally edited wedding film of up to 20–30 minutes',
-'Film delivered digitally or on USB',
-'Edited highlight photos within 1–2 weeks of the wedding',
-'Up to 120 professionally edited images',
-'All remaining images in high resolution via online gallery or USB']}];
+'Extended full wedding film of approximately 1–3 hours, including recorded guest messages',
+'Up to 200 professionally edited wedding photographs',
+'Selected highlight photographs delivered within 1–2 weeks',
+'Remaining photographs delivered through a private online gallery',
+'Digital wedding film delivery']},
+{n:'Gold',p:'£3,400',star:false,pre:false,tag:'',img:'',d:'An elegant full-day photography and filmmaking experience, documenting your wedding from the preparations through to the celebrations.',f:[
+'Up to 15 hours of wedding-day coverage',
+'One professional photographer',
+'Two professional videographers',
+'Cinematic wedding highlight film',
+'Full wedding film of approximately 1–2 hours',
+'Up to 200 professionally edited photographs',
+'Selected highlight photographs delivered within 1–2 weeks',
+'Remaining photographs delivered through a private online gallery',
+'Digital wedding film delivery']},
+{n:'Silver',p:'£2,800',star:false,pre:false,tag:'',img:'',d:'Beautifully capturing the most meaningful moments of your wedding through photography and cinematic filmmaking.',f:[
+'Half-day wedding coverage',
+'One professional photographer',
+'One professional videographer',
+'Professionally edited wedding film of approximately 20–30 minutes',
+'Up to 120 professionally edited photographs',
+'Selected highlight photographs delivered within 1–2 weeks',
+'Remaining photographs delivered through a private online gallery',
+'Digital wedding film delivery']}];
+/* Optional extras for weddings. id never changes (bookings and invoices refer to it). pre = the pre-wedding experience */
+const ADDONS=[
+{id:'album',n:'Luxury Wedding Album',p:'£250',ic:'album',img:'',pre:false,d:'Your favourite photographs printed in a luxury album, made to be held and passed down.',f:[]},
+{id:'signboard',n:'Custom Guest Signing Board',p:'£150',ic:'board',img:'',pre:false,d:'A personalised board for your guests to sign on the day, a keepsake to frame at home.',f:[]},
+{id:'drone',n:'Drone Filming',p:'£150',ic:'drone',img:'',pre:false,d:'Sweeping aerial views of your venue and celebration, woven into your film. Subject to venue and flight permissions.',f:[]},
+{id:'usb',n:'Personalised USB Presentation Box',p:'£70',ic:'usb',img:'',pre:false,d:'Your wedding film presented in a personalised keepsake box with USB.',f:[]},
+{id:'prewedding',n:'Pre-wedding Experience',p:'£600',ic:'pre',img:'',pre:true,d:'A relaxed shoot before your wedding day, at a location that means something to you.',f:['Pre-wedding photoshoot','20–50 professionally edited photographs','Cinematic pre-wedding highlight film']}];
 const EPK=[
 {n:'Essential',p:'£1,000',d:'5 hours of photography and videography coverage.'},
 {n:'Signature',p:'£1,400',d:'8 hours of photography and videography coverage.'},
@@ -803,10 +893,11 @@ function bkPkgs(){
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
   return o;
 }
-function bkSummary(){const v=bk.v;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
+function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
 function bkInner(){
   if(bk.done)return`<div class="lbl">${bk.fail?'Almost there':'Request sent'}</div><div class="nm" style="font-size:28px;margin-top:10px">${bk.fail?'We couldn’t send the form':'Thank you, '+esc((bk.v.name||'').split(/[ ,&]/)[0])}</div>
 <p class="intro" style="margin:12px 0 20px">${bk.fail?'Your answers are saved in the message below. Please send it to us on WhatsApp and we’ll take it from there.':'We’ve received your booking request and will be in touch soon. Your date is not secured until we confirm it. To reach us straight away, send the same details on WhatsApp.'}</p>
+${bk.sentCol?`<div class="cbk" style="margin-top:0"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(bk.sentCol.n)}${bk.sentCol.lines.length?' + '+bk.sentCol.lines.map(x=>esc(x.n)).join(', '):''}</div></div>${pkd.hide?'':`<div class="cbkr"><b>${gbp(bk.sentCol.total)}</b></div>`}</div>`:''}
 <a class="btn fill" style="width:100%" href="${esc(waLink(bkSummary()))}" target="_blank" rel="noopener">Send on WhatsApp</a>`;
   const A=bkAct();bk.step=Math.min(bk.step,A.length-1);
   const q=A[bk.step],v=bk.v[q.k]||'',n=A.length;let f;
@@ -819,7 +910,10 @@ function bkInner(){
 <div class="nm" style="font-size:26px">${esc(q.q)}${q.req?' <span style="color:var(--ac)">*</span>':''}</div>${q.sub?`<p class="intro" style="margin:8px 0 0">${esc(q.sub)}</p>`:''}<div style="height:18px"></div>${f}
 <div class="bad" id="bkerr"></div>
 <div class="bt" style="justify-content:space-between">${bk.step?'<button class="btn" data-a="bkBack">Back</button>':'<span></span>'}<button class="btn fill" data-a="bkNext">${bk.step===n-1?'Send booking request':'Next'}</button></div>`}
-function bkDraw(scroll){const el=$('#bkbox');if(!el)return;el.innerHTML=bkInner();if(scroll)$('#book').scrollIntoView({behavior:'smooth',block:'start'})}
+function bkDraw(scroll){const el=$('#bkbox');if(!el)return;
+  /* a wedding package picked inside the form becomes the builder's package too */
+  if(pkd&&!bk.done&&bk.v.event_type==='Wedding'&&bk.v.package){const n=pkName(bk.v.package);if(n!==col.pkg&&pkd.wed.some(k=>k.n===n)){col.pkg=n;colCheck();colSave();colPaint()}}
+  el.innerHTML=bkInner();const h=$('#bkcol');if(h)h.innerHTML=colHead();if(scroll)$('#book').scrollIntoView({behavior:'smooth',block:'start'})}
 async function bkNext(){
   const A=bkAct(),q=A[bk.step];
   bkRead(q);
@@ -834,13 +928,20 @@ async function bkNext(){
   if(hp&&hp.value){bk.done=true;return bkDraw(1)}
   err('Sending…');
   let fail=false;
-  try{const{error}=await sb.rpc('booking_submit',{p:bk.v});fail=!!error}catch(_){fail=true}
-  bk.done=true;bk.fail=fail;bkDraw(1);
+  /* the wedding extras go as ids only; the server prices them from your saved price list */
+  const cw=colActive(),cc=cw?colCalc():null,pl=cw?{...bk.v,addons:cc.lines.map(x=>x.id),client_total:cc.total}:bk.v;
+  bk.sentCol=cw?{n:cc.k.n,lines:cc.lines,total:cc.total,inc:cc.inc?cc.inc.n:''}:null;
+  try{const{error}=await sb.rpc('booking_submit',{p:pl});fail=!!error}catch(_){fail=true}
+  if(!fail)try{sessionStorage.removeItem('zemaCol')}catch(_){}
+  bk.done=true;bk.fail=fail;bkDraw(1);colBar();
 }
 /* ---- Bookings on the photographer's dashboard ---- */
+/* wedding extras on a booking, as priced by the server when it came in */
+const bkEx=b=>Array.isArray(b&&b.extras)?b.extras.filter(x=>x&&x.label).map(x=>({id:String(x.id||''),label:String(x.label),amount:Number(x.amount)||0})):[];
 function bkCard(b){return`<div class="wc" style="cursor:default;border-color:var(--ac)"><div class="nm">${esc(b.name)}</div><div class="sub">${esc(b.event_type||'Booking')} · ${fmtD(b.event_date)}</div>
 ${[b.location,b.location2,b.location3].filter(Boolean).map((x,i)=>`<div class="sub">Location ${i+1} · ${esc(x)}</div>`).join('')}
-<div><span class="tag approved">New request</span>${b.package?`<span class="tag">${esc(b.package)}</span>`:''}${b.hours?`<span class="tag">${esc(b.hours)}</span>`:''}${b.services?`<span class="tag">${esc(b.services)}</span>`:''}</div>
+<div><span class="tag approved">New request</span>${b.package?`<span class="tag">${esc(b.package)}</span>`:''}${b.hours?`<span class="tag">${esc(b.hours)}</span>`:''}${b.services?`<span class="tag">${esc(b.services)}</span>`:''}${bkEx(b).map(x=>`<span class="tag">+ ${esc(x.label)}</span>`).join('')}</div>
+${b.total!=null&&isFinite(+b.total)?`<div class="row2" style="margin-top:12px"><span>Collection total${bkEx(b).length?' · package '+mny(+b.pkg_price||0)+' + '+bkEx(b).length+(bkEx(b).length>1?' extras':' extra'):''}</span><span><b>${mny(+b.total)}</b></span></div>`:''}
 ${b.message?`<p class="ntx" style="font-size:14px;color:var(--tx2)">${esc(b.message)}</p>`:''}
 <div class="row2" style="margin-top:12px"><span>${esc([b.phone,b.email].filter(Boolean).join(' · '))}</span><span>${b.source?'Via '+esc(b.source):''}</span></div>
 <div class="acts"><button data-a="bkAccept" data-id="${b.id}">Accept · create event</button>${b.phone?`<button data-a="bkWa" data-id="${b.id}">WhatsApp</button>`:''}<button data-a="bkDecline" data-id="${b.id}">Decline</button></div></div>`}
@@ -851,11 +952,19 @@ async function acceptBk(id){
   if(error)return toast('Could not create the event: '+error.message);
   if(ty==='Wedding')await sb.from('photo_groups').insert(demoRows(data.id));
   await applyShots(data.id,ty);
-  const pr=known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
-  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{})});
+  const ex=bkEx(b),pp=b.pkg_price!=null&&isFinite(+b.pkg_price)?+b.pkg_price:null,pr=pp!=null?pp:known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
+  await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{}),...(ex.some(x=>x.amount>0)?{extras:ex.filter(x=>x.amount>0).map(x=>({label:x.label,amount:x.amount}))}:{})});
+  if(ty==='Wedding'){
+    /* things to bring go to the top of the equipment checklist */
+    const ids=ex.map(x=>x.id),gi=[ids.includes('signboard')&&'Guest sign board',ids.includes('drone')&&'Drone'].filter(Boolean);
+    if(gi.length)await sb.from('event_gear').upsert({wedding_id:data.id,items:[...gi.map(t=>({s:GCL,t,pre:false,post:false})),...gearParse(gearTpl)],updated_at:new Date().toISOString()});
+    /* a pre-wedding shoot (bought as an extra, or part of the package) gets its own day, with no extra charge on the invoice */
+    const pkI=pk&&pk.wed.find(x=>x.n===pn),preA=pk&&pk.addons.find(x=>x.pre);
+    if((pkI&&pkI.pre)||(preA&&ids.includes(preA.id)))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
+  }
   const locs=[b.location,b.location2,b.location3].filter(Boolean);
   if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
-  const note=['From the booking form, '+fmtD(String(b.created_at||'').slice(0,10)),b.phone&&('Phone: '+b.phone),b.email&&('Email: '+b.email),b.package&&('Package asked for: '+b.package),b.hours&&('Hours asked for: '+b.hours),b.source&&('Heard about us: '+b.source),b.message&&('Message: '+b.message)].filter(Boolean).join('\n');
+  const note=['From the booking form, '+fmtD(String(b.created_at||'').slice(0,10)),b.phone&&('Phone: '+b.phone),b.email&&('Email: '+b.email),b.package&&('Package asked for: '+b.package),bkEx(b).length&&('Extras chosen: '+bkEx(b).map(x=>x.label+' ('+gbp(x.amount)+')').join(', ')),b.total!=null&&isFinite(+b.total)&&('Collection total when booked: '+gbp(+b.total)+' (checked against your price list)'),b.hours&&('Hours asked for: '+b.hours),b.source&&('Heard about us: '+b.source),b.message&&('Message: '+b.message)].filter(Boolean).join('\n');
   await sb.from('wedding_notes').upsert({wedding_id:data.id,private_note:note});
   await sb.from('bookings').update({status:'accepted',wedding_id:data.id}).eq('id',id);
   bks=bks.filter(x=>x.id!==id);toast('Event created from the booking');openWedding(data.id);
@@ -864,31 +973,35 @@ async function acceptBk(id){
 const PKDEF={hide:false,
 wedNote:'Each wedding package covers one wedding day. If additional days are needed, an extra package will be required.',
 wed:WPK,
+adIntro:'Optional additions, chosen only if they feel right for your day. Nothing here is added automatically.',
+addons:ADDONS,
 evIntro:'Perfect for birthdays, baptisms, engagements and intimate celebrations. Your photos and videos are professionally edited and delivered through an online gallery.',
 ev:EPK,
 evNote:'These packages are for small events only, such as birthdays, baptisms, engagements and private celebrations, and are not available for weddings. For events outside London, additional travel costs may apply depending on the distance and location.',
 hr:{p:'£200 per hour',d:'Minimum booking of 3 hours.'},
 terms:TERMS};
 function pkNorm(d){
-  const o=JSON.parse(JSON.stringify({...PKDEF,...(d&&typeof d==='object'?d:{})}));
-  if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];
+  /* packages saved before the add-ons existed: the new wedding packages and extras replace the old wedding ones; everything else is kept */
+  const old=!!(d&&typeof d==='object'&&!Array.isArray(d.addons));
+  const o=JSON.parse(JSON.stringify({...PKDEF,...(d&&typeof d==='object'?d:{}),...(old?{wed:WPK,addons:ADDONS}:{})}));
+  if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];if(!Array.isArray(o.addons))o.addons=[];
   if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
-  o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[]});
+  o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
+  o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||''});
   return o}
+/* "£4,000" -> 4000 (the same rule the server uses) */
+const pkNum=p=>{const m=String(p==null?'':p).replace(/,/g,'').match(/\d+(\.\d+)?/);return m?Number(m[0]):null};
 async function loadPk(){
   try{const{data,error}=await sb.rpc('packages_get');return{d:pkNorm(error?null:data),err:!!error}}
   catch(_){return{d:pkNorm(null),err:true}}
 }
 function pkgView(d){
-  pkd=d;
+  pkd=d;colCheck();
   const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
   return`<div class="brand">ZEMA PRODUCTION</div><h1>Packages</h1><div class="meta">Photography &amp; videography · London</div>
 <nav class="sec"><a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a></nav>
-<h2 id="wed">Wedding Packages</h2>
-${d.wedNote?`<p class="intro">${esc(d.wedNote)}</p>`:''}
-${d.wed.map((k,i)=>`<section class="card pk ${i?'':'ok'}"><div class="nm">${esc(k.n)}</div>${prc(k.p)}${k.d?`<p class="intro" style="margin:0">${esc(k.d)}</p>`:''}
-<ul class="fl">${k.f.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-<button class="btn ${i?'pri':'fill'}" style="width:100%" data-a="bkPick" data-t="Wedding" data-p="${esc(k.n)}">Book ${esc(k.n)}</button></section>`).join('')}
+${d.wed.filter(k=>k.n).length?colView():'<div id="wed"></div>'}
+<div class="pkn">
 <h2 id="ev">Small Events</h2>
 ${d.evIntro?`<p class="intro">${esc(d.evIntro)}</p>`:''}
 ${d.ev.map(k=>`<section class="card pk"><div class="nm" style="font-size:26px">${esc(k.n)}</div>${prc(k.p)}<p class="intro" style="margin:0 0 18px">${esc(k.d||'')}</p>
@@ -899,17 +1012,142 @@ ${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
 <button class="btn pri" style="width:100%" data-a="bkPick" data-t="" data-p="Hourly rate">Book by the hour</button></section>
 <h2 id="book">Book with us</h2>
 <p class="intro">Tell us about your event and we’ll get back to you. It takes about two minutes.</p>
-<section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkbox">${bkInner()}</div></section>
+<section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkcol">${colHead()}</div><div id="bkbox">${bkInner()}</div></section>
 <h2 id="tc">Terms &amp; Conditions</h2>
 <div class="tc">${d.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>
 <div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
-<footer><span>Zema Production · London</span></footer>`}
+<footer><span>Zema Production · London</span></footer></div>
+${d.wed.filter(k=>k.n).length?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
+/* ---- Wedding collection builder (packages page): one package, optional extras, a live total, carried into the booking form.
+   The total is always worked out from the price list (pkd), and the server works it out again when the booking is sent. ---- */
+let col={pkg:'',add:[]},colOpen=false,colSeen=false;
+try{const v=JSON.parse(sessionStorage.getItem('zemaCol')||'null');if(v&&typeof v==='object')col={pkg:String(v.pkg||''),add:Array.isArray(v.add)?v.add.map(String):[]}}catch(_){}
+const colSave=()=>{try{sessionStorage.setItem('zemaCol',JSON.stringify(col))}catch(_){}};
+const pkName=x=>String(x||'').split(' · ')[0];
+const colPk=()=>pkd&&col.pkg?pkd.wed.find(k=>k.n&&k.n===col.pkg)||null:null;
+const colIncl=a=>{const k=colPk();return!!(a&&a.pre&&k&&k.pre)};
+/* drop anything that is no longer on the price list, and extras the chosen package already includes */
+function colCheck(){
+  if(!pkd)return;if(!colPk())col.pkg='';
+  col.add=[...new Set(col.add)].filter(id=>{const a=pkd.addons.find(x=>x.id===id);return a&&!colIncl(a)});
+}
+function colCalc(){
+  const k=colPk(),lines=(pkd?pkd.addons:[]).filter(a=>col.add.includes(a.id)&&!colIncl(a)).map(a=>({id:a.id,n:a.n,amt:pkNum(a.p)||0}));
+  const base=k?pkNum(k.p):null;
+  return{k,lines,base,total:base==null?null:Math.round(lines.reduce((t,x)=>t+x.amt,base)*100)/100,inc:k&&k.pre?(pkd.addons.find(a=>a.pre)||null):null};
+}
+/* the form is booking this collection: a wedding, with the same package as the builder */
+const colActive=()=>!!(pkd&&bk.v.event_type==='Wedding'&&colPk()&&pkName(bk.v.package)===col.pkg);
+const colM=n=>pkd.hide?'':gbp(n);
+const COLIC={album:'<rect x="11" y="8" width="26" height="32" rx="1.5"/><path d="M15.5 8v32M21 17h11M21 22h8"/>',
+board:'<path d="M11 9h26v21H11z"/><path d="M16 16.5c2.5-2.6 4.6 2.6 7.2 0s4.8 2.4 7.8-.6M16 23h12M18 30l-4.5 10M30 30l4.5 10M24 30v7"/>',
+drone:'<circle cx="11.5" cy="12.5" r="5"/><circle cx="36.5" cy="12.5" r="5"/><circle cx="11.5" cy="35.5" r="5"/><circle cx="36.5" cy="35.5" r="5"/><path d="M15.5 16.5l5 5M32.5 16.5l-5 5M15.5 31.5l5-5M32.5 31.5l-5-5"/><rect x="20" y="20" width="8" height="8" rx="2"/>',
+usb:'<rect x="8" y="17" width="32" height="21" rx="1.5"/><path d="M8 23h32M21 28h6v5h-6zM24 9v8M21 9h6"/>',
+pre:'<rect x="8.5" y="15" width="31" height="21" rx="3"/><circle cx="24" cy="25.5" r="6"/><path d="M18 15l2.2-4h7.6l2.2 4M34 19.5h1"/>',
+x:'<path d="M24 9l3.6 10.6H38.5l-8.8 6.6 3.4 10.8L24 30.4l-9.1 6.6 3.4-10.8-8.8-6.6h10.9z"/>'};
+const colIcon=k=>`<svg viewBox="0 0 48 48" aria-hidden="true">${COLIC[k]||COLIC.x}</svg>`;
+const colLi=x=>`<li>${esc(x)}</li>`;
+const colSel=(n,on)=>`<span class="cpk">${on?'✓':''}</span>${on?'Selected':'Select '+esc(n)}`;
+function colCards(){return pkd.wed.filter(k=>k.n).map(k=>{const on=col.pkg===k.n,F=k.f,lim=5;
+  return`<article class="cp ${k.star?'star':''} ${on?'on':''}" data-c="pk" data-k="${esc(k.n)}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${esc(k.n)} package">
+${k.img?`<div class="cpi" style="background-image:url('${esc(k.img)}')" role="img" aria-label=""></div>`:''}
+<div class="cpb">${k.star&&k.tag?`<div class="cpt">${esc(k.tag)}</div>`:''}<div class="cpn">${esc(k.n)}</div><div class="cpp">${esc(pkd.hide?'Price on request':k.p)}</div>
+${k.d?`<p class="cpd">${esc(k.d)}</p>`:''}
+${F.length?`<ul class="cpl">${F.slice(0,lim).map(colLi).join('')}</ul>`:''}
+${F.length>lim?`<details class="cpm"><summary>All ${F.length} inclusions</summary><ul class="cpl">${F.slice(lim).map(colLi).join('')}</ul></details>`:''}
+<div class="cpf"><div class="cps">${colSel(k.n,on)}</div></div></div></article>`}).join('')}
+const colAdFoot=(a,inc,on)=>`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="ad" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-pressed="${on}" aria-label="${inc?'Included':on?'Remove':'Add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'+ Add'}</button>`;
+function colAds(){return pkd.addons.filter(a=>a.n).map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
+  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="ad" data-k="${esc(a.id)}">
+<div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}</div>
+<div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
+<div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
+function colSum(inBar){
+  const c=colCalc(),head=inBar?'':'<div class="cst"><span>03</span>Your collection</div>';
+  if(!c.k)return head+`<p class="cse">Choose a wedding package to begin. Your extras and total appear here as you go.</p>`;
+  return`${head}<div>
+<div class="csr"><span><b>${esc(c.k.n)}</b><small>Wedding collection</small></span><span class="v">${colM(c.base)}</span></div>
+${c.inc?`<div class="csr inc"><span>${esc(c.inc.n)}<small>Part of ${esc(c.k.n)}</small></span><span class="v">Included</span></div>`:''}
+${c.lines.map(x=>`<div class="csr"><span>${esc(x.n)}</span><span class="v">${colM(x.amt)}<button type="button" class="csx" data-c="rm" data-k="${esc(x.id)}" aria-label="Remove ${esc(x.n)}">×</button></span></div>`).join('')}
+${c.lines.length?'':`<p class="cse" style="margin:6px 0 10px">No extras added. Everything in step two is optional.</p>`}
+</div>
+<div class="cstt"><span class="lbl">Total</span><span class="ctot ${pkd.hide?'por':''}">${pkd.hide?'Price on request':gbp(c.total)}</span></div>
+<button type="button" class="btn fill cgo" data-c="go">Continue booking</button>
+<p class="csn">Nothing is paid now. Your date is secured once Zema Production confirms your booking.</p>`}
+function colView(){
+  const d=pkd,ad=d.addons.filter(a=>a.n);
+  return`<section id="wed" class="col">
+<div class="colh"><div class="lbl colk">Wedding collections</div><h2>Create your Zema wedding collection</h2>${d.wedNote?`<p class="intro" style="max-width:640px">${esc(d.wedNote)}</p>`:''}</div>
+${d.hero?`<div class="colhero" style="background-image:url('${esc(d.hero)}')" role="img" aria-label="Wedding photograph by Zema Production"></div>`:''}
+<div class="cst"><span>01</span>Choose your coverage</div>
+<div class="cpg" id="colpk">${colCards()}</div>
+${ad.length?`<div class="cst"><span>02</span>Optional extras</div><h2 class="cah">Personalise Your Zema Experience</h2>${d.adIntro?`<p class="intro" style="max-width:640px">${esc(d.adIntro)}</p>`:''}`:''}
+<div class="cgrid" ${ad.length?'':'style="display:block"'}>${ad.length?`<div class="cag" id="colad">${colAds()}</div>`:''}<aside class="csd" id="colside" aria-label="Your collection">${colSum()}</aside></div>
+</section>`}
+function colHead(){
+  if(!pkd||bk.done||!colActive())return'';const c=colCalc();
+  return`<div class="cbk"><div><div class="lbl">Your collection</div><div class="cbkn">${esc(c.k.n)}${c.lines.length?' + '+c.lines.map(x=>esc(x.n)).join(', '):''}</div></div><div class="cbkr">${pkd.hide?'':`<b>${gbp(c.total)}</b>`}<button type="button" class="lnk" data-c="edit">Change</button></div></div>`}
+function colBar(){
+  const bar=$('#colbar');if(!bar||!pkd)return;const c=colCalc();
+  document.body.classList.toggle('hasbar',!!c.k);
+  const off=!c.k||colSeen;if(off)colOpen=false;
+  bar.classList.toggle('off',off);bar.classList.toggle('open',colOpen);
+  if(!c.k){bar.innerHTML='';return}
+  const n=c.lines.length;
+  bar.innerHTML=`<div class="cbx"><div class="cbp" id="colbp">${colSum(1)}</div><button type="button" class="cbh" data-c="bar" aria-expanded="${colOpen}" aria-controls="colbp"><span class="cbl"><b>${esc(c.k.n)}</b>${n?' + '+n+(n>1?' extras':' extra'):''}</span><span class="cbr">${pkd.hide?'Your collection':gbp(c.total)}<i class="cbc"></i></span></button></div>`;
+}
+/* update the page in place so the selected states animate */
+function colPaint(flash){
+  document.querySelectorAll('#colpk .cp').forEach(el=>{const on=el.dataset.k===col.pkg;el.classList.toggle('on',on);el.setAttribute('aria-pressed',on);const s=el.querySelector('.cps');if(s)s.innerHTML=colSel(el.dataset.k,on)});
+  document.querySelectorAll('#colad .ca').forEach(el=>{const a=pkd.addons.find(x=>x.id===el.dataset.k);if(!a)return;const inc=colIncl(a),on=!inc&&col.add.includes(a.id);el.classList.toggle('on',on);el.classList.toggle('inc',inc);const f=el.querySelector('.caf');if(f)f.innerHTML=colAdFoot(a,inc,on)});
+  const sd=$('#colside');if(sd)sd.innerHTML=colSum();colBar();
+  const h=$('#bkcol');if(h)h.innerHTML=colHead();
+  if(flash)document.querySelectorAll('.ctot').forEach(t=>{t.classList.remove('fl');void t.offsetWidth;t.classList.add('fl')});
+}
+function colPick(n){
+  if(!pkd.wed.some(k=>k.n===n))return;
+  col.pkg=n;colCheck();colSave();
+  if(bk.v.event_type==='Wedding'&&bk.v.package&&!bk.done){const o=bkPkgs().find(x=>pkName(x)===n);if(o&&o!==bk.v.package){bk.v.package=o;const q=bkAct()[bk.step];if(q&&q.k==='package')bkDraw()}}
+  colPaint(1);
+}
+function colTog(id){
+  const a=pkd.addons.find(x=>x.id===id);if(!a||colIncl(a))return;
+  col.add=col.add.includes(id)?col.add.filter(x=>x!==id):[...col.add,id];colSave();colPaint(1);
+}
+function colGo(){
+  const c=colCalc();
+  if(!c.k){const g=$('#colpk');if(g){g.scrollIntoView({behavior:'smooth',block:'start'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}return}
+  colOpen=false;bk.done=false;bk.fail=false;bk.sentCol=null;bk.v.event_type='Wedding';
+  const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n;bk.step=Math.max(bk.step,2);bkDraw(1);colBar();
+}
+/* the floating bar hides while the full summary or the booking form is on screen */
+function colWatch(){
+  if(!$('#colbar'))return;
+  if(!('IntersectionObserver' in window)){colBar();return}
+  const vis=new Set(),io=new IntersectionObserver(es=>{es.forEach(x=>x.isIntersecting?vis.add(x.target.id):vis.delete(x.target.id));colSeen=vis.size>0;colBar()},{threshold:.12});
+  ['colside','bkbox'].forEach(id=>{const e=$('#'+id);if(e)io.observe(e)});colBar();
+}
+document.addEventListener('click',e=>{
+  if(!PKPAGE||!pkd)return;
+  const t=e.target&&e.target.closest&&e.target.closest('[data-c]');if(!t)return;
+  if(e.target.closest('details'))return;
+  const c=t.dataset.c,k=t.dataset.k;
+  if(c==='pk')colPick(k);
+  else if(c==='ad'){if(!t.disabled&&!t.classList.contains('inc'))colTog(k)}
+  else if(c==='rm')colTog(k);
+  else if(c==='go')colGo();
+  else if(c==='bar'){colOpen=!colOpen;colBar()}
+  else if(c==='edit'){const w=$('#wed');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}
+});
+document.addEventListener('keydown',e=>{if(!PKPAGE||(e.key!=='Enter'&&e.key!==' '))return;const t=e.target;if(t&&t.matches&&t.matches('article[data-c="pk"]')){e.preventDefault();t.click()}});
 /* ---- Packages editor (photographer only) ---- */
 function pkEdit(){
   const d=pk;
   const F=(l,f,v,ph)=>`<div class="f"><span class="l">${l}</span><input data-f="${f}" value="${esc(v||'')}" placeholder="${ph||''}"></div>`;
   const TA=(l,f,v,rows,list)=>`<div class="f"><span class="l">${l}</span><textarea data-f="${f}" ${list?'data-list="1"':''} rows="${rows}">${esc(list?(v||[]).join('\n'):(v||''))}</textarea></div>`;
-  const acts=(g,i)=>`<div class="acts"><button data-a="pkUp" data-g="${g}" data-i="${i}" aria-label="Move up">↑</button><button data-a="pkDown" data-g="${g}" data-i="${i}" aria-label="Move down">↓</button><button data-a="pkDel" data-g="${g}" data-i="${i}">Remove package</button></div>`;
+  const acts=(g,i)=>`<div class="acts"><button data-a="pkUp" data-g="${g}" data-i="${i}" aria-label="Move up">↑</button><button data-a="pkDown" data-g="${g}" data-i="${i}" aria-label="Move down">↓</button><button data-a="pkDel" data-g="${g}" data-i="${i}">${g==='addons'?'Remove extra':'Remove package'}</button></div>`;
+  const CB=(l,f,v)=>`<label class="chk" style="margin:2px 0 14px"><input type="checkbox" data-f="${f}" ${v?'checked':''}> ${l}</label>`;
+  const IM=(l,f,v,id)=>`<div class="f" style="margin-bottom:0"><span class="l">${l}</span><input id="${id}" data-f="${f}" value="${esc(v||'')}" placeholder="Upload a photo, or paste an image link"></div>${upBtn(id)}<div style="height:16px"></div>`;
   return`<div class="top2"><button class="btn" data-a="back">← All events</button></div>
 <div class="brand">ZEMA PRODUCTION</div><h1>Edit packages</h1><div class="meta">Shown on your packages link</div>
 ${pkErr?'<p class="intro" style="margin-top:16px">Saving isn’t set up yet. Run the packages SQL in Supabase once, then refresh this page.</p>':''}
@@ -918,8 +1156,14 @@ ${pkErr?'<p class="intro" style="margin-top:16px">Saving isn’t set up yet. Run
 <p class="intro" style="margin:12px 0 0;font-size:13px">When hidden, the page says “Price on request” in place of every price. This button saves straight away.</p></section>
 <h2>Wedding packages</h2>
 ${TA('Note above the wedding packages','wedNote',d.wedNote,3)}
-${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Wedding package ${i+1}</div>${F('Name','wed.'+i+'.n',k.n)}${F('Price','wed.'+i+'.p',k.p,'£0,000')}${TA('Short description','wed.'+i+'.d',k.d,3)}${TA('What’s included · one item per line','wed.'+i+'.f',k.f,10,1)}${acts('wed',i)}</section>`).join('')}
+${IM('Wedding section photo · optional, shown above the packages','hero',d.hero,'pkimg-hero')}
+${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Wedding package ${i+1}</div>${F('Name','wed.'+i+'.n',k.n)}${F('Price','wed.'+i+'.p',k.p,'£0,000')}${TA('Short description','wed.'+i+'.d',k.d,3)}${TA('What’s included · one item per line','wed.'+i+'.f',k.f,10,1)}${IM('Photo · optional','wed.'+i+'.img',k.img,'pkimg-w'+i)}${CB('Includes the pre-wedding experience (that extra shows as included, at no charge)','wed.'+i+'.pre',k.pre)}${CB('Flagship collection (gold edge and label)','wed.'+i+'.star',k.star)}${k.star?F('Flagship label','wed.'+i+'.tag',k.tag,'The flagship collection'):''}${acts('wed',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="wed">+ Add wedding package</button></div>
+<h2>Wedding extras</h2>
+<p class="intro">Shown as “Personalise Your Zema Experience”. Couples add them to any wedding package and the total updates as they go. Prices here are the ones checked when a booking comes in.</p>
+${TA('Introduction','adIntro',d.adIntro,2)}
+${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Extra ${i+1}</div>${F('Name','addons.'+i+'.n',a.n)}${F('Price','addons.'+i+'.p',a.p,'£000')}${TA('Short description','addons.'+i+'.d',a.d,3)}${TA('What’s included · optional, one item per line','addons.'+i+'.f',a.f,3,1)}${IM('Photo · optional (a gold line drawing shows until you add one)','addons.'+i+'.img',a.img,'pkimg-a'+i)}${CB('This is the pre-wedding experience (free with packages that include it)','addons.'+i+'.pre',a.pre)}${acts('addons',i)}</section>`).join('')}
+<div class="cta"><button class="btn" data-a="pkAdd" data-g="addons">+ Add extra</button></div>
 <h2>Small events</h2>
 ${TA('Introduction','evIntro',d.evIntro,3)}
 ${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
@@ -935,14 +1179,14 @@ function collectPk(){
   document.querySelectorAll('[data-f]').forEach(el=>{
     const path=el.dataset.f.split('.');let o=pk;
     for(let i=0;i<path.length-1;i++){o=o&&o[path[i]]}
-    if(o)o[path[path.length-1]]=el.dataset.list?el.value.split('\n').map(x=>x.trim()).filter(Boolean):el.value.trim();
+    if(o)o[path[path.length-1]]=el.type==='checkbox'?el.checked:el.dataset.list?el.value.split('\n').map(x=>x.trim()).filter(Boolean):el.value.trim();
   });
 }
 async function savePk(){
   collectPk();
   const{error}=await sb.from('app_content').upsert({key:'packages',data:pk,updated_at:new Date().toISOString()});
   if(error){toast(/relation|schema|find the table/i.test(error.message)?'Run the packages SQL in Supabase first, then refresh.':'Could not save: '+error.message);render();return false}
-  pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);render();toast('Packages saved');return true;
+  pkErr=false;PKG=pk.wed.map(x=>x.n).filter(Boolean);pkd=null;render();toast('Packages saved');return true;
 }
 
 let pk=null,pkErr=false,inv=null,crew=[],crewErr=false,cw=null,cph=null,cnotes=[];
@@ -1050,7 +1294,7 @@ function loadScript(src){return new Promise(r=>{const s=document.createElement('
 const STANDALONE=(()=>{try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches}catch(_){return false}})();
 async function init(){
   try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
-  if(PKPAGE)document.title='Zema Production · Packages';
+  if(PKPAGE){document.title='Zema Production · Packages';document.documentElement.classList.add('noir');document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content='#0A0A0B');const ap=$('#app');if(ap)ap.classList.add('pkw')}
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
   sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||CPTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
@@ -1061,7 +1305,7 @@ async function init(){
   if(HTOKEN){document.title='Zema Production · Freelance booking';loadHirer();return}
   if(CPTOKEN){document.title='Zema Production · Crew';document.querySelectorAll('meta[name="apple-mobile-web-app-title"],meta[name="application-name"]').forEach(m=>m.content='Zema Crew');loadCrewHome();setInterval(()=>{if(!document.hidden)loadCrewHome()},60000);return}
   if(CTOKEN){document.title='Zema Production · Crew';loadCrewPage();setInterval(()=>{if(!document.hidden)loadCrewPage()},60000);return}
-  if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
+  if(PKPAGE){const r=await loadPk();setApp(pkgView(r.d));colWatch();if(location.hash==='#book')setTimeout(()=>{const e=$('#book');if(e)e.scrollIntoView()},80);return}
   if(FTOKEN){loadFamily();watchFamily();setInterval(()=>{if(!document.hidden)loadFamily()},30000);return}
   if(TOKEN){ui.sec=QS.get('s')||'overview';setInterval(async()=>{if(document.hidden||!wed||isWed(wed))return;const r=await sb.rpc('shared_timer_get',{p_token:TOKEN});if(r.error)return;const ch=JSON.stringify(r.data)!==JSON.stringify(wed.timer),was=secOff('overview');wed.timer=r.data;if(ch&&!ui.modal&&ui.play==null&&(was||SK_OK(ui.sec)==='overview'))render()},20000);return loadShared()}
   const{data}=await sb.auth.getSession();user=data.session?data.session.user:null;
@@ -3945,7 +4189,7 @@ ${Object.entries(THEMES).map(([k,v])=>`<button class="or" data-a="themeSet" data
 /* the Cinema and its delivery pages stay dark whatever the theme */
 function cineDark(){
   let on=false;
-  try{on=!!(TOKEN?wed&&SK_OK(ui.sec)==='del':(ui.view==='cine'||(ui.view==='wed'&&wed&&ui.cine)))}catch(_){}
+  try{on=PKPAGE||!!(TOKEN?wed&&SK_OK(ui.sec)==='del':(ui.view==='cine'||(ui.view==='wed'&&wed&&ui.cine)))}catch(_){}
   const r=document.documentElement;if(r.classList.contains('noir')!==on){r.classList.toggle('noir',on);applyTheme()}
 }
 
@@ -4213,9 +4457,9 @@ document.addEventListener('click',async e=>{
   else if(a==='savePk'&&!TOKEN)savePk();
   else if(a==='togHide'&&!TOKEN){collectPk();pk.hide=!pk.hide;if(!await savePk()){pk.hide=!pk.hide;render()}}
   else if(a==='viewPk')window.open(location.origin+location.pathname+'?p=1','_blank');
-  else if(a==='pkAdd'&&!TOKEN){collectPk();pk[t.dataset.g==='ev'?'ev':'wed'].push(t.dataset.g==='ev'?{n:'New package',p:'',d:''}:{n:'New package',p:'',d:'',f:[]});render()}
-  else if((a==='pkUp'||a==='pkDown')&&!TOKEN){collectPk();const l=pk[t.dataset.g==='ev'?'ev':'wed'],i=+t.dataset.i,j=i+(a==='pkUp'?-1:1);if(l[j]){[l[i],l[j]]=[l[j],l[i]];render()}}
-  else if(a==='pkDel'&&!TOKEN){collectPk();const l=pk[t.dataset.g==='ev'?'ev':'wed'],i=+t.dataset.i;ask(`Remove “${l[i].n||'this package'}”? It disappears from the page when you save.`,()=>{l.splice(i,1);render()})}
+  else if(a==='pkAdd'&&!TOKEN){collectPk();const g=t.dataset.g;if(g==='addons')pk.addons.push({id:'x'+Date.now().toString(36),n:'New extra',p:'',d:'',f:[],img:'',ic:'',pre:false});else pk[g==='ev'?'ev':'wed'].push(g==='ev'?{n:'New package',p:'',d:''}:{n:'New package',p:'',d:'',f:[],img:'',tag:'',pre:false,star:false});render()}
+  else if((a==='pkUp'||a==='pkDown')&&!TOKEN){collectPk();const g=t.dataset.g,l=pk[g==='ev'?'ev':g==='addons'?'addons':'wed'],i=+t.dataset.i,j=i+(a==='pkUp'?-1:1);if(l[j]){[l[i],l[j]]=[l[j],l[i]];render()}}
+  else if(a==='pkDel'&&!TOKEN){collectPk();const g=t.dataset.g,l=pk[g==='ev'?'ev':g==='addons'?'addons':'wed'],i=+t.dataset.i;ask(`Remove “${l[i].n||'this '+(g==='addons'?'extra':'package')}”? It disappears from the page when you save.`,()=>{l.splice(i,1);render()})}
   else if(a==='approve'&&TOKEN)openApprove();
   else if(a==='doApprove'&&TOKEN)doApprove();
   else if(a==='reopen'&&!TOKEN)ask('Reopen this plan so the couple can edit it again?',async()=>{const{error}=await sb.from('weddings').update({approval_status:'draft',approved_at:null,approved_by:null}).eq('id',wed.id);if(error)return toast('Could not reopen: '+error.message);Object.assign(wed,{approval_status:'draft',approved_at:null,approved_by:null});render()});
