@@ -234,6 +234,10 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .gp{padding:6px 0;color:var(--tx2)}.gp:before{content:"·";color:var(--ac);margin-right:10px}
 /* ---------- wedding collection builder (packages page) ---------- */
 #app.pkw{max-width:1120px}.pkn{max-width:720px}
+.pkhd{padding-top:8px}.pkhd h1{font-size:clamp(40px,7vw,64px);text-wrap:balance;margin:14px 0 10px}.pklead{color:var(--tx2);font-size:17px;line-height:1.55;max-width:560px;margin:18px 0 0}
+.pkhd+.col .cst:first-child,.pkhd+.col>.cst:first-of-type{margin-top:40px}
+.bktc{max-height:260px;overflow:auto;background:var(--s2);border-radius:var(--r2);padding:16px 18px 2px;-webkit-overflow-scrolling:touch}.bktc p{font-size:13.5px;line-height:1.6}
+.bkag{margin-top:18px;color:var(--tx);font-size:15px;line-height:1.45}
 .colh{margin:56px 0 4px}.colh h2{margin:10px 0 14px}.colk{color:var(--ac)!important;letter-spacing:.2em!important}
 .colhero{height:clamp(220px,40vw,440px);border-radius:var(--r);background:center/cover no-repeat var(--s2);margin:26px 0 6px;position:relative;overflow:hidden}
 .colhero:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(10,10,11,.7))}
@@ -925,7 +929,7 @@ ${bk.sentCol?`<div class="cbk" style="margin-top:0"><div><div class="lbl">Your c
   if(q.t==='choice')f=`<div>${(q.k==='package'?bkPkgs():q.k==='event_type'&&PKMODE==='ev'?q.o.filter(x=>x!=='Wedding'):q.o).map(x=>`<button class="dr ${v===x?'nx':''}" data-a="bkSet" data-v="${esc(x)}" style="min-height:0;padding:15px 16px"><span class="ck" style="width:26px;height:26px;font-size:14px;${v===x?'background:var(--ac);border-color:var(--ac)':''}">${v===x?'✓':''}</span><span class="dt"><b style="font-size:19px">${esc(x)}</b></span></button>`).join('')}</div>`;
   else if(q.t==='locs')f=bkLocs.map(([k,l],i)=>{const L=(bk.loc||[])[i]||{};return`<div class="lbl" style="margin:${i?20:0}px 0 10px;color:var(--ac)">${l}</div><div class="f"><span class="l">Address</span><input id="bkl${i}" maxlength="160" value="${esc(L.a||'')}" placeholder="${i?'':'Venue name, street and town'}" autocomplete="off"></div><div class="f"><span class="l">Postcode</span><input id="bkp${i}" maxlength="10" value="${esc(L.p||'')}" placeholder="${i?'':'SW1A 1AA'}" autocapitalize="characters" autocomplete="off" style="max-width:190px"></div>`}).join('');
   else if(q.t==='area')f=`<div class="f"><textarea id="bkf" rows="5" maxlength="1500">${esc(v)}</textarea></div>`;
-  else if(q.t==='agree')f=`<div class="tc" style="max-height:220px;overflow:auto;border:1px solid var(--line);padding:14px 14px 0;border-radius:3px">${pkd.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div><label class="chk" style="margin-top:16px;color:var(--tx)"><input type="checkbox" id="bkf" ${v?'checked':''}> I have read and agree to the Terms &amp; Conditions</label>`;
+  else if(q.t==='agree')f=`<p class="intro" style="margin:0 0 14px">Please read these before sending your request.</p><div class="tc bktc" tabindex="0" aria-label="Terms and Conditions">${pkd.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div><label class="chk bkag"><input type="checkbox" id="bkf" ${v?'checked':''}> I have read and agree to the Terms &amp; Conditions</label>`;
   else f=`<div class="f"><input id="bkf" type="${q.t}" value="${esc(v)}" maxlength="200" ${q.t==='date'?'min="'+today()+'"':''} ${q.t==='tel'?'autocomplete="tel"':q.t==='email'?'autocomplete="email" autocapitalize="none"':q.k==='name'?'autocomplete="name"':''}></div>`;
   return`<div class="lbl">Booking form · ${bk.step+1} of ${n}</div><div class="bar" style="margin:12px 0 22px"><i style="width:${Math.round((bk.step+1)/n*100)}%"></i></div>
 <div class="nm" style="font-size:26px">${esc(q.q)}${q.req?' <span style="color:var(--ac)">*</span>':''}</div>${q.sub?`<p class="intro" style="margin:8px 0 0">${esc(q.sub)}</p>`:''}<div style="height:18px"></div>${f}
@@ -1029,8 +1033,8 @@ function pkgView(d){
   const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
   if(PKMODE==='wed'&&!bk.done)bk.v.event_type='Wedding';
   const W=PKMODE!=='ev'&&d.wed.some(k=>k.n);
-  return`<div class="brand">ZEMA PRODUCTION</div><h1>${PKMODE==='wed'?'Weddings':PKMODE==='ev'?'Events &amp; Photoshoots':'Packages'}</h1><div class="meta">Photography &amp; videography · London</div>
-<nav class="sec">${PKMODE==='wed'?'<a href="#wed">Collections</a><a href="#tc">Terms</a>':PKMODE==='ev'?'<a href="#ev">Packages</a><a href="#tc">Terms</a>':'<a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>'}</nav>
+  const lead=PKMODE==='ev'?(d.evIntro||'Choose your occasion and coverage, add only the extras you want, and see your total as you go.'):'Choose your coverage, add only the extras you want, and see your total as you go.';
+  return`<header class="pkhd"><div class="brand">ZEMA PRODUCTION</div><h1>${PKMODE==='wed'?'Your wedding collection':PKMODE==='ev'?'Your event collection':'Packages'}</h1><div class="meta">Photography &amp; videography · London &amp; worldwide</div>${PKMODE==='all'?'':`<p class="pklead">${esc(lead)}</p>`}</header>
 ${W?colView():PKMODE==='ev'?colViewEv():'<div id="wed"></div>'}
 <div class="pkn">
 ${PKMODE!=='all'?'':`<h2 id="ev">Small Events</h2>
@@ -1045,8 +1049,6 @@ ${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
 <div id="bksec" ${PKMODE!=='all'?'hidden':''}><h2 id="book">${PKMODE==='all'?'Book with us':'Almost there'}</h2>
 <p class="intro">${PKMODE==='all'?'Tell us about your event and we’ll get back to you. It takes about two minutes.':'Just a few details about you and the '+(PKMODE==='wed'?'wedding':'event')+', and we’ll get back to you.'}</p>
 <section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkcol">${colHead()}</div><div id="bkbox">${bkInner()}</div></section></div>
-<h2 id="tc">Terms &amp; Conditions</h2>
-<div class="tc">${d.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>
 <div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
 <footer><span>Zema Production · London</span></footer></div>
 ${W||PKMODE==='ev'?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
@@ -1150,7 +1152,7 @@ ${pkd.hide?'':`<p class="cpd" style="margin-top:16px">${col.hh} hours × ${gbp(r
 function colViewEv(){
   const d=pkd,ad=colAdList();
   return`<section id="ev" class="col">
-<div class="colh"><div class="lbl colk">Events &amp; photoshoots</div><h2>Create your event collection</h2>${d.evIntro?`<p class="intro" style="max-width:640px">${esc(d.evIntro)}</p>`:''}</div>
+
 <div class="cst"><span>01</span>What are you celebrating?</div>
 <div class="cdk cocc" id="colocc">${colOcc()}</div>
 <div class="cst"><span>02</span>Choose your coverage</div>
@@ -1173,7 +1175,7 @@ function colDaysDraw(){const el=$('#coldays');if(el)el.innerHTML=colDays();colPa
 function colView(){
   const d=pkd,ad=d.addons.filter(a=>a.n);
   return`<section id="wed" class="col">
-<div class="colh"><div class="lbl colk">Wedding collections</div><h2>Create your Zema wedding collection</h2><p class="intro" style="max-width:640px">Choose your coverage, add only the extras you want, and see your total as you go.</p></div>
+${PKMODE==='all'?`<div class="colh"><div class="lbl colk">Wedding collections</div><h2>Create your Zema wedding collection</h2><p class="intro" style="max-width:640px">Choose your coverage, add only the extras you want, and see your total as you go.</p></div>`:''}
 ${d.hero?`<div class="colhero" style="background-image:url('${esc(d.hero)}')" role="img" aria-label="Wedding photograph by Zema Production"></div>`:''}
 <div class="cst"><span>01</span>Choose your coverage</div>
 <div class="cpg" id="colpk">${colCards()}</div>
