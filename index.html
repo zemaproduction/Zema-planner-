@@ -304,6 +304,14 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .cbp .cgo{margin-top:14px}
 body.hasbar #app{padding-bottom:150px}
 .cmain{min-width:0}
+.cocc .tab{padding:12px 18px;font-size:15px}
+.cph .cdk .tab{padding:9px 14px}.cph .chh{min-width:46px;justify-content:center;text-align:center}
+.cbrow{display:flex;align-items:center;gap:8px;padding-right:10px}.cbrow .cbh{flex:1;min-width:0}
+.cbgo{flex:none;background:var(--ac);color:#0A0A0B;border:0;border-radius:14px;padding:0 18px;min-height:44px;font:600 15px var(--sans);cursor:pointer;white-space:nowrap}.cbgo:active{transform:scale(.97)}
+#colocc.nudge,#colpk.nudge{animation:nudge .9s var(--ease)}
+@media(min-width:700px){.cpg.evg{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:980px){.cpg.evg{grid-template-columns:repeat(2,minmax(0,1fr))}.cpg.evg[data-n="1"]{grid-template-columns:minmax(0,560px)}}
+@media(max-width:979px){#colside{display:none}}
 .cdy{background:var(--s);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:14px;animation:fadein .35s var(--ease);transition:border-color .4s var(--ease)}
 .cdy.nudge{animation:nudge .9s var(--ease)}
 .cdh{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
@@ -894,7 +902,7 @@ const BKQ=[
 {k:'email',q:'Email address',sub:'Optional.',t:'email'},
 {k:'event_date',q:'Date of the event',t:'date',req:1},
 {k:'location',q:'Where is it?',sub:'Please give the address and postcode. Locations two and three are optional, for events in more than one place.',t:'locs',req:1},
-{k:'services',q:'What would you like?',t:'choice',o:['Photography','Videography','Photography & Videography']},
+{k:'services',q:'What would you like?',t:'choice',when:v=>!(v.hr_kind&&String(v.package||'').startsWith('Hourly rate')),o:['Photography','Videography','Photography & Videography']},
 {k:'message',q:'Anything else we should know?',sub:'Timings, number of guests, special requests. Optional.',t:'area'},
 {k:'source',q:'How did you hear about us?',t:'choice',o:['Instagram','Recommendation','Google','An event we covered','Other']},
 {k:'agree',q:'Terms & Conditions',t:'agree',req:1}];
@@ -906,7 +914,7 @@ function bkPkgs(){
   const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
   return o;
 }
-function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&sc.days&&sc.days.length&&('Extra days: '+sc.days.map(x=>x.n+(x.date?', '+fmtD(x.date):'')+(pkd.hide?'':' ('+gbp(x.amt)+')')).join('; ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
+function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length>0&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&sc.days&&sc.days.length>0&&('Extra days: '+sc.days.map(x=>x.n+(x.date?', '+fmtD(x.date):'')+(pkd.hide?'':' ('+gbp(x.amt)+')')).join('; ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
 function bkInner(){
   if(bk.done)return`<div class="lbl">${bk.fail?'Almost there':'Request sent'}</div><div class="nm" style="font-size:28px;margin-top:10px">${bk.fail?'We couldn’t send the form':'Thank you, '+esc((bk.v.name||'').split(/[ ,&]/)[0])}</div>
 <p class="intro" style="margin:12px 0 20px">${bk.fail?'Your answers are saved in the message below. Please send it to us on WhatsApp and we’ll take it from there.':'We’ve received your booking request and will be in touch soon. Your date is not secured until we confirm it. To reach us straight away, send the same details on WhatsApp.'}</p>
@@ -943,7 +951,7 @@ async function bkNext(){
   let fail=false;
   /* the wedding extras go as ids only; the server prices them from your saved price list */
   const cw=colActive(),cc=cw?colCalc():null,pl=cw?{...bk.v,addons:cc.lines.map(x=>x.id),days:cc.days.map(x=>({kind:x.kind,pkg:x.pkg,date:x.date})),client_total:cc.total}:bk.v;
-  bk.sentCol=cw?{n:cc.k.n,lines:cc.lines,days:cc.days,total:cc.total,inc:cc.inc?cc.inc.n:''}:null;
+  bk.sentCol=cw?{n:cc.k.n,lines:cc.lines,days:cc.days,total:cc.total,inc:cc.incs.map(a=>a.n).join(', ')}:null;
   try{const{error}=await sb.rpc('booking_submit',{p:pl});fail=!!error}catch(_){fail=true}
   if(!fail)try{sessionStorage.removeItem('zemaCol')}catch(_){}
   bk.done=true;bk.fail=fail;bkDraw(1);colBar();
@@ -965,7 +973,7 @@ async function acceptBk(id){
   if(error)return toast('Could not create the event: '+error.message);
   if(ty==='Wedding')await sb.from('photo_groups').insert(demoRows(data.id));
   await applyShots(data.id,ty);
-  const ex=bkEx(b),pp=b.pkg_price!=null&&isFinite(+b.pkg_price)?+b.pkg_price:null,pr=pp!=null?pp:known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
+  const ex=bkEx(b),pp=b.pkg_price!=null&&isFinite(+b.pkg_price)?+b.pkg_price:null,pr=pp!=null?pp:known?pkPrice(pn):null,h=parseFloat(b.hours),rm=pk&&pk.hr&&String(pk.hr.p).replace(/,/g,'').match(/\d+(\.\d+)?/),rt=b.pkg_price!=null&&h>0&&+b.pkg_price>0?Math.round(+b.pkg_price/h*100)/100:rm?Number(rm[0]):0,hourly=pn==='Hourly rate'&&h>0&&rt>0;
   /* extra days become days on the event, each with its own line on the invoice */
   const bl=ex.filter(x=>!x.day&&x.amount>0).map(x=>({label:x.label,amount:x.amount}));
   for(const x of ex.filter(x=>x.day&&ty==='Wedding')){
@@ -974,13 +982,13 @@ async function acceptBk(id){
     bl.push({label:xdLabel(d)+(x.pkg?' · '+x.pkg:''),amount:x.amount,...(r&&!r.error&&r.data?{day:r.data.id}:{})});
   }
   await sb.from('event_billing').upsert({wedding_id:data.id,bill_to:b.name,client_phone:b.phone||'',...(hourly?{price:Math.round(h*rt*100)/100,hours:h,hourly_rate:rt}:pr!=null?{price:pr}:{}),...(bl.length?{extras:bl}:{})});
-  if(ty==='Wedding'){
+  {
     /* things to bring go to the top of the equipment checklist */
     const ids=ex.map(x=>x.id),gi=[ids.includes('signboard')&&'Guest sign board',ids.includes('drone')&&'Drone'].filter(Boolean);
     if(gi.length)await sb.from('event_gear').upsert({wedding_id:data.id,items:[...gi.map(t=>({s:GCL,t,pre:false,post:false})),...gearParse(gearTpl)],updated_at:new Date().toISOString()});
     /* a pre-wedding shoot (bought as an extra, or part of the package) gets its own day, with no extra charge on the invoice */
     const pkI=pk&&pk.wed.find(x=>x.n===pn),preA=pk&&pk.addons.find(x=>x.pre);
-    if((pkI&&pkI.pre)||(preA&&ids.includes(preA.id)))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
+    if(ty==='Wedding'&&((pkI&&pkI.pre)||(preA&&ids.includes(preA.id))))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
   }
   const locs=[b.location,b.location2,b.location3].filter(Boolean);
   if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
@@ -1007,7 +1015,7 @@ function pkNorm(d){
   if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];if(!Array.isArray(o.addons))o.addons=[];
   if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
   o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
-  o.ev.forEach(k=>{k.h=Number(k.h)||Number((String(k.d||'').match(/(\d+(?:\.\d+)?)\s*hours?/i)||[])[1])||null});
+  o.ev.forEach(k=>{k.h=Number(k.h)||Number((String(k.d||'').match(/(\d+(?:\.\d+)?)\s*hours?/i)||[])[1])||null;k.inc=Array.isArray(k.inc)?k.inc.map(String):(/album/i.test(String(k.d||''))?['album']:[])});
   o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||''});
   return o}
 /* "£4,000" -> 4000 (the same rule the server uses) */
@@ -1022,10 +1030,10 @@ function pkgView(d){
   if(PKMODE==='wed'&&!bk.done)bk.v.event_type='Wedding';
   const W=PKMODE!=='ev'&&d.wed.some(k=>k.n);
   return`<div class="brand">ZEMA PRODUCTION</div><h1>${PKMODE==='wed'?'Weddings':PKMODE==='ev'?'Events &amp; Photoshoots':'Packages'}</h1><div class="meta">Photography &amp; videography · London</div>
-<nav class="sec">${PKMODE==='wed'?'<a href="#wed">Collections</a><a href="#book">Book</a><a href="#tc">Terms</a>':PKMODE==='ev'?'<a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>':'<a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>'}</nav>
-${W?colView():'<div id="wed"></div>'}
+<nav class="sec">${PKMODE==='wed'?'<a href="#wed">Collections</a><a href="#tc">Terms</a>':PKMODE==='ev'?'<a href="#ev">Packages</a><a href="#tc">Terms</a>':'<a href="#wed">Weddings</a><a href="#ev">Small events</a><a href="#hr">Hourly rate</a><a href="#book">Book</a><a href="#tc">Terms</a>'}</nav>
+${W?colView():PKMODE==='ev'?colViewEv():'<div id="wed"></div>'}
 <div class="pkn">
-${PKMODE==='wed'?'':`<h2 id="ev">Small Events</h2>
+${PKMODE!=='all'?'':`<h2 id="ev">Small Events</h2>
 ${d.evIntro?`<p class="intro">${esc(d.evIntro)}</p>`:''}
 ${d.ev.map(k=>`<section class="card pk"><div class="nm" style="font-size:26px">${esc(k.n)}</div>${prc(k.p)}<p class="intro" style="margin:0 0 18px">${esc(k.d||'')}</p>
 <button class="btn pri" style="width:100%" data-a="bkPick" data-t="" data-p="${esc(k.n)}">Book ${esc(k.n)}</button></section>`).join('')}
@@ -1034,41 +1042,60 @@ ${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
 <section class="card pk"><div class="nm" style="font-size:26px">By the hour</div>${prc(d.hr.p)}<p class="intro" style="margin:0 0 18px">${esc(d.hr.d||'')}</p>
 <button class="btn pri" style="width:100%" data-a="bkPick" data-t="" data-p="Hourly rate">Book by the hour</button></section>
 `}
-<h2 id="book">Book with us</h2>
-<p class="intro">${PKMODE==='wed'?'Tell us about your wedding and we’ll get back to you. It takes about two minutes.':'Tell us about your event and we’ll get back to you. It takes about two minutes.'}</p>
-<section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkcol">${colHead()}</div><div id="bkbox">${bkInner()}</div></section>
+<div id="bksec" ${PKMODE!=='all'?'hidden':''}><h2 id="book">${PKMODE==='all'?'Book with us':'Almost there'}</h2>
+<p class="intro">${PKMODE==='all'?'Tell us about your event and we’ll get back to you. It takes about two minutes.':'Just a few details about you and the '+(PKMODE==='wed'?'wedding':'event')+', and we’ll get back to you.'}</p>
+<section class="card ok" style="position:relative;overflow:hidden"><input id="bkhp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:0"><div id="bkcol">${colHead()}</div><div id="bkbox">${bkInner()}</div></section></div>
 <h2 id="tc">Terms &amp; Conditions</h2>
 <div class="tc">${d.terms.map(x=>`<p>${esc(x)}</p>`).join('')}</div>
 <div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
 <footer><span>Zema Production · London</span></footer></div>
-${W?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
+${W||PKMODE==='ev'?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
 /* ---- Wedding collection builder (packages page): one package, optional extras, a live total, carried into the booking form.
    The total is always worked out from the price list (pkd), and the server works it out again when the booking is sent. ---- */
-let col={pkg:'',add:[],days:[]},colOpen=false,colSeen=false;
-try{const v=JSON.parse(sessionStorage.getItem('zemaCol')||'null');if(v&&typeof v==='object')col={pkg:String(v.pkg||''),add:Array.isArray(v.add)?v.add.map(String):[],days:Array.isArray(v.days)?v.days.slice(0,3).map(x=>({k:String((x&&x.k)||'Church'),o:String((x&&x.o)||''),pkg:String((x&&x.pkg)||''),date:String((x&&x.date)||'')})):[]}}catch(_){}
+const EVM=PKMODE==='ev',CKEY='zemaCol'+(EVM?'Ev':'');
+let col={pkg:'',add:[],days:[],occ:'',hk:'pv',hh:3},colOpen=false,colSeen=false;
+try{const v=JSON.parse(sessionStorage.getItem(CKEY)||'null');if(v&&typeof v==='object')col={pkg:String(v.pkg||''),add:Array.isArray(v.add)?v.add.map(String):[],days:Array.isArray(v.days)?v.days.slice(0,3).map(x=>({k:String((x&&x.k)||'Church'),o:String((x&&x.o)||''),pkg:String((x&&x.pkg)||''),date:String((x&&x.date)||'')})):[],occ:String(v.occ||''),hk:String(v.hk||'pv'),hh:Number(v.hh)||3}}catch(_){}
 /* extra wedding days: the day, and one of the small event packages as its coverage */
 const DAYK=['Church','Mels','Hammawiti','Other'];
 const dayName=x=>x.k==='Other'?(String(x.o||'').trim()||'Extra day'):x.k;
 const colEv=()=>pkd?pkd.ev.filter(k=>k.n):[];
-const colSave=()=>{try{sessionStorage.setItem('zemaCol',JSON.stringify(col))}catch(_){}};
+const colSave=()=>{try{sessionStorage.setItem(CKEY,JSON.stringify(col))}catch(_){}};
 const pkName=x=>String(x||'').split(' · ')[0];
-const colPk=()=>pkd&&col.pkg?pkd.wed.find(k=>k.n&&k.n===col.pkg)||null:null;
-const colIncl=a=>{const k=colPk();return!!(a&&a.pre&&k&&k.pre)};
+/* events: the occasion, then a package or by the hour (photo, video, or both, each with its own rate) */
+const EVOCC=['Christening','Birthday Party','Pre-Wedding Shoot','Photoshoot','Other Small Event'];
+const hourOnly=o=>o==='Photoshoot'||o==='Pre-Wedding Shoot';
+const HRK=[['pv','Photo + Video','p','Photography & Videography'],['ph','Photo only','pp','Photography'],['vi','Video only','pv','Videography']],HRH=[3,4,5,6,7,8];
+const colRate=k=>{const r=HRK.find(x=>x[0]===k);return r&&pkd?pkNum(pkd.hr[r[2]]):null};
+const hrKinds=()=>HRK.filter(r=>colRate(r[0])!=null);
+const colPk=()=>{
+  if(!pkd||!col.pkg)return null;
+  if(EVM){
+    if(col.pkg==='__hr'){const r=HRK.find(x=>x[0]===col.hk),rt=colRate(col.hk);return r&&rt!=null?{hr:1,n:'By the hour · '+r[1]+' · '+col.hh+' hours',kind:r[1],rate:rt,inc:[]}:null}
+    return pkd.ev.find(k=>k.n&&k.n===col.pkg)||null}
+  return pkd.wed.find(k=>k.n&&k.n===col.pkg)||null};
+const colIncl=a=>{const k=colPk();if(!a||!k)return false;return EVM?(Array.isArray(k.inc)&&k.inc.includes(a.id)):!!(a.pre&&k.pre)};
+const colAdList=()=>pkd?pkd.addons.filter(a=>a.n&&!(EVM&&a.pre)):[];
 /* drop anything that is no longer on the price list, and extras the chosen package already includes */
 function colCheck(){
-  if(!pkd)return;if(!colPk())col.pkg='';
-  col.add=[...new Set(col.add)].filter(id=>{const a=pkd.addons.find(x=>x.id===id);return a&&!colIncl(a)});
-  if(!Array.isArray(col.days))col.days=[];col.days.forEach(x=>{if(!colEv().some(k=>k.n===x.pkg))x.pkg='';if(!DAYK.includes(x.k))x.k='Church'});
+  if(!pkd)return;
+  if(EVM){if(!EVOCC.includes(col.occ))col.occ='';if(hourOnly(col.occ))col.pkg='__hr';if(colRate(col.hk)==null)col.hk=(hrKinds()[0]||['pv'])[0];col.hh=HRH.includes(+col.hh)?+col.hh:3}
+  if(!colPk())col.pkg='';
+  col.add=[...new Set(col.add)].filter(id=>{const a=colAdList().find(x=>x.id===id);return a&&!colIncl(a)});
+  if(!Array.isArray(col.days)||EVM)col.days=[];col.days.forEach(x=>{if(!colEv().some(k=>k.n===x.pkg))x.pkg='';if(!DAYK.includes(x.k))x.k='Church'});
 }
 function colCalc(){
-  const k=colPk(),lines=(pkd?pkd.addons:[]).filter(a=>col.add.includes(a.id)&&!colIncl(a)).map(a=>({id:a.id,n:a.n,amt:pkNum(a.p)||0}));
-  const base=k?pkNum(k.p):null;
-  const days=(col.days||[]).map((x,i)=>{const e=colEv().find(k=>k.n===x.pkg);return e?{i,kind:dayName(x),pkg:e.n,n:dayName(x)+' · '+e.n,amt:pkNum(e.p)||0,date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:'',h:e.h}:null}).filter(Boolean);
-  const miss=(col.days||[]).findIndex(x=>!colEv().some(k=>k.n===x.pkg));
-  return{k,lines,days,miss,base,total:base==null?null:Math.round([...lines,...days].reduce((t,x)=>t+x.amt,base)*100)/100,inc:k&&k.pre?(pkd.addons.find(a=>a.pre)||null):null};
+  const k=colPk(),lines=colAdList().filter(a=>col.add.includes(a.id)&&!colIncl(a)).map(a=>({id:a.id,n:a.n,amt:pkNum(a.p)||0}));
+  const base=k?(k.hr?Math.round(k.rate*col.hh*100)/100:pkNum(k.p)):null;
+  const days=EVM?[]:(col.days||[]).map((x,i)=>{const e=colEv().find(k=>k.n===x.pkg);return e?{i,kind:dayName(x),pkg:e.n,n:dayName(x)+' · '+e.n,amt:pkNum(e.p)||0,date:/^\d{4}-\d{2}-\d{2}$/.test(x.date)?x.date:'',h:e.h}:null}).filter(Boolean);
+  const miss=EVM?-1:(col.days||[]).findIndex(x=>!colEv().some(k=>k.n===x.pkg));
+  const incs=k?colAdList().filter(a=>colIncl(a)):[];
+  return{k,lines,days,miss,base,incs,total:base==null?null:Math.round([...lines,...days].reduce((t,x)=>t+x.amt,base)*100)/100};
 }
-/* the form is booking this collection: a wedding, with the same package as the builder */
-const colActive=()=>!!(pkd&&bk.v.event_type==='Wedding'&&colPk()&&pkName(bk.v.package)===col.pkg);
+/* the form is booking this collection */
+const colActive=()=>{
+  if(!pkd||!colPk())return false;
+  if(EVM)return!!col.occ&&bk.v.event_type===col.occ&&(col.pkg==='__hr'?pkName(bk.v.package)==='Hourly rate':pkName(bk.v.package)===col.pkg);
+  return bk.v.event_type==='Wedding'&&pkName(bk.v.package)===col.pkg};
 const colM=n=>pkd.hide?'':gbp(n);
 const COLIC={album:'<rect x="11" y="8" width="26" height="32" rx="1.5"/><path d="M15.5 8v32M21 17h11M21 22h8"/>',
 board:'<path d="M11 9h26v21H11z"/><path d="M16 16.5c2.5-2.6 4.6 2.6 7.2 0s4.8 2.4 7.8-.6M16 23h12M18 30l-4.5 10M30 30l4.5 10M24 30v7"/>',
@@ -1088,25 +1115,49 @@ ${F.length?`<ul class="cpl">${F.slice(0,lim).map(colLi).join('')}</ul>`:''}
 ${F.length>lim?`<details class="cpm"><summary>All ${F.length} inclusions</summary><ul class="cpl">${F.slice(lim).map(colLi).join('')}</ul></details>`:''}
 <div class="cpf"><div class="cps">${colSel(k.n,on)}</div></div></div></article>`}).join('')}
 const colAdFoot=(a,inc,on)=>`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="ad" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-pressed="${on}" aria-label="${inc?'Included':on?'Remove':'Add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'+ Add'}</button>`;
-function colAds(){return pkd.addons.filter(a=>a.n).map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
+function colAds(){return colAdList().map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
   return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="ad" data-k="${esc(a.id)}">
 <div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}</div>
 <div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
 <div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
 function colSum(inBar){
-  const c=colCalc(),head=inBar?'':`<div class="cst"><span>${colEv().length?'04':'03'}</span>Your collection</div>`;
-  if(!c.k)return head+`<p class="cse">Choose a wedding package to begin. Your extras and total appear here as you go.</p>`;
+  const c=colCalc(),head=inBar?'':`<div class="cst"><span>${EVM||colEv().length?'04':'03'}</span>Your collection</div>`;
+  if(!c.k)return head+`<p class="cse">${EVM?'Choose your occasion and coverage to begin.':'Choose a wedding package to begin.'} Your extras and total appear here as you go.</p>`;
+  const sub=EVM?(c.k.hr?(col.occ?esc(col.occ)+' · ':'')+(pkd.hide?col.hh+' hours':col.hh+' hours at '+gbp(c.k.rate)+' an hour'):esc(col.occ||'Event')):'Wedding collection';
   return`${head}<div>
-<div class="csr"><span><b>${esc(c.k.n)}</b><small>Wedding collection</small></span><span class="v">${colM(c.base)}</span></div>
-${c.inc?`<div class="csr inc"><span>${esc(c.inc.n)}<small>Part of ${esc(c.k.n)}</small></span><span class="v">Included</span></div>`:''}
+<div class="csr"><span><b>${esc(c.k.hr?'By the hour · '+c.k.kind:c.k.n)}</b><small>${sub}</small></span><span class="v">${colM(c.base)}</span></div>
+${c.incs.map(a=>`<div class="csr inc"><span>${esc(a.n)}<small>Part of ${esc(c.k.n)}</small></span><span class="v">Included</span></div>`).join('')}
 ${c.lines.map(x=>`<div class="csr"><span>${esc(x.n)}</span><span class="v">${colM(x.amt)}<button type="button" class="csx" data-c="rm" data-k="${esc(x.id)}" aria-label="Remove ${esc(x.n)}">×</button></span></div>`).join('')}
 ${c.days.map(x=>`<div class="csr"><span>${esc(x.n)}<small>Extra day · ${x.date?fmtD(x.date):'date to be confirmed'}${x.h?' · '+x.h+' hours':''}</small></span><span class="v">${colM(x.amt)}<button type="button" class="csx" data-c="dayrm" data-i="${x.i}" aria-label="Remove ${esc(x.n)}">×</button></span></div>`).join('')}
 ${c.miss>=0?`<div class="csr"><span>${esc(dayName(col.days[c.miss]))}<small>Choose the coverage for this day</small></span><span class="v"><button type="button" class="lnk" style="background:none;border:0;color:var(--ac2);cursor:pointer;font:500 13px var(--sans);text-decoration:underline" data-c="dayfix" data-i="${c.miss}">Choose</button></span></div>`:''}
 ${c.lines.length||c.days.length?'':`<p class="cse" style="margin:6px 0 10px">No extras added. Everything in step two is optional.</p>`}
 </div>
 <div class="cstt"><span class="lbl">Total</span><span class="ctot ${pkd.hide?'por':''}">${pkd.hide?'Price on request':gbp(c.total)}</span></div>
-<button type="button" class="btn fill cgo" data-c="go">Continue booking</button>
+${inBar?'':`<button type="button" class="btn fill cgo" data-c="go">Continue booking</button>`}
 <p class="csn">Nothing is paid now. Your date is secured once Zema Production confirms your booking.</p>`}
+const colOcc=()=>EVOCC.map(o=>`<button type="button" class="tab ${col.occ===o?'on':''}" data-c="occ" data-k="${esc(o)}" aria-pressed="${col.occ===o}">${esc(o)}</button>`).join('');
+function colCardsEv(){
+  const P=hourOnly(col.occ)?[]:colEv(),K=hrKinds();
+  const a=P.map(k=>{const on=col.pkg===k.n,incN=colAdList().filter(x=>(k.inc||[]).includes(x.id)).map(x=>x.n);
+    return`<article class="cp ${on?'on':''}" data-c="pk" data-k="${esc(k.n)}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${esc(k.n)} package"><div class="cpb"><div class="cpn">${esc(k.n)}</div><div class="cpp">${esc(pkd.hide?'Price on request':k.p)}</div>${k.d?`<p class="cpd">${esc(k.d)}</p>`:''}${incN.length?`<ul class="cpl">${incN.map(n=>colLi(n+' included')).join('')}</ul>`:''}<div class="cpf"><div class="cps">${colSel(k.n,on)}</div></div></div></article>`}).join('');
+  if(!K.length)return a;
+  const on=col.pkg==='__hr',rt=colRate(col.hk);
+  return a+`<article class="cp cph ${on?'on':''}" data-c="pk" data-k="__hr" role="button" tabindex="0" aria-pressed="${on}" aria-label="By the hour"><div class="cpb"><div class="cpn">By the hour</div><div class="cpp">${pkd.hide?'Price on request':gbp(rt)+' an hour'}</div>${pkd.hr.d?`<p class="cpd">${esc(pkd.hr.d)}</p>`:''}
+<div class="lbl" style="margin:18px 0 8px">Coverage</div><div class="cdk">${K.map(r=>`<button type="button" class="tab ${col.hk===r[0]?'on':''}" data-c="hk" data-k="${r[0]}" aria-pressed="${col.hk===r[0]}">${r[1]}${pkd.hide?'':' · '+gbp(colRate(r[0]))}</button>`).join('')}</div>
+<div class="lbl" style="margin:16px 0 8px">Hours</div><div class="cdk">${HRH.map(h=>`<button type="button" class="tab chh ${+col.hh===h?'on':''}" data-c="hh" data-k="${h}" aria-pressed="${+col.hh===h}">${h}</button>`).join('')}</div>
+${pkd.hide?'':`<p class="cpd" style="margin-top:16px">${col.hh} hours × ${gbp(rt)} = <b style="color:var(--tx);font-weight:600">${gbp(Math.round(rt*col.hh*100)/100)}</b></p>`}
+<div class="cpf"><div class="cps">${colSel('By the hour',on)}</div></div></div></article>`}
+function colViewEv(){
+  const d=pkd,ad=colAdList();
+  return`<section id="ev" class="col">
+<div class="colh"><div class="lbl colk">Events &amp; photoshoots</div><h2>Create your event collection</h2>${d.evIntro?`<p class="intro" style="max-width:640px">${esc(d.evIntro)}</p>`:''}</div>
+<div class="cst"><span>01</span>What are you celebrating?</div>
+<div class="cdk cocc" id="colocc">${colOcc()}</div>
+<div class="cst"><span>02</span>Choose your coverage</div>
+<div class="cpg evg" id="colpk" data-n="${(hourOnly(col.occ)?0:colEv().length)+(hrKinds().length?1:0)}">${colCardsEv()}</div>
+${d.evNote?`<p class="intro" style="margin-top:16px;max-width:640px">${esc(d.evNote)}</p>`:''}
+<div class="cgrid"><div class="cmain">${ad.length?`<div class="cst"><span>03</span>Optional extras</div><h2 class="cah">Personalise Your Zema Experience</h2>${d.adIntro?`<p class="intro" style="max-width:640px">${esc(d.adIntro)}</p>`:''}<div class="cag" id="colad">${colAds()}</div>`:''}</div><aside class="csd" id="colside" aria-label="Your collection">${colSum()}</aside></div>
+</section>`}
 function colDays(){
   const E=colEv();
   return`${col.days.map((x,i)=>`<div class="cdy" id="cdy${i}">
@@ -1141,32 +1192,41 @@ function colBar(){
   bar.classList.toggle('off',off);bar.classList.toggle('open',colOpen);
   if(!c.k){bar.innerHTML='';return}
   const n=c.lines.length+c.days.length;
-  bar.innerHTML=`<div class="cbx"><div class="cbp" id="colbp">${colSum(1)}</div><button type="button" class="cbh" data-c="bar" aria-expanded="${colOpen}" aria-controls="colbp"><span class="cbl"><b>${esc(c.k.n)}</b>${n?' + '+n+(n>1?' extras':' extra'):''}</span><span class="cbr">${pkd.hide?'Your collection':gbp(c.total)}<i class="cbc"></i></span></button></div>`;
+  bar.innerHTML=`<div class="cbx"><div class="cbp" id="colbp">${colSum(1)}</div><div class="cbrow"><button type="button" class="cbh" data-c="bar" aria-expanded="${colOpen}" aria-controls="colbp"><span class="cbl"><b>${esc(c.k.hr?'By the hour':c.k.n)}</b>${n?' + '+n+(n>1?' extras':' extra'):''}</span><span class="cbr">${pkd.hide?'':gbp(c.total)}<i class="cbc"></i></span></button><button type="button" class="cbgo" data-c="go">Continue</button></div></div>`;
 }
 /* update the page in place so the selected states animate */
 function colPaint(flash){
-  document.querySelectorAll('#colpk .cp').forEach(el=>{const on=el.dataset.k===col.pkg;el.classList.toggle('on',on);el.setAttribute('aria-pressed',on);const s=el.querySelector('.cps');if(s)s.innerHTML=colSel(el.dataset.k,on)});
+  if(EVM){const g=$('#colpk');if(g){g.innerHTML=colCardsEv();g.dataset.n=g.children.length}const o=$('#colocc');if(o)o.innerHTML=colOcc()}
+  else document.querySelectorAll('#colpk .cp').forEach(el=>{const on=el.dataset.k===col.pkg;el.classList.toggle('on',on);el.setAttribute('aria-pressed',on);const s=el.querySelector('.cps');if(s)s.innerHTML=colSel(el.dataset.k,on)});
   document.querySelectorAll('#colad .ca').forEach(el=>{const a=pkd.addons.find(x=>x.id===el.dataset.k);if(!a)return;const inc=colIncl(a),on=!inc&&col.add.includes(a.id);el.classList.toggle('on',on);el.classList.toggle('inc',inc);const f=el.querySelector('.caf');if(f)f.innerHTML=colAdFoot(a,inc,on)});
   const sd=$('#colside');if(sd)sd.innerHTML=colSum();colBar();
   const h=$('#bkcol');if(h)h.innerHTML=colHead();
   if(flash)document.querySelectorAll('.ctot').forEach(t=>{t.classList.remove('fl');void t.offsetWidth;t.classList.add('fl')});
 }
 function colPick(n){
-  if(!pkd.wed.some(k=>k.n===n))return;
+  if(EVM?!(n==='__hr'||colEv().some(k=>k.n===n)):!pkd.wed.some(k=>k.n===n))return;
   col.pkg=n;colCheck();colSave();
-  if(bk.v.event_type==='Wedding'&&bk.v.package&&!bk.done){const o=bkPkgs().find(x=>pkName(x)===n);if(o&&o!==bk.v.package){bk.v.package=o;const q=bkAct()[bk.step];if(q&&q.k==='package')bkDraw()}}
+  if(!EVM&&bk.v.event_type==='Wedding'&&bk.v.package&&!bk.done){const o=bkPkgs().find(x=>pkName(x)===n);if(o&&o!==bk.v.package){bk.v.package=o;const q=bkAct()[bk.step];if(q&&q.k==='package')bkDraw()}}
   colPaint(1);
 }
 function colTog(id){
-  const a=pkd.addons.find(x=>x.id===id);if(!a||colIncl(a))return;
+  const a=colAdList().find(x=>x.id===id);if(!a||colIncl(a))return;
   col.add=col.add.includes(id)?col.add.filter(x=>x!==id):[...col.add,id];colSave();colPaint(1);
 }
+const colNudge=sel=>{const g=$(sel);if(g){g.scrollIntoView({behavior:'smooth',block:'center'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}};
 function colGo(){
   const c=colCalc();
+  if(EVM&&!col.occ){colOpen=false;colBar();return colNudge('#colocc')}
   if(!c.k){const g=$('#colpk');if(g){g.scrollIntoView({behavior:'smooth',block:'start'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}return}
   if(c.miss>=0){colOpen=false;colBar();const g=$('#cdy'+c.miss);if(g){g.scrollIntoView({behavior:'smooth',block:'center'});g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge')}return}
-  colOpen=false;bk.done=false;bk.fail=false;bk.sentCol=null;bk.v.event_type='Wedding';
-  const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n;bk.step=Math.max(bk.step,bkAct().findIndex(q=>q.k==='name'));bkDraw(1);colBar();
+  colOpen=false;bk.done=false;bk.fail=false;bk.sentCol=null;
+  const sec=$('#bksec');if(sec)sec.hidden=false;
+  if(EVM){
+    bk.v.event_type=col.occ;
+    if(c.k.hr){const r=HRK.find(x=>x[0]===col.hk);bk.v.package='Hourly rate · '+r[1]+(pkd.hide?'':' · '+gbp(c.k.rate)+' an hour');bk.v.hours=col.hh+' hours';bk.v.services=r[3];bk.v.hr_kind=col.hk}
+    else{const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n;delete bk.v.hours;delete bk.v.hr_kind}
+  }else{bk.v.event_type='Wedding';const o=bkPkgs().find(x=>pkName(x)===c.k.n);bk.v.package=o||c.k.n}
+  bk.step=Math.max(bk.step,bkAct().findIndex(q=>q.k==='name'));bkDraw(1);colBar();
 }
 /* the floating bar hides while the full summary or the booking form is on screen */
 function colWatch(){
@@ -1185,7 +1245,10 @@ document.addEventListener('click',e=>{
   else if(c==='rm')colTog(k);
   else if(c==='go')colGo();
   else if(c==='bar'){colOpen=!colOpen;colBar()}
-  else if(c==='edit'){const w=$('#wed');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(c==='edit'){const w=$('#wed')||$('#ev');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(c==='occ'){col.occ=k;colCheck();colSave();colPaint(1)}
+  else if(c==='hk'){col.hk=k;col.pkg='__hr';colCheck();colSave();colPaint(1)}
+  else if(c==='hh'){col.hh=+k;col.pkg='__hr';colCheck();colSave();colPaint(1)}
   else if(c==='dayadd'){if(col.days.length<3){col.days.push({k:'Church',o:'',pkg:'',date:''});colSave();colDaysDraw();const n=$('#cdy'+(col.days.length-1));if(n)n.scrollIntoView({behavior:'smooth',block:'center'})}}
   else if(c==='dayrm'){col.days.splice(+t.dataset.i,1);colSave();colDaysDraw()}
   else if(c==='dayk'){const x=col.days[+t.dataset.i];if(x){x.k=k;colSave();colDaysDraw()}}
@@ -1220,16 +1283,18 @@ ${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-b
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="addons">+ Add extra</button></div>
 <h2>Small events</h2>
 ${TA('Introduction','evIntro',d.evIntro,3)}
-${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${F('Hours · also offered as an extra wedding day','ev.'+i+'.h',k.h,'8')}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
+${d.ev.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Small events package ${i+1}</div>${F('Name','ev.'+i+'.n',k.n)}${F('Price','ev.'+i+'.p',k.p,'£0,000')}${F('Hours · also offered as an extra wedding day','ev.'+i+'.h',k.h,'8')}${d.addons.filter(a=>a.n&&!a.pre).length?`<div class="lbl" style="margin:2px 0 10px">Extras included in this package</div>${d.addons.filter(a=>a.n&&!a.pre).map(a=>`<label class="chk" style="margin:0 0 10px"><input type="checkbox" data-inc="${i}" value="${esc(a.id)}" ${(k.inc||[]).includes(a.id)?'checked':''}> ${esc(a.n)}</label>`).join('')}`:''}${TA('Description','ev.'+i+'.d',k.d,3)}${acts('ev',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="ev">+ Add small events package</button></div>
 ${TA('Note below the small events packages','evNote',d.evNote,4)}
 <h2>Hourly rate</h2>
-<section class="card pk">${F('Price','hr.p',d.hr.p,'£000 per hour')}${F('Detail','hr.d',d.hr.d)}</section>
+<section class="card pk">${F('Photo + Video · price per hour','hr.p',d.hr.p,'£000 per hour')}${F('Photo only · price per hour (leave empty to hide)','hr.pp',d.hr.pp,'£000 per hour')}${F('Video only · price per hour (leave empty to hide)','hr.pv',d.hr.pv,'£000 per hour')}${F('Detail','hr.d',d.hr.d)}</section>
 <h2>Terms &amp; Conditions</h2>
 ${TA('One paragraph per line','terms',d.terms,16,1)}
 <div class="cta"><button class="btn fill" data-a="savePk">Save changes</button></div>`}
 /* Copy whatever is typed in the editor back into pk before any re-render or save */
 function collectPk(){
+  const ib={};document.querySelectorAll('[data-inc]').forEach(el=>{(ib[el.dataset.inc]=ib[el.dataset.inc]||[]);if(el.checked)ib[el.dataset.inc].push(el.value)});
+  Object.keys(ib).forEach(i=>{if(pk&&pk.ev[+i])pk.ev[+i].inc=ib[i]});
   document.querySelectorAll('[data-f]').forEach(el=>{
     const path=el.dataset.f.split('.');let o=pk;
     for(let i=0;i<path.length-1;i++){o=o&&o[path[i]]}
