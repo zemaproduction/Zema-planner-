@@ -906,7 +906,7 @@ const BKQ=[
 {k:'email',q:'Email address',sub:'Optional.',t:'email'},
 {k:'event_date',q:'Date of the event',t:'date',req:1},
 {k:'location',q:'Where is it?',sub:'Please give the address and postcode. Locations two and three are optional, for events in more than one place.',t:'locs',req:1},
-{k:'services',q:'What would you like?',t:'choice',when:v=>!(v.hr_kind&&String(v.package||'').startsWith('Hourly rate')),o:['Photography','Videography','Photography & Videography']},
+{k:'services',q:'What would you like?',t:'choice',when:v=>!bkBoth(v)&&!(v.hr_kind&&String(v.package||'').startsWith('Hourly rate')),o:['Photography','Videography','Photography & Videography']},
 {k:'message',q:'Anything else we should know?',sub:'Timings, number of guests, special requests. Optional.',t:'area'},
 {k:'source',q:'How did you hear about us?',t:'choice',o:['Instagram','Recommendation','Google','An event we covered','Other']},
 {k:'agree',q:'Terms & Conditions',t:'agree',req:1}];
@@ -935,6 +935,8 @@ ${bk.sentCol?`<div class="cbk" style="margin-top:0"><div><div class="lbl">Your c
 <div class="nm" style="font-size:26px">${esc(q.q)}${q.req?' <span style="color:var(--ac)">*</span>':''}</div>${q.sub?`<p class="intro" style="margin:8px 0 0">${esc(q.sub)}</p>`:''}<div style="height:18px"></div>${f}
 <div class="bad" id="bkerr"></div>
 <div class="bt" style="justify-content:space-between">${bk.step?'<button class="btn" data-a="bkBack">Back</button>':'<span></span>'}<button class="btn fill" data-a="bkNext">${bk.step===n-1?'Send booking request':'Next'}</button></div>`}
+/* wedding packages and small event packages already include photography and videography, so that question is skipped */
+const bkBoth=v=>{const n=pkName(v&&v.package);return!!(v&&n&&n!=='Hourly rate'&&(v.event_type==='Wedding'||(pkd&&pkd.ev.some(k=>k.n===n))))};
 function bkDraw(scroll){const el=$('#bkbox');if(!el)return;
   /* a wedding package picked inside the form becomes the builder's package too */
   if(pkd&&!bk.done&&bk.v.event_type==='Wedding'&&bk.v.package){const n=pkName(bk.v.package);if(n!==col.pkg&&pkd.wed.some(k=>k.n===n)){col.pkg=n;colCheck();colSave();colPaint()}}
@@ -951,6 +953,7 @@ async function bkNext(){
   if(!String(bk.v.package||'').startsWith('Hourly rate'))delete bk.v.hours;
   const hp=$('#bkhp');
   if(hp&&hp.value){bk.done=true;return bkDraw(1)}
+  if(bkBoth(bk.v))bk.v.services='Photography & Videography';
   err('Sending…');
   let fail=false;
   /* the wedding extras go as ids only; the server prices them from your saved price list */
