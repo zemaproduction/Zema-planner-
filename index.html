@@ -898,7 +898,7 @@ const waLink=t=>CONTACT.wa+'?text='+encodeURIComponent(t);
 /* ---- Booking form (public, at the end of the packages page) ---- */
 let pkd=null,bk={step:0,v:{},done:false,fail:false},bks=[],bkErr=false;
 const BKQ=[
-{k:'event_type',q:'What are you booking?',t:'choice',req:1,when:()=>PKMODE!=='wed',o:['Pre-Wedding Shoot','Wedding','Christening','Birthday Party','Other Small Event','Photoshoot']},
+{k:'event_type',q:'What are you booking?',t:'choice',req:1,when:()=>PKMODE!=='wed',o:['Pre-Wedding Shoot','Wedding','Engagement','Christening','Birthday Party','Other Small Event','Photoshoot']},
 {k:'package',q:'Which package are you interested in?',t:'choice'},
 {k:'hours',q:'How many hours would you like to book?',sub:'The minimum booking is 3 hours.',t:'choice',req:1,o:['3 hours','4 hours','5 hours','6 hours','7 hours','8 hours','More than 8 hours'],when:v=>String(v.package||'').startsWith('Hourly rate')},
 {k:'name',q:'Your name',sub:'For weddings, both names please.',t:'text',req:1},
@@ -915,7 +915,7 @@ const bkLocs=[['location','Location one'],['location2','Location two (optional)'
 function bkRead(q){const el=$('#bkf');if(q.t==='locs'){if($('#bkl0')){bk.loc=bkLocs.map((_,i)=>({a:(($('#bkl'+i)||{}).value||'').trim(),p:(($('#bkp'+i)||{}).value||'').trim().toUpperCase().replace(/\s+/g,' ')}));bkLocs.forEach(([k],i)=>{const L=bk.loc[i];bk.v[k]=L.a?L.a+(L.p?', '+L.p:''):''})}}else if(el)bk.v[q.k]=q.t==='agree'?(el.checked?'yes':''):el.value.trim()}
 function bkPkgs(){
   const ty=bk.v.event_type,pr=k=>k.n+(pkd.hide||!k.p?'':' · '+k.p),hr='Hourly rate'+(pkd.hide||!pkd.hr.p?'':' · '+pkd.hr.p);
-  const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'?[hr]:[...pkd.ev.map(pr),hr];
+  const o=ty==='Wedding'?pkd.wed.map(pr):ty==='Photoshoot'||ty==='Pre-Wedding Shoot'||ty==='Engagement'?[hr]:[...pkd.ev.map(pr),hr];
   return o;
 }
 function bkSummary(){const v=bk.v,sc=bk.sentCol;return['Booking request for Zema Production','',v.event_type,v.package&&('Package: '+v.package),sc&&sc.inc&&('Included: '+sc.inc),sc&&sc.lines.length>0&&('Extras: '+sc.lines.map(x=>x.n+(pkd.hide?'':' ('+gbp(x.amt)+')')).join(', ')),sc&&sc.days&&sc.days.length>0&&('Extra days: '+sc.days.map(x=>x.n+(x.date?', '+fmtD(x.date):'')+(pkd.hide?'':' ('+gbp(x.amt)+')')).join('; ')),sc&&!pkd.hide&&sc.total!=null&&('Collection total: '+gbp(sc.total)),v.hours&&String(v.package||'').startsWith('Hourly rate')&&('Hours: '+v.hours),'Name: '+(v.name||''),v.phone&&('Phone: '+v.phone),v.email&&('Email: '+v.email),v.event_date&&('Date: '+fmtD(v.event_date)),v.location&&('Location one: '+v.location),v.location2&&('Location two: '+v.location2),v.location3&&('Location three: '+v.location3),v.services,v.message&&('Note: '+v.message)].filter(x=>x!==undefined&&x!==false&&x!==null&&x!=='').join('\n').replace('Zema Production\n','Zema Production\n\n')}
@@ -1067,8 +1067,8 @@ const colEv=()=>pkd?pkd.ev.filter(k=>k.n):[];
 const colSave=()=>{try{sessionStorage.setItem(CKEY,JSON.stringify(col))}catch(_){}};
 const pkName=x=>String(x||'').split(' · ')[0];
 /* events: the occasion, then a package or by the hour (photo, video, or both, each with its own rate) */
-const EVOCC=['Christening','Birthday Party','Pre-Wedding Shoot','Photoshoot','Other Small Event'];
-const hourOnly=o=>o==='Photoshoot'||o==='Pre-Wedding Shoot';
+const EVOCC=['Engagement','Christening','Birthday Party','Pre-Wedding Shoot','Photoshoot','Other Small Event'];
+const hourOnly=o=>o==='Photoshoot'||o==='Pre-Wedding Shoot'||o==='Engagement';
 const HRK=[['pv','Photo + Video','p','Photography & Videography'],['ph','Photo only','pp','Photography'],['vi','Video only','pv','Videography']],HRH=[3,4,5,6,7,8];
 const colRate=k=>{const r=HRK.find(x=>x[0]===k);return r&&pkd?pkNum(pkd.hr[r[2]]):null};
 const hrKinds=()=>HRK.filter(r=>colRate(r[0])!=null);
@@ -1251,7 +1251,7 @@ document.addEventListener('click',e=>{
   else if(c==='go')colGo();
   else if(c==='bar'){colOpen=!colOpen;colBar()}
   else if(c==='edit'){const w=$('#wed')||$('#ev');if(w)w.scrollIntoView({behavior:'smooth',block:'start'})}
-  else if(c==='occ'){col.occ=k;colCheck();colSave();colPaint(1)}
+  else if(c==='occ'){col.occ=k;colCheck();colSave();colPaint(1);if(hourOnly(k)){const h=$('#colpk .cph');if(h)setTimeout(()=>h.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
   else if(c==='hk'){col.hk=k;col.pkg='__hr';colCheck();colSave();colPaint(1)}
   else if(c==='hh'){col.hh=+k;col.pkg='__hr';colCheck();colSave();colPaint(1)}
   else if(c==='dayadd'){if(col.days.length<3){col.days.push({k:'Church',o:'',pkg:'',date:''});colSave();colDaysDraw();const n=$('#cdy'+(col.days.length-1));if(n)n.scrollIntoView({behavior:'smooth',block:'center'})}}
@@ -1327,7 +1327,7 @@ const STG={pending:'Pending',confirmed:'Confirmed',post:'Post-production',delive
 let PKG=['Platinum','Gold','Silver'];
 const ALB={none:'Not ordered',ordered:'Ordered',delivered:'Delivered',na:'No album'};
 const stg=w=>STG[w.stage]?w.stage:'pending';
-const ETYPES=['Wedding','Pre-Wedding Shoot','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
+const ETYPES=['Wedding','Pre-Wedding Shoot','Engagement','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
 const secsFor=w=>(isWed(w)?SECS:['Overview','Timeline','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery']).filter(x=>x!=='Travel'||!!(w&&w.travel&&w.travel.enabled));
@@ -1660,7 +1660,7 @@ ${monthCard(y)}
 <section class="card">${Object.entries(gm).map(([k,v])=>`<div class="row2" style="padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline"><span class="lbl">${k}</span><b style="font-size:24px;font-weight:500">${mny(v)}</b></div>`).join('')}<div class="row2" style="padding:12px 0 0"><span class="lbl">Total received in ${y}</span><b style="font-size:24px;font-weight:500">${mny(recvIn(y))}</b></div></section>
 <section class="card" style="margin-top:12px"><div class="lbl" style="margin-bottom:16px">By category in ${y}</div>
 ${cats.length?cats.map(([k,n])=>{const m=money[k]||0,tm=recvIn(y)||1;return`<div class="pg"><div class="row2"><span class="lbl">${esc(k)}</span><span>${mny(m)} · ${n} done</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(m/tm*100)}%"></i></div></div>`}).join(''):'<p class="intro" style="margin:0">No completed events or payments in this year yet.</p>'}
-<p class="intro" style="margin:14px 0 0;font-size:13px">Money is what you received in ${y}, by the date each payment was made. Small events covers christenings, birthdays, photoshoots, pre-wedding shoots and other small events.</p></section>
+<p class="intro" style="margin:14px 0 0;font-size:13px">Money is what you received in ${y}, by the date each payment was made. Small events covers engagements, christenings, birthdays, photoshoots, pre-wedding shoots and other small events.</p></section>
 <h2>Year by year</h2>
 <section class="card">${ys.map(v=>{const n=doneIn(v).length;return`<div class="pg"><div class="row2"><span class="lbl">${v}</span><span>${n} event${n==1?'':'s'} · ${mny(recvIn(v))}</span></div><div class="bar" style="margin:10px 0 0"><i style="width:${Math.round(n/mx*100)}%"></i></div></div>`}).join('')}</section>
 <p class="intro" style="margin-top:16px">An event counts as done once its date has passed and it is Confirmed, in Post-production or Completed. Income is the total of payments you have recorded, by the date each was paid.</p>
@@ -3414,6 +3414,7 @@ function impType(items,cust){
   if(/baptism|christening/i.test(all))return{type:'Christening',pkg:''};
   if(/birthday/i.test(all))return{type:'Birthday Party',pkg:''};
   if(/pre[- ]?wedding/i.test(all))return{type:'Pre-Wedding Shoot',pkg:''};
+  if(/engagement/i.test(all))return{type:'Engagement',pkg:''};
   if(/2nd shooter|second shooter/i.test(all))return{type:FREE,pkg:''};
   if(items.some(x=>/photoshoot/i.test(x.name)))return{type:'Photoshoot',pkg:''};
   return{type:'Other Small Event',pkg:''};
@@ -4440,6 +4441,7 @@ const SHOTDEF={
 'Pre-Wedding Shoot':['Wide shots of the location','Walking together','Hands and rings close-up','Candid laughing moments','Forehead kiss','Golden hour portraits','Outfit change details'],
 'Christening':['Church outside and details','Baby in the christening outfit','Parents with baby','Godparents with baby','The baptism moment, close-up','Candle lighting','Family group photo','Reception details and cake'],
 'Birthday Party':['Venue and decorations before guests arrive','Cake and table details','Portraits of the birthday person','Arrival or surprise moment','Group photo with family','Group photo with friends','Candles and singing','Cake cutting','Speeches and toasts','Dance floor'],
+'Engagement':['Venue and decorations before guests arrive','The couple arriving together','Ring close-up','The proposal or ring moment','Couple portraits','Family group photo','Friends group photo','Cake and table details','Speeches and toasts'],
 'Photoshoot':['Wide shots of the location','Full-length portraits','Close-up portraits','Candid movement','Outfit and accessory details','Outfit change'],
 'Other Small Event':['Venue details','Guests arriving','Portraits of the key people','Group photos','The main moment','Candid guests']};
 let shotTpl=null;
