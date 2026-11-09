@@ -406,6 +406,297 @@ body.hasbar #app{padding-bottom:150px}
 @keyframes hbz1{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,-1%)}}@keyframes hbz2{from{transform:scale(1.12) translate(1.5%,1%)}to{transform:scale(1) translate(0,0)}}
 #hbg iframe{position:absolute;inset:0;width:100%;height:100%;transform:scale(1.34);border:0;opacity:0;transition:opacity 1.2s ease;pointer-events:none}#hbg iframe.on{opacity:1}
 @media(prefers-reduced-motion:reduce){#hbg i{animation:none!important}}
+/* ================= Zema Digital Invitations & RSVP ================= */
+.zi{--zi-bg:#F6F1E7;--zi-pa:#FBF8F2;--zi-tx:#1B1A17;--zi-mu:#7A7266;--zi-gd:#A8864F;--zi-ln:rgba(27,26,23,.14);--zi-in:#FFFFFF;--zi-vh:100svh;
+  container-type:inline-size;position:relative;background:var(--zi-bg);color:var(--zi-tx);font:16px/1.6 var(--sans);letter-spacing:0;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-align:center}
+.zi.zi-noir{--zi-bg:#0C0B0A;--zi-pa:#15130F;--zi-tx:#F3EDE2;--zi-mu:#A39C90;--zi-gd:#C9A86A;--zi-ln:rgba(243,237,226,.14);--zi-in:#1C1A16}
+.zi.zi-sand{--zi-bg:#E9E0D2;--zi-pa:#F2EBDF;--zi-tx:#2A251E;--zi-mu:#7D7264;--zi-gd:#9C7A45;--zi-ln:rgba(42,37,30,.15);--zi-in:#FBF7F0}
+.zi *{box-sizing:border-box}
+.zi h1,.zi h2,.zi h3,.zi h4,.zi h5{color:inherit;letter-spacing:normal}
+.zi .zk{font:500 11px/1.4 var(--sans);letter-spacing:.32em;text-transform:uppercase;color:var(--zi-gd)}
+.zi .zs{font-family:var(--serif);font-weight:300}
+.zi .zrule{display:flex;align-items:center;justify-content:center;gap:14px;color:var(--zi-gd);margin:26px auto}
+.zi .zrule:before,.zi .zrule:after{content:"";height:1px;width:56px;background:currentColor;opacity:.6}
+.zi .zrule i{width:6px;height:6px;border:1px solid currentColor;transform:rotate(45deg)}
+/* cover */
+.zi-cov{position:relative;min-height:var(--zi-vh);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 24px 13vh;overflow:hidden;color:#FBF8F2}
+.zi-cov .zbg{position:absolute;inset:-4%;background-size:cover;background-position:center;transform:scale(1.08);transition:transform 2.6s cubic-bezier(.22,.61,.36,1),opacity 1.4s ease;opacity:0}
+.zi.in .zi-cov .zbg{transform:scale(1);opacity:1}
+.zi-cov:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,9,8,.18) 0%,rgba(10,9,8,0) 30%,rgba(10,9,8,.2) 55%,rgba(10,9,8,.72) 100%)}
+.zi-cov.np{color:var(--zi-tx);justify-content:center;padding-bottom:0}
+.zi-cov.np:after{inset:clamp(14px,4cqw,34px);background:none;border:1px solid var(--zi-gd);opacity:.55;outline:1px solid var(--zi-gd);outline-offset:-7px}
+.zi-cov .zin{position:relative;z-index:1;max-width:760px}
+.zi-cov .zk{color:inherit;opacity:.88}
+.zi-cov.np .zk{color:var(--zi-gd);opacity:1}
+.zi-nm{font-family:var(--serif);font-weight:300;font-size:clamp(46px,15cqw,128px);line-height:.95;letter-spacing:-.01em;margin:18px 0 0}
+.zi-nm span{display:block}.zi-nm em{display:block;font-style:italic;font-size:.5em;line-height:1.3;color:var(--zi-gd)}
+.zi-cov:not(.np) .zi-nm em{color:#E3CB9B}
+.zi-cw{margin-top:22px;font:500 12px/1.6 var(--sans);letter-spacing:.3em;text-transform:uppercase;opacity:.92}
+.zi-scr{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:1;font:500 10px var(--sans);letter-spacing:.3em;text-transform:uppercase;opacity:.75}
+.zi-scr:after{content:"";display:block;width:1px;height:34px;margin:10px auto 0;background:currentColor;animation:ziDrop 2.4s ease-in-out infinite}
+@keyframes ziDrop{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.zi-cov.np .zi-scr{color:var(--zi-gd)}
+/* sections */
+.zi-sec{padding:clamp(72px,16cqw,150px) 24px;max-width:860px;margin:0 auto;position:relative}
+.zi-pre{font-family:var(--serif);font-style:italic;font-size:clamp(20px,4.6cqw,26px);color:var(--zi-mu)}
+.zi-h{font-family:var(--serif);font-weight:300;font-size:clamp(40px,10cqw,82px);line-height:1;margin:18px 0}
+.zi-line{font-family:var(--serif);font-size:clamp(20px,4.8cqw,28px);line-height:1.45;max-width:560px;margin:0 auto}
+.zi-msg{font-size:15px;line-height:1.85;color:var(--zi-mu);max-width:520px;margin:28px auto 0;white-space:pre-line}
+.zi-date{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(14px,4cqw,34px);max-width:520px;margin:44px auto 0}
+.zi-date .zb{border-top:1px solid var(--zi-gd);border-bottom:1px solid var(--zi-gd);padding:12px 0;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+.zi-date .zd{font-family:var(--serif);font-weight:300;font-size:clamp(58px,15cqw,96px);line-height:1}
+.zi-date .zd small{display:block;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-gd);margin-top:6px}
+.zi-time{margin-top:22px;font-family:var(--serif);font-size:22px;font-style:italic}
+/* countdown */
+.zi-cd{display:flex;justify-content:center;gap:clamp(18px,6cqw,56px);margin-top:10px}
+.zi-cd div{min-width:58px}.zi-cd b{display:block;font-family:var(--serif);font-weight:300;font-size:clamp(40px,10cqw,64px);line-height:1}
+.zi-cd span{font:500 10px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-mu)}
+.zi-band{background:var(--zi-pa);border-top:1px solid var(--zi-ln);border-bottom:1px solid var(--zi-ln)}
+.zi-band>.zi-sec{padding-top:clamp(56px,11cqw,96px);padding-bottom:clamp(56px,11cqw,96px)}
+/* details */
+.zi-dg{display:grid;gap:1px;background:var(--zi-ln);border:1px solid var(--zi-ln);margin-top:40px;text-align:center}
+@container (min-width:640px){.zi-dg{grid-template-columns:repeat(var(--n,3),1fr)}}
+.zi-dg>div{background:var(--zi-bg);padding:34px 22px}
+.zi-dg h4{margin:14px 0 8px;font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.2}
+.zi-dg p{margin:0;color:var(--zi-mu);font-size:14px;line-height:1.7;white-space:pre-line}
+.zi-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 26px;border:1px solid var(--zi-tx);border-radius:999px;background:transparent;color:var(--zi-tx);font:500 12px var(--sans);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:background .3s,color .3s,opacity .3s}
+.zi-btn:hover{background:var(--zi-tx);color:var(--zi-bg)}
+.zi-btn.zfill{background:var(--zi-tx);color:var(--zi-bg)}.zi-btn.zfill:hover{opacity:.86}
+.zi-btn.zsmb{min-height:40px;padding:0 18px;font-size:11px;margin-top:16px}
+.zi-btn[disabled]{opacity:.45;cursor:default}
+/* schedule */
+.zi-sch{max-width:520px;margin:34px auto 0;text-align:left}
+.zi-sch div{display:grid;grid-template-columns:96px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--zi-ln);align-items:baseline}
+.zi-sch b{font-family:var(--serif);font-weight:400;font-size:24px;color:var(--zi-gd)}
+.zi-sch span{font-family:var(--serif);font-size:22px}
+/* gallery */
+.zi-gal{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 24px 18px;scrollbar-width:none;margin-top:30px}
+.zi-gal::-webkit-scrollbar{display:none}
+.zi-gal div{flex:0 0 min(72%,420px);aspect-ratio:4/5;background-size:cover;background-position:center;scroll-snap-align:center}
+/* rsvp */
+.zi-form{max-width:520px;margin:36px auto 0;text-align:left}
+.zi-f{display:block;margin-bottom:22px}
+.zi-f>span{display:block;font:500 11px var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--zi-mu);margin-bottom:10px}
+.zi input,.zi select,.zi textarea{width:100%;background:var(--zi-in);border:1px solid var(--zi-ln);border-radius:0;padding:15px 16px;font:16px var(--sans);color:var(--zi-tx);outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.zi input:focus,.zi select:focus,.zi textarea:focus{border-color:var(--zi-gd)}
+.zi .err{border-color:#B4483C!important}
+.zi-yn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.zi-yn button{min-height:64px;padding:10px 6px;border:1px solid var(--zi-ln);background:var(--zi-in);color:var(--zi-tx);font-family:var(--serif);font-size:clamp(16px,4.6cqw,20px);line-height:1.2;cursor:pointer;transition:all .25s}
+.zi-yn button small{display:block;font:500 10px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--zi-mu);margin-top:2px}
+.zi-yn button.on{border-color:var(--zi-gd);background:var(--zi-gd);color:#FBF8F2}.zi-yn button.on small{color:inherit;opacity:.85}
+.zi-note{font-size:13px;color:var(--zi-mu);text-align:center;margin-top:14px;line-height:1.6}
+.zi-bad{color:#B4483C;font-size:14px;text-align:center;margin:14px 0 0;min-height:1em}
+.zi-done{max-width:520px;margin:30px auto 0;padding:44px 26px;border:1px solid var(--zi-gd);position:relative;animation:ziUp .7s ease both}
+.zi-done:before{content:"";position:absolute;inset:6px;border:1px solid var(--zi-ln);pointer-events:none}
+.zi-done h3{font-family:var(--serif);font-weight:300;font-size:clamp(34px,8cqw,48px);line-height:1.1;margin:14px 0 12px}
+.zi-done p{color:var(--zi-mu);margin:0 auto;max-width:400px;font-size:15px}
+.zi-done .zsum{margin:22px auto 0;font:500 11px var(--sans);letter-spacing:.22em;text-transform:uppercase}
+.zi-foot{padding:46px 24px 54px;border-top:1px solid var(--zi-ln);font:500 10px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-mu)}
+.zi-foot a{color:inherit;text-decoration:none}
+/* opening seal */
+.zi-seal{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--zi-bg);transition:opacity 1s ease,visibility 1s;cursor:pointer;height:var(--zi-vh)}
+.zi-seal .zm{width:132px;height:132px;border-radius:50%;border:1px solid var(--zi-gd);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:42px;font-weight:300;color:var(--zi-gd);position:relative;animation:ziUp 1.2s ease both}
+.zi-seal .zm:before{content:"";position:absolute;inset:7px;border-radius:50%;border:1px solid var(--zi-ln)}
+.zi-seal .zk{margin-top:28px;animation:ziUp 1.2s .3s ease both;color:var(--zi-mu)}
+.zi-seal .zt{margin-top:10px;font-family:var(--serif);font-style:italic;font-size:22px;animation:ziUp 1.2s .45s ease both}
+.zi.in .zi-seal{opacity:0;visibility:hidden}
+.zi-root{position:relative}
+.zi-root>.zi>.zi-seal{position:fixed}
+/* reveal */
+.zi [data-rv]{opacity:0;transform:translateY(26px);transition:opacity 1.1s cubic-bezier(.22,.61,.36,1),transform 1.1s cubic-bezier(.22,.61,.36,1)}
+.zi [data-rv].on{opacity:1;transform:none}
+.zi.zpv [data-rv]{opacity:1;transform:none}
+@keyframes ziUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.zi *{animation:none!important;transition:none!important}.zi [data-rv]{opacity:1;transform:none}}
+.zi-flag{position:sticky;top:0;z-index:6;background:#A8864F;color:#fff;font:500 11px var(--sans);letter-spacing:.18em;text-transform:uppercase;padding:9px 14px}
+.zi-miss{min-height:100svh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:30px}
+.zi-miss h1{font-family:var(--serif);font-weight:300;font-size:44px;margin:18px 0 8px}
+.zi-miss p{color:var(--zi-mu);max-width:340px}
+
+/* ===== full-screen layers (invitation preview, add-on preview) ===== */
+.zl{position:fixed;inset:0;z-index:300;background:rgba(6,6,6,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;animation:zlIn .35s ease both;overscroll-behavior:contain}
+@keyframes zlIn{from{opacity:0}to{opacity:1}}
+.zl-full{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#000}
+.zl-x{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:320;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(10,10,10,.55);color:#fff;font:300 26px/1 var(--sans);cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center}
+body.zl-lock{overflow:hidden}
+
+/* add-on preview panel (packages page, noir) */
+.ap{position:relative;width:min(1180px,100%);height:min(780px,100%);background:#0E0E0F;color:#F5F5F7;border:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);overflow:hidden;animation:apIn .5s cubic-bezier(.22,.61,.36,1) both}
+@keyframes apIn{from{opacity:0;transform:translateY(24px) scale(.985)}to{opacity:1;transform:none}}
+@media (min-width:900px){.ap{border-radius:22px;height:min(780px,calc(100% - 48px))}}
+.ap-st{position:relative;background:radial-gradient(120% 90% at 30% 15%,#2A251D 0%,#141315 55%,#0B0B0C 100%);overflow:hidden;display:flex;flex-direction:column}
+.ap-tb{display:flex;gap:6px;padding:16px 18px 0;flex-wrap:wrap;position:relative;z-index:2}
+.ap-tb button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#D1D1D6;border-radius:999px;padding:8px 14px;font:500 12px var(--sans);cursor:pointer;transition:all .25s}
+.ap-tb button.on{background:#C9AB7F;border-color:#C9AB7F;color:#0A0A0B}
+.ap-tb .sp{flex:1}
+.ap-cv{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:16px}
+.ap-sm{position:absolute;left:18px;bottom:14px;z-index:3;font:500 10px var(--sans);letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.ap-pn{display:flex;flex-direction:column;min-height:0;border-left:1px solid rgba(255,255,255,.08)}
+.ap-sc{flex:1;overflow-y:auto;padding:42px 36px 24px}
+.ap-k{font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:#C9AB7F}
+.ap-n{font-family:var(--serif);font-weight:300;font-size:clamp(34px,4vw,46px);line-height:1.05;margin:14px 0 10px}
+.ap-p{font-family:var(--serif);font-size:26px;color:#D8BE96}
+.ap-d{color:#B9B9BE;font-size:15px;line-height:1.7;margin:18px 0 0}
+.ap-l{list-style:none;padding:0;margin:26px 0 0;border-top:1px solid rgba(255,255,255,.08)}
+.ap-l li{padding:13px 0 13px 28px;border-bottom:1px solid rgba(255,255,255,.08);font-size:14px;color:#D1D1D6;position:relative}
+.ap-l li:before{content:"";position:absolute;left:4px;top:19px;width:10px;height:6px;border-left:1.5px solid #C9AB7F;border-bottom:1.5px solid #C9AB7F;transform:rotate(-45deg)}
+.ap-ft{padding:18px 36px calc(20px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.08);background:#0E0E0F}
+.ap-ft .t{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#8E8E93;margin-bottom:12px}
+.ap-ft .t b{font:400 20px var(--serif);color:#F5F5F7}
+.ap-add{width:100%;min-height:54px;border:0;border-radius:999px;background:#C9AB7F;color:#0A0A0B;font:600 15px var(--sans);cursor:pointer;transition:transform .2s,background .3s}
+.ap-add:active{transform:scale(.98)}
+.ap-add.on{background:transparent;color:#C9AB7F;border:1px solid #C9AB7F}
+.ap-add[disabled]{opacity:.5;cursor:default}
+.ap-rm{display:block;margin:12px auto 0;background:none;border:0;color:#8E8E93;font:500 13px var(--sans);text-decoration:underline;cursor:pointer}
+.ap-demo{margin-top:22px;width:100%;min-height:46px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:transparent;color:#F5F5F7;font:500 14px var(--sans);cursor:pointer}
+.ap-demo:hover{border-color:#C9AB7F;color:#C9AB7F}
+.ap .zl-x{position:absolute}
+@media (max-width:899px){
+  .zl.zap{align-items:stretch}
+  .ap{grid-template-columns:1fr;grid-template-rows:minmax(56%,auto) auto;height:100%;overflow-y:auto;display:block}
+  .ap-st{height:62svh;min-height:430px}
+  .ap-pn{border-left:0;border-top:1px solid rgba(255,255,255,.08)}
+  .ap-sc{overflow:visible;padding:30px 22px 20px}
+  .ap-ft{position:sticky;bottom:0;padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px))}
+  .ap .zl-x{position:fixed}
+  .ap-tb:first-child{padding-right:66px}
+  .ap-st{height:72svh}
+}
+/* device frames */
+.zph{height:100%;max-height:660px;width:auto;max-width:86%;aspect-ratio:9/19;border-radius:42px;background:#050505;padding:10px;box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.1);position:relative;max-height:100%}
+.zph:before{content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);width:84px;height:22px;border-radius:12px;background:#050505;z-index:4}
+.ph-in{width:100%;height:100%;border-radius:33px;overflow:hidden auto;scrollbar-width:none;position:relative;scroll-behavior:smooth}
+.ph-in::-webkit-scrollbar{display:none}
+.ph-in .zi{--zi-vh:calc(var(--phh,560px))}
+.pnl{width:min(620px,100%);max-height:100%;overflow:auto;background:#F7F5F1;color:#1D1D1F;border-radius:14px;box-shadow:0 40px 80px rgba(0,0,0,.5);text-align:left}
+/* album */
+.alb{position:relative;width:min(640px,94%);aspect-ratio:2/1.32;perspective:2000px}
+.alb-sp{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;box-shadow:0 30px 60px rgba(0,0,0,.55);transition:opacity .5s ease,transform .7s cubic-bezier(.22,.61,.36,1)}
+.alb-sp.out{opacity:0;transform:rotateY(-14deg) translateX(-3%)}
+.alb-pg{background:#F6F2EA;position:relative;overflow:hidden;padding:7%}
+.alb-pg:first-child{box-shadow:inset -18px 0 26px -18px rgba(0,0,0,.35)}.alb-pg:last-child{box-shadow:inset 18px 0 26px -18px rgba(0,0,0,.3)}
+.alb-im{background-size:cover;background-position:center;width:100%;height:100%}
+.alb-cap{font-family:var(--serif);color:#2A251E;display:flex;flex-direction:column;justify-content:center;height:100%;text-align:center}
+.alb-cap b{font-weight:300;font-size:clamp(20px,3.4vw,34px);line-height:1.1}.alb-cap small{font:500 9px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:#9C7A45;margin-top:12px}
+.alb-cov{position:absolute;inset:0;margin:auto;width:52%;aspect-ratio:1/1.3;background:var(--cv,#E9E1D3);box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:background .5s;font-family:var(--serif);color:var(--ct,#7A6240)}
+.alb-cov:before{content:"";position:absolute;left:6%;top:0;bottom:0;width:1px;background:rgba(0,0,0,.12)}
+.alb-cov b{font-weight:300;font-size:clamp(22px,4vw,36px);letter-spacing:.04em}.alb-cov small{font:500 9px var(--sans);letter-spacing:.34em;text-transform:uppercase;margin-top:10px;opacity:.8}
+.alb-nav{position:absolute;bottom:-6px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:16px;z-index:3}
+.cnb{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(10,10,10,.5);color:#fff;font-size:18px;cursor:pointer}
+.dots{display:flex;gap:6px}.dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .3s}.dots i.on{background:#C9AB7F}
+.swt{display:flex;gap:8px;align-items:center}.swt button{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:0 0 0 1px rgba(255,255,255,.25)}.swt button.on{border-color:#C9AB7F}
+/* signing board */
+.brd{position:relative;width:min(400px,80%);display:flex;flex-direction:column;align-items:center}
+.brd-b{width:100%;aspect-ratio:4/5;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9%;box-shadow:0 30px 60px rgba(0,0,0,.5);transition:all .6s ease;overflow:hidden}
+.brd-legs{width:70%;height:90px;margin-top:-8px;position:relative;z-index:1}
+.brd-b .bn{font-family:var(--serif);font-weight:300;font-size:clamp(28px,6vw,44px);line-height:1.05}
+.brd-b .bk{font:500 9px var(--sans);letter-spacing:.32em;text-transform:uppercase;margin-top:12px}
+.brd-b .bs{position:absolute;inset:0;pointer-events:none}
+.brd-ip{display:flex;gap:8px;margin-top:14px;width:min(400px,92%);position:relative;z-index:3}
+.brd-ip input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#fff;padding:11px 12px;border-radius:10px;font:14px var(--sans)}
+/* drone */
+.drn{position:absolute;inset:0;overflow:hidden;background:#0B0B0C}
+.drn .dsc{position:absolute;inset:-20%;background-size:cover;background-position:center;animation:drnR 22s ease-in-out infinite alternate}
+.drn.m1 .dsc{animation:drnT 40s linear infinite}
+.drn.m2 .dsc{animation:drnO 18s ease-in-out infinite alternate}
+@keyframes drnR{from{transform:scale(1.45)}to{transform:scale(1)}}
+@keyframes drnT{from{transform:scale(1.2) rotate(0)}to{transform:scale(1.2) rotate(360deg)}}
+@keyframes drnO{from{transform:scale(1.25) translateX(-7%)}to{transform:scale(1.25) translateX(7%)}}
+.hud{position:absolute;inset:18px;pointer-events:none;font:500 10px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:rgba(255,255,255,.85)}
+.hud .c{position:absolute;width:22px;height:22px;border:1.5px solid rgba(255,255,255,.8)}
+.hud .c1{top:40px;left:0;border-right:0;border-bottom:0}.hud .c2{top:40px;right:0;border-left:0;border-bottom:0}.hud .c3{bottom:30px;left:0;border-right:0;border-top:0}.hud .c4{bottom:30px;right:0;border-left:0;border-top:0}
+.hud .rec{position:absolute;top:44px;left:34px;display:flex;align-items:center;gap:8px}.hud .rec:before{content:"";width:8px;height:8px;border-radius:50%;background:#E5484D;animation:blink 1.2s infinite}
+.hud .alt{position:absolute;top:44px;right:34px;text-align:right;line-height:1.7}
+.hud .hx{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%)}
+.hud .hx:before,.hud .hx:after{content:"";position:absolute;background:rgba(255,255,255,.6)}.hud .hx:before{left:50%;top:0;bottom:0;width:1px}.hud .hx:after{top:50%;left:0;right:0;height:1px}
+@keyframes blink{50%{opacity:.2}}
+.drn iframe,.drn video{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+/* usb box */
+.usb{perspective:1400px;width:min(420px,84%);aspect-ratio:1.25/1;position:relative}
+.usb-b{position:absolute;left:0;right:0;bottom:6%;height:44%;background:var(--fb);box-shadow:0 30px 50px rgba(0,0,0,.55),inset 0 -14px 24px rgba(0,0,0,.18);border-radius:4px;display:flex;align-items:center;justify-content:center;transition:background .5s}
+.usb-tray{width:78%;height:58%;background:var(--ft);border-radius:3px;box-shadow:inset 0 4px 12px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;transition:background .5s}
+.usb-key{width:34%;height:30%;border-radius:4px;background:linear-gradient(180deg,#E4D2AE,#B8975F);box-shadow:0 4px 10px rgba(0,0,0,.4);position:relative}
+.usb-key:after{content:"";position:absolute;right:-16%;top:30%;width:18%;height:40%;background:#C9C9CC;border-radius:1px}
+.usb-l{position:absolute;left:0;right:0;bottom:50%;height:44%;transform-origin:bottom center;transition:transform 1.1s cubic-bezier(.22,.61,.36,1),background .5s;background:var(--fb);border-radius:4px;box-shadow:0 18px 30px rgba(0,0,0,.4),inset 0 10px 20px rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--fx);backface-visibility:hidden;cursor:pointer}
+.usb.op .usb-l{transform:translateY(-58%) rotateX(16deg)}
+.usb-l b{font:300 clamp(22px,4.6vw,32px) var(--serif);letter-spacing:.03em}.usb-l small{font:500 9px var(--sans);letter-spacing:.32em;text-transform:uppercase;margin-top:8px;opacity:.85}
+.usb.cl .usb-l{bottom:6%}
+/* pre-wedding styles */
+.pws{position:absolute;inset:0;display:grid;grid-template-columns:1.2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:62px 16px 40px}
+.pws div{background-size:cover;background-position:center;transition:filter .8s ease,transform .8s ease;animation:ziUp .8s ease both}
+.pws div:first-child{grid-row:span 2}
+.pws.s0 div{filter:sepia(.35) saturate(1.25) brightness(1.04) contrast(.98)}
+.pws.s1 div{filter:contrast(1.15) saturate(.85) hue-rotate(-6deg) brightness(.95)}
+.pws.s2 div{filter:grayscale(1) contrast(1.12)}
+.pwc{position:absolute;left:16px;right:16px;bottom:14px;z-index:2;text-align:right;font:italic 18px var(--serif);color:rgba(255,255,255,.85)}
+.gnc{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity .8s}
+
+/* ===== Invitation tab inside the planner ===== */
+.ivh{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ivst{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font:600 12px var(--sans);background:var(--s2);color:var(--mu)}
+.ivst.ivlive{background:rgba(46,125,91,.12);color:var(--ok)}.ivst:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ivlk{font:500 14px var(--sans);word-break:break-all;color:var(--tx);margin:12px 0 4px}
+.ivg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+@media (min-width:700px){.ivg{grid-template-columns:repeat(5,1fr)}}
+.ivg>div{background:var(--s);border:1px solid var(--line);border-radius:var(--r2);padding:16px;box-shadow:var(--sh)}
+.ivg b{display:block;font:300 34px/1 var(--serif);color:var(--tx)}.ivg span{font:500 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}
+.ivg>div.hl{border-color:var(--ac)}.ivg>div.hl b{color:var(--ac)}
+.ivr{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:16px 0;border-bottom:1px solid var(--line)}
+.ivr .ivn{font-weight:500}.ivr .ivs{font-size:13px;color:var(--mu)}
+.ivr .ivmsg{grid-column:1/-1;font:italic 16px/1.5 var(--serif);color:var(--tx2)}
+.ivp{display:inline-block;font:600 11px var(--sans);letter-spacing:.04em;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.ivp.y{background:rgba(46,125,91,.12);color:var(--ok)}.ivp.n{background:rgba(194,69,58,.1);color:var(--bad)}.ivp.w{background:var(--s2);color:var(--mu)}
+.ivd{display:inline-block;margin-top:6px;font-size:12px;padding:3px 10px;border-radius:8px;background:var(--act);color:var(--ac2)}
+.ivx{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.ivx button{background:none;border:0;color:var(--mu);font:500 13px var(--sans);cursor:pointer;padding:6px}
+.ivx button:hover{color:var(--tx)}
+.ivsr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 6px}
+.ivsr input{flex:1 1 200px;min-width:0;background:var(--s);border:1px solid var(--line2);border-radius:12px;padding:12px 14px}
+.ivk{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px}
+.ivth{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.ivth button{border:1px solid var(--line2);border-radius:14px;overflow:hidden;cursor:pointer;padding:0;background:var(--s);text-align:left}
+.ivth button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.ivth i{display:block;height:62px;position:relative}.ivth i:after{content:"Aa";position:absolute;left:12px;bottom:6px;font:300 24px var(--serif)}
+.ivth span{display:block;padding:8px 12px;font:500 13px var(--sans)}
+.ivph{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin:8px 0 6px}
+.ivph div{aspect-ratio:4/5;background-size:cover;background-position:center;border-radius:12px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.ivph div em{position:absolute;left:8px;top:8px;font:600 10px var(--sans);letter-spacing:.06em;background:var(--ac);color:#fff;border-radius:6px;padding:2px 7px;font-style:normal}
+.ivph div span{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:linear-gradient(transparent,rgba(0,0,0,.6));padding:18px 6px 5px}
+.ivph div span button{background:none;border:0;color:#fff;font:500 11px var(--sans);cursor:pointer;padding:4px}
+.ivph label{aspect-ratio:4/5;border:1px dashed var(--line2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;color:var(--mu);font-size:13px;text-align:center;padding:8px}
+.ivph label b{font:300 30px var(--serif);color:var(--ac)}
+.ivsc{display:grid;grid-template-columns:110px 1fr 40px;gap:8px;margin-bottom:8px}
+.ivsc input{background:var(--s);border:1px solid var(--line2);border-radius:12px;padding:12px;min-width:0}
+.ivsc button{background:none;border:1px solid var(--line2);border-radius:12px;color:var(--mu);cursor:pointer;font-size:18px}
+.ivdirty{font:500 12px var(--sans);color:var(--ac)}
+.ivsave{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:10px;flex-wrap:wrap;padding:12px;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;margin-top:22px;box-shadow:var(--sh)}
+.ivsave .btn{flex:1}
+.ivm{position:fixed;inset:0;z-index:310;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;animation:zlIn .25s ease}
+@media (min-width:640px){.ivm{align-items:center}}
+.ivm>div{background:var(--bg);color:var(--tx);width:min(520px,100%);max-height:92svh;overflow:auto;border-radius:22px 22px 0 0;padding:26px 22px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:var(--sh2)}
+@media (min-width:640px){.ivm>div{border-radius:22px}}
+.ivm h3{font:300 30px var(--serif);margin:0 0 16px}
+.ivyn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ivyn button{min-height:48px;border:1px solid var(--line2);border-radius:12px;background:var(--s);cursor:pointer;font:500 14px var(--sans)}
+.ivyn button.on{border-color:var(--ac);background:var(--act);color:var(--ac2)}
+.pnl .ivg{grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0}.pnl .ivg>div{padding:10px;border-radius:10px;box-shadow:none;background:#fff;border-color:rgba(0,0,0,.08)}.pnl .ivg b{font-size:24px}.pnl .ivg span{font-size:9px}
+.pnl .ivr{padding:11px 0;border-color:rgba(0,0,0,.08)}.pnl .ivr .ivs{color:#86868B}
+.pnl{--bg:#F7F5F1;--s:#FFFFFF;--s2:#EFECE6;--line:rgba(29,29,31,.09);--line2:rgba(29,29,31,.16);--tx:#1D1D1F;--tx2:#3A3A3C;--mu:#86868B;--ac:#A2834F;--ac2:#8A6D3E;--act:rgba(162,131,79,.12);--ok:#2E7D5B;--bad:#C2453A;--sh:none;padding:18px 18px 8px}
+.pnl h5{margin:0;font:300 26px var(--serif)}.pnl .zsm{font:500 10px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#A2834F}
+
+html.zi-lock,html.zi-lock body{overflow:hidden}
+.ca .cpv{position:absolute;left:12px;bottom:12px;z-index:1;font:600 10px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:#F5F5F7;background:rgba(10,10,11,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 11px;transition:background .3s}
+.ca:hover .cpv{background:#C9AB7F;color:#0A0A0B;border-color:#C9AB7F}
+.ivlinks{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:14px}.ivlinks:empty{display:none}
+.ivlinks a,.ivlinks button{background:none;border:0;padding:4px 0;color:var(--mu);font:500 14px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.ivlinks a:hover,.ivlinks button:hover{color:var(--tx)}
+@media (max-width:899px){
+  .zph{width:100%;max-width:none;max-height:none;aspect-ratio:auto;border-radius:18px;padding:0;box-shadow:0 20px 40px rgba(0,0,0,.45)}
+  .zph:before{display:none}
+  .ph-in{border-radius:18px}
+  .zi-done{padding:34px 18px}
+  .ap-cv{padding:10px 16px 34px}
+}
 </style>
 <script>try{var zt=localStorage.getItem("zemaTheme");if(zt==="light"||zt==="dark")document.documentElement.dataset.theme=zt}catch(_){}</script></head>
 <body>
@@ -854,8 +1145,8 @@ const SB_KEY='sb_publishable__ZhIkUFvXPt6oZ0jnoNtfw_Iw2mYNes';
 const QS=new URLSearchParams(location.search),TOKEN=QS.get('w'),FTOKEN=QS.get('f'),PKPAGE=QS.get('p')!==null,CTOKEN=QS.get('c'),HTOKEN=QS.get('h'),EQPAGE=QS.get('e')!==null,RVTOKEN=QS.get('rv'),DTOKEN=QS.get('d'),CPTOKEN=QS.get('cp'),LOCPAGE=QS.get('loc')!==null;
 const PKMODE=PKPAGE?(/^w/i.test(QS.get('p')||'')?'wed':/^e/i.test(QS.get('p')||'')?'ev':'all'):'all';
 const CATS={bride:"Bride’s Family",groom:"Groom’s Family",both:"Both Families",friends:"Friends & Wedding Party",custom:"Custom"};
-const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery'];
-const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Travel':'trav','Notes':'notes','Updates':'msg','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
+const SECS=['Overview','Timeline','Family & Friends','Wedding Party','Must-Have Moments','Locations','Travel','Notes','Invitation','Updates','Crew','Equipment','Payments','Costs','Delivery'];
+const SK={'Overview':'overview','Timeline':'timeline','Family & Friends':'family','Must-Have Moments':'musts','Wedding Party':'party','Locations':'places','Travel':'trav','Notes':'notes','Invitation':'rsvp','Updates':'msg','Payments':'pay','Costs':'cost','Crew':'crew','Equipment':'gear','Delivery':'del'};
 const DEMO=[
 ['bride','Bride + Mum',['Mum'],2],['bride','Bride + Dad',['Dad'],2],['bride','Bride + Mum + Dad',['Mum','Dad'],2],
 ['bride','Bride + siblings',['Hana','Michael','Daniel'],3],['bride','Bride + grandparents',['Grandma','Grandad'],3,'Grandparents are very important.'],
@@ -907,7 +1198,8 @@ const ADDONS=[
 {id:'signboard',n:'Custom Guest Signing Board',p:'£150',ic:'board',img:'',pre:false,d:'A personalised board for your guests to sign on the day, a keepsake to frame at home.',f:[]},
 {id:'drone',n:'Drone Filming',p:'£150',ic:'drone',img:'',pre:false,d:'Sweeping aerial views of your venue and celebration, woven into your film. Subject to venue and flight permissions.',f:[]},
 {id:'usb',n:'Personalised USB Presentation Box',p:'£70',ic:'usb',img:'',pre:false,d:'Your wedding film presented in a personalised keepsake box with USB.',f:[]},
-{id:'prewedding',n:'Pre-wedding Experience',p:'£600',ic:'pre',img:'',pre:true,d:'A relaxed shoot before your wedding day, at a location that means something to you.',f:['Pre-wedding photoshoot','20–50 professionally edited photographs','Cinematic pre-wedding highlight film']}];
+{id:'prewedding',n:'Pre-wedding Experience',p:'£600',ic:'pre',img:'',pre:true,d:'A relaxed shoot before your wedding day, at a location that means something to you.',f:['Pre-wedding photoshoot','20–50 professionally edited photographs','Cinematic pre-wedding highlight film']},
+{id:'invite',n:'Digital Invitations & RSVP',p:'£150',ic:'invite',img:'',pre:false,d:'A personalised digital invitation with an online RSVP system, allowing guests to view event details and confirm their attendance.',f:['Your own invitation website and private link','Your photos, wording and style','Guest RSVP with dietary requirements','Private RSVP dashboard and guest list']}];
 const EPK=[
 {n:'Essential',p:'£1,000',h:5,d:'5 hours of photography and videography coverage.'},
 {n:'Signature',p:'£1,400',h:8,d:'8 hours of photography and videography coverage.'},
@@ -1022,6 +1314,8 @@ async function acceptBk(id){
     /* a pre-wedding shoot (bought as an extra, or part of the package) gets its own day, with no extra charge on the invoice */
     const pkI=pk&&pk.wed.find(x=>x.n===pn),preA=pk&&pk.addons.find(x=>x.pre);
     if(ty==='Wedding'&&((pkI&&pkI.pre)||(preA&&ids.includes(preA.id))))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
+    /* the Digital Invitations & RSVP extra switches the invitation on for the couple's link */
+    if(ids.includes('invite'))await ivEnable(data.id,{name:b.name,ty,date:b.event_date,address:b.location||''}).catch(()=>{});
   }
   const locs=[b.location,b.location2,b.location3].filter(Boolean);
   if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
@@ -1049,7 +1343,7 @@ function pkNorm(d){
   if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
   o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
   o.hr.img=o.hr.img||'';o.ev.forEach(k=>{k.img=k.img||'';k.h=Number(k.h)||Number((String(k.d||'').match(/(\d+(?:\.\d+)?)\s*hours?/i)||[])[1])||null;k.inc=Array.isArray(k.inc)?k.inc.map(String):(/album/i.test(String(k.d||''))?['album']:[])});
-  o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||''});
+  o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||'';a.ph=Array.isArray(a.ph)?a.ph.map(String).filter(Boolean):[];a.vid=String(a.vid||'')});
   return o}
 /* "£4,000" -> 4000 (the same rule the server uses) */
 const pkNum=p=>{const m=String(p==null?'':p).replace(/,/g,'').match(/\d+(\.\d+)?/);return m?Number(m[0]):null};
@@ -1138,6 +1432,7 @@ board:'<path d="M11 9h26v21H11z"/><path d="M16 16.5c2.5-2.6 4.6 2.6 7.2 0s4.8 2.
 drone:'<circle cx="11.5" cy="12.5" r="5"/><circle cx="36.5" cy="12.5" r="5"/><circle cx="11.5" cy="35.5" r="5"/><circle cx="36.5" cy="35.5" r="5"/><path d="M15.5 16.5l5 5M32.5 16.5l-5 5M15.5 31.5l5-5M32.5 31.5l-5-5"/><rect x="20" y="20" width="8" height="8" rx="2"/>',
 usb:'<rect x="8" y="17" width="32" height="21" rx="1.5"/><path d="M8 23h32M21 28h6v5h-6zM24 9v8M21 9h6"/>',
 pre:'<rect x="8.5" y="15" width="31" height="21" rx="3"/><circle cx="24" cy="25.5" r="6"/><path d="M18 15l2.2-4h7.6l2.2 4M34 19.5h1"/>',
+invite:'<rect x="8" y="13" width="32" height="23" rx="1.5"/><path d="M8 14.5l16 11.5 16-11.5"/><path d="M24 33.5c-3.6-2.5-5.6-4.5-5.6-6.6a2.9 2.9 0 0 1 5.6-1.1 2.9 2.9 0 0 1 5.6 1.1c0 2.1-2 4.1-5.6 6.6z"/>',
 x:'<path d="M24 9l3.6 10.6H38.5l-8.8 6.6 3.4 10.8L24 30.4l-9.1 6.6 3.4-10.8-8.8-6.6h10.9z"/>'};
 const colIcon=k=>`<svg viewBox="0 0 48 48" aria-hidden="true">${COLIC[k]||COLIC.x}</svg>`;
 const colLi=x=>`<li>${esc(x)}</li>`;
@@ -1150,10 +1445,10 @@ ${k.d?`<p class="cpd">${esc(k.d)}</p>`:''}
 ${F.length?`<ul class="cpl">${F.slice(0,lim).map(colLi).join('')}</ul>`:''}
 ${F.length>lim?`<details class="cpm"><summary>All ${F.length} inclusions</summary><ul class="cpl">${F.slice(lim).map(colLi).join('')}</ul></details>`:''}
 <div class="cpf"><div class="cps">${colSel(k.n,on)}</div></div></div></article>`}).join('')}
-const colAdFoot=(a,inc,on)=>`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="ad" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-pressed="${on}" aria-label="${inc?'Included':on?'Remove':'Add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'+ Add'}</button>`;
+const colAdFoot=(a,inc,on)=>`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="adv" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-label="${inc?'Included':on?'Added · preview':'Preview and add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'Preview & add'}</button>`;
 function colAds(){return colAdList().map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
-  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="ad" data-k="${esc(a.id)}">
-<div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}</div>
+  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="adv" data-k="${esc(a.id)}" role="button" tabindex="0" aria-label="Preview ${esc(a.n)}">
+<div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}<span class="cpv">Preview</span></div>
 <div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
 <div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
 function colSum(inBar){
@@ -1284,6 +1579,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('details'))return;
   const c=t.dataset.c,k=t.dataset.k;
   if(c==='pk')colPick(k);
+  else if(c==='adv'){if(!t.disabled)adPrev(k)}
   else if(c==='ad'){if(!t.disabled&&!t.classList.contains('inc'))colTog(k)}
   else if(c==='rm')colTog(k);
   else if(c==='go')colGo();
@@ -1323,7 +1619,7 @@ ${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bott
 <h2>Wedding extras</h2>
 <p class="intro">Shown as “Personalise Your Zema Experience”. Couples add them to any wedding package and the total updates as they go. Prices here are the ones checked when a booking comes in.</p>
 ${TA('Introduction','adIntro',d.adIntro,2)}
-${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Extra ${i+1}</div>${F('Name','addons.'+i+'.n',a.n)}${F('Price','addons.'+i+'.p',a.p,'£000')}${TA('Short description','addons.'+i+'.d',a.d,3)}${TA('What’s included · optional, one item per line','addons.'+i+'.f',a.f,3,1)}${IM('Photo · optional (a gold line drawing shows until you add one)','addons.'+i+'.img',a.img,'pkimg-a'+i)}${CB('This is the pre-wedding experience (free with packages that include it)','addons.'+i+'.pre',a.pre)}${acts('addons',i)}</section>`).join('')}
+${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Extra ${i+1}</div>${F('Name','addons.'+i+'.n',a.n)}${F('Price','addons.'+i+'.p',a.p,'£000')}${TA('Short description','addons.'+i+'.d',a.d,3)}${TA('What’s included · optional, one item per line','addons.'+i+'.f',a.f,3,1)}${IM('Photo · optional (a gold line drawing shows until you add one)','addons.'+i+'.img',a.img,'pkimg-a'+i)}${ivPkFields(a,i)}${CB('This is the pre-wedding experience (free with packages that include it)','addons.'+i+'.pre',a.pre)}${acts('addons',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="addons">+ Add extra</button></div>
 <h2>Small events</h2>
 ${TA('Introduction','evIntro',d.evIntro,3)}
@@ -1369,7 +1665,7 @@ const stg=w=>STG[w.stage]?w.stage:'pending';
 const ETYPES=['Wedding','Pre-Wedding Shoot','Engagement','Christening','Birthday Party','Photoshoot','Freelance / Second Shooting','Other Small Event'];
 const etype=w=>(w&&w.event_type)||'Wedding';
 const isWed=w=>etype(w)==='Wedding';
-const secsFor=w=>(isWed(w)?SECS:['Overview','Timeline','Must-Have Moments','Locations','Travel','Notes','Updates','Crew','Equipment','Payments','Costs','Delivery']).filter(x=>x!=='Travel'||!!(w&&w.travel&&w.travel.enabled));
+const secsFor=w=>(isWed(w)?SECS:['Overview','Timeline','Must-Have Moments','Locations','Travel','Notes','Invitation','Updates','Crew','Equipment','Payments','Costs','Delivery']).filter(x=>x!=='Travel'||!!(w&&w.travel&&w.travel.enabled));
 /* ---- Money helpers (photographer only) ---- */
 const INVDEF={biz:'Zema Production',addr:'',contact:'+44 7449 727801',pay:'Cash or bank transfer',an:'',sc:'',acn:'',note:''};
 let hideMoney=false;try{hideMoney=localStorage.getItem('zemaHideMoney')==='1'}catch(_){}
@@ -1459,8 +1755,10 @@ async function init(){
   try{if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(_){}
   if(PKPAGE){document.title='Zema Production · '+(PKMODE==='wed'?'Weddings':PKMODE==='ev'?'Events':'Packages');document.documentElement.classList.add('noir');document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content='#0A0A0B');const ap=$('#app');if(ap)ap.classList.add('pkw')}
   if(!window.supabase)await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js');
+  if(!window.supabase&&IPAGE){document.body.innerHTML='<p style="padding:40px;text-align:center;font-family:Georgia,serif">Please check your connection and open the invitation again.</p>';return}
   if(!window.supabase)return setApp(PKPAGE?pkgView(pkNorm(null)):'<p class="empty">Could not load the Supabase library. Check your internet connection and refresh.</p>');
-  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||CPTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  sb=supabase.createClient(SB_URL,SB_KEY,(TOKEN||FTOKEN||PKPAGE||CTOKEN||CPTOKEN||HTOKEN||EQPAGE||RVTOKEN||DTOKEN||LOCPAGE||IPAGE)?{auth:{persistSession:false,autoRefreshToken:false}}:undefined);
+  if(IPAGE){ivBoot();return}
   if(EQPAGE){document.title='Zema Production · Enquiry';return setApp(eqView())}
   if(LOCPAGE){document.title='Zema Production · Locations';const lr=await sb.rpc('location_ideas_get');return setApp(locPage(lr.error?[]:(lr.data||[])))}
   if(RVTOKEN){document.title='Zema Production · Review';return setApp(rvView())}
@@ -1546,7 +1844,8 @@ async function loadWedding(id){
   const mq=await sb.from('event_messages').select('*').eq('wedding_id',id).order('created_at');
   const vq=await sb.from('event_travel').select('*').eq('wedding_id',id).maybeSingle();
   const dyq=await sb.from('event_days').select('*').eq('wedding_id',id).order('day_date');
-  wed={...w,days:dyq.error?[]:(dyq.data||[]),dayErr:!!dyq.error,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error,agrC:acq.error||!acq.data?{}:(acq.data.data||{}),agrCErr:!!acq.error};tsort();lsort();render();
+  const ivx=await ivLoadOwner(id);
+  wed={...w,days:dyq.error?[]:(dyq.data||[]),dayErr:!!dyq.error,msgs:mq.error?[]:(mq.data||[]),msgErr:!!mq.error,travel:vq.error?null:(vq.data||null),travErr:!!vq.error,gear:gear0,gearErr:!!gq.error,sel:sq.error?null:(sq.data||null),selErr:!!sq.error,agr:aq.error?null:(aq.data||null),agrErr:!!aq.error,costs:kq.error?[]:(kq.data||[]),costErr:!!kq.error,timer:tq.error||!tq.data?{}:tq.data,tmErr:!!tq.error,del:dq.error||!dq.data?{}:dq.data,delErr:!!dq.error,crew:ec.error?[]:(ec.data||[]),ecErr:!!ec.error,pays:py.error?[]:(py.data||[]),bill:bl.error||!bl.data?{}:bl.data,payErr:!!(py.error||bl.error),groups:gs,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error,agrC:acq.error||!acq.data?{}:(acq.data.data||{}),agrCErr:!!acq.error,invite:ivx};tsort();lsort();render();
 }
 async function loadShared(){
   const{data,error}=await sb.rpc('shared_get',{p_token:TOKEN});
@@ -1568,9 +1867,10 @@ async function loadShared(){
   const tv=await sb.rpc('shared_travel_get',{p_token:TOKEN});
   const li=await sb.rpc('location_ideas_get');
   const dz=await sb.rpc('shared_days_get',{p_token:TOKEN});
+  const ivx=await ivLoadShared();
   if(!ui.landed){ui.landed=1;if(!QS.get('s')&&dl)ui.sec='del'}
   const m0=mn.error?null:mn.data;if(m0&&m0.settings)inv={...INVDEF,...m0.settings};
-  wed={...data,days:dz.error?[]:(dz.data||[]),msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error,agrC:agc.error||!agc.data?{}:agc.data};tsort();lsort();render();
+  wed={...data,days:dz.error?[]:(dz.data||[]),msgs:ms.error?null:(ms.data||[]),travel:tv.error||!tv.data?null:{enabled:true,data:tv.data},ideas:li.error?[]:(li.data||[]),sel:sg2.error?null:(sg2.data||null),agr:ag.error?null:(ag.data||null),timer:tr.error?null:tr.data,del:dl,bill:m0||{},pays:m0?(m0.payments||[]):[],money:m0,event_type:(mt.error||!mt.data?data.event_type:mt.data.event_type)||'Wedding',prog:pg.error?null:pg.data,timeline:tl.error?[]:(tl.data||[]),tlErr:!!tl.error,musts:mh.error?[]:(mh.data||[]),mhErr:!!mh.error,party:pt.error?[]:(pt.data||[]),ptErr:!!pt.error,places:lc.error?[]:(lc.data||[]),lcErr:!!lc.error,notes:nt.error||!nt.data?{client_note:'',private_note:''}:nt.data,ntErr:!!nt.error,agrC:agc.error||!agc.data?{}:agc.data,invite:ivx};tsort();lsort();render();
 }
 async function loadFamily(){
   const{data,error}=await sb.rpc('family_get',{p_token:FTOKEN});
@@ -1584,7 +1884,7 @@ const run=async p=>{const{error}=await p;if(error){toast('Could not save: '+erro
 
 /* ---- Views ---- */
 function render(){
-  if(LOCPAGE)return;
+  if(LOCPAGE||IPAGE)return;
   if(DTOKEN){if(wed)setApp(dayRO());return}
   if(RVTOKEN){setApp(rvView());return}
   if(EQPAGE){setApp(eqView());return}
@@ -1609,7 +1909,7 @@ function render(){
 }
 /* Section switcher. cl = client view: only the sections that exist are shown */
 const ERR={timeline:'tlErr',musts:'mhErr',party:'ptErr',places:'lcErr',notes:'ntErr'};
-const secOff=k=>k==='msg'?!!(TOKEN&&!Array.isArray(wed.msgs)):k==='trav'?false:k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'||k==='gear'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
+const secOff=k=>k==='rsvp'?!!(TOKEN&&!ivOn()):k==='msg'?!!(TOKEN&&!Array.isArray(wed.msgs)):k==='trav'?false:k==='del'?!!(TOKEN&&!wed.del):k==='pay'||k==='crew'||k==='cost'||k==='gear'?!!TOKEN:k==='overview'?!!(TOKEN&&!wed.prog&&!wed.money&&!(wed.timer&&wed.timer.started_at)&&!wed.sel):!!(ERR[k]&&wed[ERR[k]]);
 const SK_OK=k=>k==='agr'&&TOKEN&&wed.agr?'agr':k==='ideas'&&TOKEN&&wed.ideas&&wed.ideas.length?'ideas':secsFor(wed).some(x=>SK[x]===k)&&!secOff(k)?k:(isWed(wed)?'family':'timeline');
 const secNav=cl=>`<nav class="sec">${secsFor(wed).filter(x=>!cl||(SK[x]&&!secOff(SK[x]))).map(x=>SK[x]?`<button class="${ui.sec===SK[x]?'on':''}" data-a="sec" data-k="${SK[x]}">${esc(cl&&x==='Delivery'?'Films & Photos':x)}</button>`:`<span title="Coming soon">${esc(x)}</span>`).join('')}${cl&&wed.agr?`<button class="${ui.sec==='agr'?'on':''}" data-a="sec" data-k="agr">Agreement${wed.agr.signed_at?'':' · to sign'}</button>`:''}${cl&&wed.ideas&&wed.ideas.length?`<button class="${ui.sec==='ideas'?'on':''}" data-a="sec" data-k="ideas">Location ideas</button>`:''}</nav>`;
 function famTl(){
@@ -3957,7 +4257,7 @@ function mainView(){
 ${tagHtml(w)}
 ${ap?`<p class="intro" style="margin-top:12px">Confirmed by ${esc(w.approved_by||'the client')} on ${fmtD((w.approved_at||'').slice(0,10))}. <button class="lnk" data-a="reopen">Reopen for editing</button></p>`:''}
 ${secNav()}
-${ui.sec==='overview'?ovMain():ui.sec==='msg'?msgMain():ui.sec==='trav'?travMain():ui.sec==='del'?delMain():ui.sec==='gear'?gearMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
+${ui.sec==='rsvp'?ivSec():ui.sec==='overview'?ovMain():ui.sec==='msg'?msgMain():ui.sec==='trav'?travMain():ui.sec==='del'?delMain():ui.sec==='gear'?gearMain():ui.sec==='cost'?costMain():ui.sec==='pay'?payMain():ui.sec==='crew'?crMain():ui.sec==='timeline'?tlMain():ui.sec==='musts'?mhMain():ui.sec==='party'?ptMain():ui.sec==='places'?lcMain():ui.sec==='notes'?ntMain():famMain()}
 <footer><span>Synced · ${esc(user.email)}</span><span><button data-a="editW">Edit event details</button><button data-a="out">Sign out</button></span></footer>`}
 function clFam(lk){
   const a=G(),t=a.reduce((x,g)=>x+g.minutes,0);
@@ -3988,6 +4288,7 @@ ${lcList()}`}
 function clientView(){
   const w=wed,lk=locked(),sec=SK_OK(ui.sec);
   if(sec==='agr')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}${secNav(1)}${clAgr()}<footer><span>Private link · Zema Production</span></footer>`;
+  if(sec==='rsvp')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}${secNav(1)}${ivSec()}<footer><span>Private link · Zema Production</span></footer>`;
   if(sec==='msg'||sec==='trav'||sec==='ideas')return`<div class="brand">${brand(w)}</div><h1>${esc(w.couple)}</h1><div class="meta">${dm(w)}</div>${xdHead()}${secNav(1)}${sec==='msg'?clMsg():sec==='trav'?clTrav():clIdeas(lk)}<footer><span>Private link · Zema Production</span></footer>`;
   if(sec==='del')return`${secNav(1)}<div style="height:20px"></div>${cineBody()}<footer><span>Private link · Zema Production</span></footer>`;
   const H={overview:'Your Overview',timeline:isWed(w)?'Your Wedding Day Timeline':'Your Event Timeline',family:'Your Family &amp; Friends Photo List',musts:'Your Must-Have Moments',party:'Your Wedding Party',places:'Your Locations',notes:'Your Notes'};
@@ -4886,7 +5187,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.id==='pw'&&e.key==='Enter')login();
   if(e.key==='Escape'&&ui.modal)closeM();
 });
-const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!EQPAGE&&!LOCPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CPTOKEN?cph:CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
+const canReload=()=>!ui.modal&&ui.play==null&&!PKPAGE&&!IPAGE&&!EQPAGE&&!LOCPAGE&&!RVTOKEN&&!DTOKEN&&ui.view!=='pkgs'&&(CPTOKEN?cph:CTOKEN?cw:(TOKEN||FTOKEN)?wed:user);
 let hidAt=0;
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hidAt=Date.now();return}
@@ -4897,5 +5198,548 @@ document.addEventListener('visibilitychange',()=>{
 });
 addEventListener('offline',()=>toast('You’re offline. Changes can’t be saved until you’re back online.'));
 addEventListener('online',()=>{toast('Back online');if(canReload()||(!PKPAGE&&!EQPAGE&&!RVTOKEN&&!ui.modal&&!wed&&(user||TOKEN||FTOKEN||CTOKEN||CPTOKEN||DTOKEN)))reload()});
+/* =====================================================================
+   ZEMA DIGITAL INVITATIONS & RSVP · add-on previews
+   Guest page: ?i=<slug> (no login). Couple: Invitation tab on their ?w= link. You: Invitation tab on the event.
+   Demo invitations and demo replies live only in the browser and never reach the database.
+   ===================================================================== */
+const IPAGE=(QS.get('i')||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,72);
+const ivSafe=u=>{const s=String(u||'').trim();return/^https:\/\/[^\s"'<>\\]+$/i.test(s)||/^data:image\/svg\+xml,/.test(s)?s:''};
+const ivBg=u=>`background-image:url('${String(u).replace(/'/g,'%27')}')`;
+const ivLink=s=>location.origin+location.pathname+'?i='+s;
+const ivKey=s=>String(s||'').trim().replace(/\s+/g,' ').toLowerCase();
+const ivOrd=n=>n+(n%100>=11&&n%100<=13?'th':['th','st','nd','rd'][n%10]||'th');
+const ivDate=s=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return null;const d=new Date(s+'T12:00:00');return isNaN(d)?null:d};
+const ivTime=t=>{if(!/^\d{1,2}:\d{2}/.test(t||''))return'';let[h,m]=String(t).split(':').map(Number);const ap=h>=12?'pm':'am';h=h%12||12;return h+(m?':'+String(m).padStart(2,'0'):'')+' '+ap};
+const ivLong=d=>d?d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+const ivShort=d=>d?d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
+
+/* each occasion: which details it asks for, and its default wording */
+const IVK={
+wedding:{n:'Wedding',big:'who',who:'Couple’s names',whoPh:'Amani & Daniel',kick:'The Wedding of',pre:'Together with their families',line:'request the pleasure of your company at the celebration of their marriage',msg:'We would be honoured to have you with us as we begin our forever.',dress:'Black tie'},
+engagement:{n:'Engagement',big:'who',who:'Couple’s names',whoPh:'Liya & Samuel',kick:'Engagement Celebration',pre:'With joy in our hearts',line:'invite you to celebrate their engagement',msg:'Come and raise a glass with us as we say yes to forever.',dress:'Cocktail attire'},
+christening:{n:'Christening or baptism',big:'hon',hon:'Child’s name',honPh:'Noah',who:'Parents’ names · optional',whoPh:'Ruth & Michael',kick:'The Christening of',pre:'With grateful hearts',line:'please join us as we celebrate the christening of our child',msg:'Your love and prayers mean the world to our family.',dress:'Smart attire'},
+birthday:{n:'Birthday',big:'hon',hon:'Who’s celebrating',honPh:'Hana',det:'Age they’re turning · optional',detPh:'30',who:'Hosted by · optional',whoPh:'Her family',kick:'Birthday Celebration',pre:'You are warmly invited',line:'to celebrate a very special birthday',msg:'An evening of good food, music and the people we love.',dress:'Glamorous'},
+graduation:{n:'Graduation party',big:'hon',hon:'Graduate’s name',honPh:'Selam',det:'Qualification or class · optional',detPh:'Class of 2027',who:'Hosted by · optional',whoPh:'The Bekele family',kick:'Graduation Celebration',pre:'Please join us',line:'as we celebrate the graduation of',msg:'Years of hard work, one proud day. Come and celebrate with us.',dress:'Smart casual'},
+anniversary:{n:'Anniversary',big:'who',who:'Couple’s names',whoPh:'Helen & Yonas',det:'Years together · optional',detPh:'25',kick:'Anniversary Celebration',pre:'Celebrating a love that has grown',line:'invite you to celebrate their anniversary',msg:'Join us as we look back with gratitude and forward with joy.',dress:'Cocktail attire'},
+private:{n:'Private celebration',big:'ttl',ttl:'Name of the celebration',ttlPh:'A Summer Garden Party',who:'Hosted by',whoPh:'The Tesfaye family',kick:'You are invited',pre:'You are cordially invited to',line:'',msg:'An intimate gathering with the people we love most.',dress:'Garden party'},
+other:{n:'Other occasion',big:'ttl',ttl:'Name of the occasion',ttlPh:'A Celebration',who:'Hosted by',whoPh:'',kick:'You are invited',pre:'You are cordially invited to',line:'',msg:'We would love to celebrate with you.',dress:''}};
+const IVKINDS=Object.keys(IVK);
+const IVTH=[['ivory','Ivory','#F6F1E7','#1B1A17','#A8864F'],['noir','Noir','#0C0B0A','#F3EDE2','#C9A86A'],['sand','Sand','#E9E0D2','#2A251E','#9C7A45']];
+const ivKindFor=t=>({Wedding:'wedding','Pre-Wedding Shoot':'wedding',Engagement:'engagement',Christening:'christening','Birthday Party':'birthday'})[t]||'private';
+const ivTheme=t=>IVTH.some(x=>x[0]===t)?t:'ivory';
+const ivMax=d=>Math.max(1,Math.min(10,parseInt(d&&d.max_party,10)||1));
+
+/* the big names on the cover, the line above them and the wording */
+function ivHead(kind,d){
+  const K=IVK[kind]||IVK.other,who=String(d.hosts||'').trim(),hon=String(d.honoree||'').trim(),det=String(d.detail||'').trim(),ttl=String(d.title||'').trim();
+  let kick=K.kick,big,sub='';
+  if(K.big==='who'){const p=who.split(/\s+(?:&|and|\+)\s+|\s*&\s*/i).filter(Boolean);big=p.length===2?[p[0],'&',p[1]]:[who||K.whoPh]}
+  else if(K.big==='hon'){big=[hon||K.honPh];sub=who}
+  else{big=[ttl||K.ttlPh];sub=who?'Hosted by '+who:''}
+  if(kind==='birthday'&&/^\d{1,3}$/.test(det))kick=ivOrd(+det)+' Birthday';
+  if(kind==='anniversary'&&/^\d{1,3}$/.test(det))kick=ivOrd(+det)+' Wedding Anniversary';
+  if(kind==='graduation'&&det)kick=det;
+  if(kind==='christening'&&who)sub=who;
+  const mono=K.big==='who'&&big.length===3?big[0][0]+'·'+big[2][0]:(big[0]||'Z')[0];
+  return{kick,big,sub,mono:mono.toUpperCase(),pre:String(d.pre||'').trim()||K.pre,line:String(d.line||'').trim()||K.line,short:K.big==='who'?big.filter(x=>x!=='&').join(' & '):(who||big[0])};
+}
+
+/* illustrated sample photos, used only in previews when no real photo is set */
+const IVSC=[
+'<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2C27"/><stop offset=".55" stop-color="#C98D5A"/><stop offset="1" stop-color="#F2CD92"/></linearGradient><radialGradient id="s" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF1CF"/><stop offset="1" stop-color="#FFF1CF" stop-opacity="0"/></radialGradient></defs><rect width="800" height="1000" fill="url(#a)"/><circle cx="430" cy="610" r="260" fill="url(#s)" opacity=".8"/><circle cx="430" cy="610" r="70" fill="#FFE7B8"/><path d="M0 700 Q200 640 400 690 T800 670 V1000 H0Z" fill="#5B3B2B" opacity=".75"/><path d="M0 780 Q260 730 520 780 T800 760 V1000 H0Z" fill="#2B1D17"/><g fill="#1A120E"><circle cx="372" cy="636" r="15"/><path d="M356 652 h32 l10 120 h-52z"/><circle cx="432" cy="630" r="14"/><path d="M420 646 h24 l40 134 h-102z"/></g>',
+'<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B2233"/><stop offset=".6" stop-color="#6A4F5E"/><stop offset="1" stop-color="#D99C6C"/></linearGradient></defs><rect width="800" height="1000" fill="url(#a)"/><g fill="#14161F"><rect x="20" y="520" width="90" height="480"/><rect x="120" y="440" width="70" height="560"/><rect x="200" y="580" width="110" height="420"/><rect x="320" y="380" width="60" height="620"/><rect x="390" y="500" width="120" height="500"/><rect x="520" y="420" width="80" height="580"/><rect x="610" y="560" width="70" height="440"/><rect x="690" y="470" width="100" height="530"/></g><g fill="#F3C98B" opacity=".55"><rect x="140" y="470" width="8" height="10"/><rect x="160" y="520" width="8" height="10"/><rect x="335" y="420" width="8" height="10"/><rect x="540" y="460" width="8" height="10"/><rect x="420" y="560" width="8" height="10"/><rect x="720" y="520" width="8" height="10"/></g>',
+'<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A221C"/><stop offset="1" stop-color="#6E5843"/></linearGradient><radialGradient id="l" cx=".5" cy=".45" r=".5"><stop offset="0" stop-color="#FCE6C0" stop-opacity=".9"/><stop offset="1" stop-color="#FCE6C0" stop-opacity="0"/></radialGradient></defs><rect width="800" height="1000" fill="url(#a)"/><g fill="none" stroke="#E7CFA6" stroke-opacity=".5" stroke-width="3"><path d="M100 1000 V420 A300 300 0 0 1 700 420 V1000"/><path d="M190 1000 V470 A210 210 0 0 1 610 470 V1000"/><path d="M265 1000 V510 A135 135 0 0 1 535 510 V1000"/><path d="M330 1000 V545 A70 70 0 0 1 470 545 V1000"/></g><ellipse cx="400" cy="520" rx="260" ry="320" fill="url(#l)"/><path d="M360 1000 L392 600 h16 L440 1000Z" fill="#F4E4C8" opacity=".25"/>',
+'<rect width="800" height="1000" fill="#17130F"/><defs><filter id="b"><feGaussianBlur stdDeviation="18"/></filter></defs><g filter="url(#b)" fill="#D9B477"><circle cx="160" cy="220" r="70" opacity=".55"/><circle cx="560" cy="160" r="110" opacity=".35"/><circle cx="660" cy="520" r="80" opacity=".5"/><circle cx="260" cy="620" r="120" opacity=".3"/><circle cx="460" cy="820" r="90" opacity=".45"/><circle cx="110" cy="880" r="60" opacity=".5"/><circle cx="420" cy="420" r="50" fill="#FFF0D2" opacity=".6"/></g>',
+'<rect width="800" height="1000" fill="#5E7A4C"/><g fill="#6F8C5A"><rect x="0" y="0" width="800" height="1000" opacity=".3"/></g><path d="M400 0 V1000 M0 520 H800" stroke="#D9CDB0" stroke-width="26"/><circle cx="400" cy="520" r="120" fill="#D9CDB0"/><circle cx="400" cy="520" r="72" fill="#8DB3C2"/><rect x="520" y="140" width="210" height="130" fill="#F4EFE6"/><path d="M520 140 L625 205 L730 140" stroke="#D6CCBB" stroke-width="3" fill="none"/><rect x="80" y="660" width="220" height="180" fill="#B9A58A"/><rect x="96" y="676" width="188" height="148" fill="#CDB99C"/><g fill="#3F5B33">'+[[120,120],[200,90],[90,260],[640,700],[720,820],[560,880],[250,420],[600,380],[120,940],[700,400]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${34+(x%3)*8}"/>`).join('')+'</g>'];
+const ivScene=n=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">${IVSC[n%IVSC.length]}</svg>`);
+
+/* ---------------- the invitation itself ---------------- */
+function ivRender(o){
+  const kind=IVK[o.kind]?o.kind:'wedding',K=IVK[kind],d=o.data||{},th=ivTheme(o.theme),h=ivHead(kind,d),dt=ivDate(d.date),demo=o.mode==='demo',pv=o.mode==='preview';
+  const ph=(Array.isArray(d.photos)?d.photos:[]).map(ivSafe).filter(Boolean),hero=ph[0]||(demo?ivScene(o.scene||0):'');
+  const names=h.big.map(x=>x==='&'?'<em>&amp;</em>':`<span>${esc(x)}</span>`).join('');
+  const place=String(d.venue||'').trim(),addr=String(d.address||'').trim();
+  const map=ivSafe(d.map)||(place||addr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([place,addr].filter(Boolean).join(', ')):'');
+  const t1=ivTime(d.time),t2=ivTime(d.end),dl=ivDate(d.deadline);
+  const det=[
+    dt||t1?`<div><div class="zk">When</div><h4>${esc(dt?dt.toLocaleDateString('en-GB',{weekday:'long'}):'')}</h4><p>${esc(ivShort(dt))}${t1?'\n'+esc(t1+(t2?' until '+t2:'')):''}</p></div>`:'',
+    place||addr?`<div><div class="zk">Where</div><h4>${esc(place||'The venue')}</h4><p>${esc(addr)}</p>${map?`<a class="zi-btn zsmb" href="${esc(map)}" target="_blank" rel="noopener">Open in Maps</a>`:''}</div>`:'',
+    d.dress?`<div><div class="zk">Dress code</div><h4>${esc(d.dress)}</h4><p>${esc(d.dress_note||'')}</p></div>`:''].filter(Boolean);
+  const sch=(Array.isArray(d.schedule)?d.schedule:[]).filter(x=>x&&(x.l||x.t));
+  const gal=ph.slice(1).length?ph.slice(1):demo?[ivScene(2),ivScene(3),ivScene(1)]:[];
+  const cd=dt&&!pv?new Date(d.date+'T'+(/^\d{1,2}:\d{2}/.test(d.time||'')?d.time:'12:00')+':00'):null;
+  return`<div class="zi zi-${th} ${pv?'zpv in':''}" data-mode="${demo?'demo':pv?'preview':'live'}">
+${o.flag?'<div class="zi-flag">Sample invitation · replies here are not saved</div>':''}
+${pv?'':`<div class="zi-seal" data-z="ivopen" role="button" tabindex="0" aria-label="Open the invitation"><div class="zm">${esc(h.mono)}</div><div class="zk">${esc(h.kick)}</div><div class="zt">Tap to open</div></div>`}
+<section class="zi-cov ${hero?'':'np'}">${hero?`<div class="zbg" style="${ivBg(hero)}"></div>`:''}<div class="zin"><div class="zk">${esc(h.kick)}</div><h1 class="zi-nm">${names}</h1>${h.sub?`<div class="zi-cw" style="font:italic 20px var(--serif);letter-spacing:0;text-transform:none">${esc(h.sub)}</div>`:''}<div class="zi-cw">${esc([ivShort(dt),place].filter(Boolean).join('  ·  '))}</div></div><div class="zi-scr">Scroll</div></section>
+<section class="zi-sec"><div data-rv><div class="zi-pre">${esc(h.pre)}</div><div class="zi-h">${names.replace(/<em>/g,'<em style="font-size:.6em;display:inline;margin:0 .2em">')}</div>${h.line?`<p class="zi-line">${esc(h.line)}</p>`:''}${d.message?`<p class="zi-msg">${esc(d.message)}</p>`:''}</div>
+${dt?`<div class="zi-date" data-rv><div class="zb">${esc(dt.toLocaleDateString('en-GB',{weekday:'long'}))}</div><div class="zd">${dt.getDate()}<small>${esc(dt.toLocaleDateString('en-GB',{month:'long'}))}</small></div><div class="zb">${dt.getFullYear()}</div></div>${t1?`<div class="zi-time" data-rv>at ${esc(t1)}</div>`:''}`:''}</section>
+${cd&&cd>new Date()?`<div class="zi-band"><section class="zi-sec" data-rv><div class="zk" style="margin-bottom:22px">Counting down</div><div class="zi-cd" data-cd="${cd.getTime()}">${['Days','Hours','Minutes','Seconds'].map(x=>`<div><b>–</b><span>${x}</span></div>`).join('')}</div></section></div>`:''}
+${det.length?`<section class="zi-sec" style="padding-bottom:0"><div data-rv><div class="zk">The details</div><div class="zi-dg" style="--n:${det.length}">${det.join('')}</div></div></section>`:''}
+${sch.length?`<section class="zi-sec" style="padding-bottom:0"><div data-rv><div class="zk">Order of the day</div><div class="zi-sch">${sch.map(x=>`<div><b>${esc(ivTime(x.t)||x.t||'')}</b><span>${esc(x.l||'')}</span></div>`).join('')}</div></div></section>`:''}
+${gal.length?`<section style="padding:clamp(72px,16cqw,140px) 0 0"><div class="zk" data-rv>Moments</div><div class="zi-gal" data-rv>${gal.map(u=>`<div style="${ivBg(u)}" role="img" aria-label="Photo"></div>`).join('')}</div></section>`:''}
+<section class="zi-sec" id="zi-rsvp"><div data-rv><div class="zk">Kindly reply</div><div class="zi-h" style="font-size:clamp(40px,10cqw,72px)">RSVP</div>${dl?`<p class="zi-line" style="font-style:italic">Please let us know by ${esc(ivShort(dl))}</p>`:''}</div>
+<div class="zi-rf">${o.open===false?'<p class="zi-msg">Replies for this invitation are now closed. Thank you.</p>':ivForm(o)}</div>
+${d.contact?`<p class="zi-note" style="margin-top:28px">Questions? ${esc(d.contact)}</p>`:''}</section>
+<footer class="zi-foot">With love · ${esc(h.short)}<div style="margin-top:14px;opacity:.7">Digital invitation by Zema Production</div></footer></div>`;
+}
+function ivForm(o,v){
+  const d=o.data||{},max=ivMax(d),diet=d.ask_diet!==false,a=v?v.attending:null,h=ivHead(o.kind,d);
+  return`<div class="zi-form">
+<label class="zi-f"><span>Your full name</span><input class="zi-n" autocomplete="name" maxlength="80" value="${esc(v?v.name:'')}" ${v?'readonly':''} placeholder="As it appears on your invitation"></label>
+<div class="zi-f"><span>Will you be joining us?</span><div class="zi-yn"><button type="button" data-z="ivyn" data-v="1" class="${a===true?'on':''}" aria-pressed="${a===true}">Joyfully accepts<small>Attending</small></button><button type="button" data-z="ivyn" data-v="0" class="${a===false?'on':''}" aria-pressed="${a===false}">Regretfully declines<small>Unable to attend</small></button></div></div>
+<div class="zi-att" ${a===true?'':'hidden'}>
+${max>1?`<label class="zi-f"><span>Number of guests, including you</span><select class="zi-p">${Array.from({length:max},(_,i)=>`<option value="${i+1}" ${v&&+v.party===i+1?'selected':''}>${i+1}${i?' guests':' guest · just me'}</option>`).join('')}</select></label>`:''}
+${diet?`<label class="zi-f"><span>Dietary requirements · optional</span><input class="zi-d" maxlength="300" placeholder="Vegetarian, allergies, halal…" value="${esc(v&&v.dietary||'')}"></label>`:''}</div>
+<label class="zi-f"><span>A message for ${esc(h.short)} · optional</span><textarea class="zi-m" rows="3" maxlength="600">${esc(v&&v.message||'')}</textarea></label>
+<button type="button" class="zi-btn zfill" style="width:100%" data-z="ivsend" ${o.mode==='preview'?'disabled':''}>${v?'Update my reply':'Send my reply'}</button>
+<div class="zi-bad" role="alert"></div>
+${o.mode==='preview'?'<p class="zi-note">This is a preview. Guests can reply once the invitation is published.</p>':''}</div>`}
+function ivDone(r,o,back){
+  const yes=r.attending,first=String(r.name||'').split(' ')[0],max=ivMax(o.data);
+  return`<div class="zi-done"><div class="zk">${back?'Your reply':yes?'With thanks':'Thank you'}</div>
+<h3>${back?esc(r.name):yes?`We can’t wait to celebrate with you, ${esc(first)}`:`You’ll be missed, ${esc(first)}`}</h3>
+<p>${back?'Thank you, your reply is saved.':yes?'Your reply has been saved and the hosts can see it.':'Thank you for letting us know. Your reply has been saved.'}</p>
+<div class="zsum">${yes?'Attending · '+r.party+(+r.party>1?' guests':' guest'):'Not attending'}</div>
+${r.limited?`<p class="zi-note">Your invitation is for up to ${+r.party} ${+r.party>1?'guests':'guest'}, so your reply has been saved for ${+r.party}.</p>`:''}
+<button type="button" class="zi-btn zsmb" data-z="ivchange">Change my reply</button>
+${o.mode==='live'&&r.key?'<p class="zi-note">This phone remembers your reply. To change it from another device, <button type="button" data-z="ivkeycopy" style="background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit">copy your private reply link</button>.</p>':''}</div>`}
+const IVERR={exists:'There’s already a reply under this name. If it’s yours, open the private link from your confirmation to change it, or contact the hosts.',closed:'Replies for this invitation are closed.',name:'Please enter your full name.',answer:'Please choose whether you’ll be joining.',full:'This invitation can’t take any more replies. Please contact the hosts.',key:'That reply link no longer works. Please send your reply again.',net:'Your reply didn’t send. Check your connection and try again.'};
+
+/* one state for the invitation on screen (live, demo or preview) */
+let ivG={slug:'',key:'',mine:null,o:null,busy:false,demo:[]},ivCdT=null;
+function ivMount(root){
+  if(!root)return;
+  const z=root.querySelector('.zi');if(!z)return;
+  const sc=root.closest('.ph-in,.zl-full')||null;
+  const els=[...z.querySelectorAll('[data-rv]')];
+  if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{root:sc,threshold:.12,rootMargin:'0px 0px -6% 0px'});els.forEach(x=>io.observe(x))}else els.forEach(x=>x.classList.add('on'));
+  if(!z.querySelector('.zi-seal'))z.classList.add('in');
+  clearInterval(ivCdT);
+  const tick=()=>document.querySelectorAll('[data-cd]').forEach(c=>{const ms=Math.max(0,+c.dataset.cd-Date.now()),v=[Math.floor(ms/864e5),Math.floor(ms/36e5)%24,Math.floor(ms/6e4)%60,Math.floor(ms/1e3)%60];c.querySelectorAll('b').forEach((b,i)=>b.textContent=String(v[i]).padStart(i?2:1,'0'))});
+  tick();ivCdT=setInterval(tick,1000);
+}
+function ivOpenSeal(z){if(!z||z.classList.contains('in'))return;z.classList.add('in');document.documentElement.classList.remove('zi-lock');setTimeout(()=>z.querySelectorAll('.zi-cov [data-rv]').forEach(x=>x.classList.add('on')),300)}
+async function ivSend(btn){
+  const z=btn.closest('.zi'),f=btn.closest('.zi-form'),bad=f.querySelector('.zi-bad'),o=ivG.o;if(ivG.busy||!o)return;
+  const nmEl=f.querySelector('.zi-n'),name=(nmEl.value||'').trim().replace(/\s+/g,' '),a=ivG.ans;
+  nmEl.classList.remove('err');bad.textContent='';
+  if(name.length<2){nmEl.classList.add('err');bad.textContent=IVERR.name;nmEl.focus();return}
+  if(a!==true&&a!==false){bad.textContent=IVERR.answer;return}
+  const party=a?(+((f.querySelector('.zi-p')||{}).value)||1):0,diet=a?((f.querySelector('.zi-d')||{}).value||'').trim():'',msg=(f.querySelector('.zi-m').value||'').trim();
+  ivG.busy=true;btn.disabled=true;const was=btn.textContent;btn.textContent='Sending…';
+  let r;
+  if(o.mode==='demo'){
+    await new Promise(x=>setTimeout(x,550));
+    const ex=ivG.demo.find(x=>ivKey(x.name)===ivKey(name));
+    if(ex&&!ivG.mine)r={ok:false,code:'exists'};
+    else{const row={id:'d'+Date.now(),name,attending:a,party:a?Math.min(party,ivMax(o.data)):0,dietary:diet,message:msg,source:'guest',created_at:new Date().toISOString(),you:1};
+      if(ex)Object.assign(ex,row,{id:ex.id});else ivG.demo.unshift(row);r={ok:true,key:'demo',name,attending:a,party:row.party,status:ex?'updated':'new'}}
+  }else{
+    try{const q=await sb.rpc('invite_rsvp',{p_slug:ivG.slug,p_name:name,p_attending:a,p_party:party,p_diet:diet,p_msg:msg,p_key:ivG.key||null});r=q.error?{ok:false,code:'net'}:(q.data||{ok:false,code:'net'})}catch(_){r={ok:false,code:'net'}}
+  }
+  ivG.busy=false;
+  if(!r.ok){btn.disabled=false;btn.textContent=was;bad.textContent=IVERR[r.code]||IVERR.net;if(r.code==='key'){ivG.key='';ivG.mine=null;try{localStorage.removeItem('zinv:'+ivG.slug)}catch(_){}}return}
+  if(o.mode==='live'){ivG.key=r.key;try{localStorage.setItem('zinv:'+ivG.slug,r.key)}catch(_){}}
+  ivG.mine={name:r.name||name,attending:r.attending,party:r.party,dietary:diet,message:msg};
+  const box=z.querySelector('.zi-rf');box.innerHTML=ivDone(r,o);box.scrollIntoView({behavior:'smooth',block:'center'});
+  if(o.mode==='demo')apDashRefresh();
+}
+
+/* ---------------- guest page (?i=slug) ---------------- */
+async function ivBoot(){
+  document.title='You’re invited';
+  const root=document.createElement('div');root.className='zi-root';document.body.appendChild(root);
+  const app=$('#app');if(app)app.style.display='none';
+  root.innerHTML='<div class="zi zi-ivory in"><div class="zi-miss"><div class="zk">Opening your invitation</div></div></div>';
+  let v=null;try{const r=await sb.rpc('invite_public',{p_slug:IPAGE});v=r.error?null:r.data}catch(_){}
+  if(!v||!v.data){root.innerHTML='<div class="zi zi-ivory in"><div class="zi-miss"><div class="zk">Zema Production</div><h1>This invitation isn’t available</h1><p>Please check the link you were sent, or ask the hosts for a new one.</p></div></div>';return}
+  let key=QS.get('r')||'';
+  try{if(key)localStorage.setItem('zinv:'+IPAGE,key);else key=localStorage.getItem('zinv:'+IPAGE)||''}catch(_){}
+  if(QS.get('r'))try{history.replaceState(null,'',location.pathname+'?i='+IPAGE)}catch(_){}
+  let mine=null;
+  if(key){try{const m=await sb.rpc('invite_rsvp_mine',{p_slug:IPAGE,p_key:key});mine=m.error?null:m.data}catch(_){}if(!mine){key='';try{localStorage.removeItem('zinv:'+IPAGE)}catch(_){}}}
+  ivG={slug:IPAGE,key,mine,ans:null,busy:false,demo:[],o:{kind:v.kind,theme:v.theme,data:v.data||{},mode:'live',open:v.open!==false}};
+  const h=ivHead(v.kind,v.data||{});document.title=h.kick+' · '+h.short;
+  const bg=(IVTH.find(x=>x[0]===ivTheme(v.theme))||IVTH[0])[2];document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content=bg);document.documentElement.style.background=bg;document.body.style.background=bg;
+  root.innerHTML=ivRender(ivG.o);
+  if(mine&&ivG.o.open)root.querySelector('.zi-rf').innerHTML=ivDone({...mine,key},ivG.o,1);
+  document.documentElement.classList.add('zi-lock');
+  ivMount(root);
+}
+
+/* ---------------- full-screen layers ---------------- */
+let zlOn=null;
+function zlOpen(html,cls){
+  zlClose(1);const el=document.createElement('div');el.className='zl '+(cls||'');el.innerHTML=html;document.body.appendChild(el);document.body.classList.add('zl-lock');zlOn=el;
+  el.addEventListener('click',e=>{if(e.target===el)zlClose()});
+  const x=el.querySelector('.zl-x');if(x)setTimeout(()=>x.focus({preventScroll:true}),50);
+  return el}
+function zlClose(quiet){
+  const el=zlOn;if(!el)return;
+  if(el.dataset.sub){zlOn=el._parent||null;el.remove();if(!zlOn)document.body.classList.remove('zl-lock');else if(apS&&pkd){const a=pkd.addons.find(x=>x.id===apS.id);if(a&&apType(a)==='invite')ivG.o=apDemoInv()}return}
+  el.remove();zlOn=null;document.body.classList.remove('zl-lock');clearInterval(apT);apT=null;
+  if(!quiet&&apS){const id=apS.id;apS=null;const r=document.querySelector('#colad [data-k="'+CSS.escape(id)+'"]');if(r)r.focus({preventScroll:true})}
+}
+function zlSub(html){const p=zlOn;const el=document.createElement('div');el.className='zl';el.dataset.sub='1';el._parent=p;el.innerHTML=html;document.body.appendChild(el);zlOn=el;document.body.classList.add('zl-lock');return el}
+function ivFull(o,sub){
+  const html=`<div class="zl-full"><button class="zl-x" data-z="zlx" aria-label="Close">×</button><div class="zi-root">${ivRender(o)}</div></div>`;
+  const el=sub?zlSub(html):zlOpen(html);ivMount(el.querySelector('.zi-root'));return el}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&zlOn){e.preventDefault();zlClose()}else if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.matches&&e.target.matches('.zi-seal,[data-c="adv"][role="button"]')){e.preventDefault();e.target.click()}});
+
+/* ===================== Invitation tab (your event view and the couple's link) ===================== */
+const ivOn=()=>!!(wed&&wed.invite&&wed.invite.inv&&wed.invite.inv.enabled!==false);
+async function ivLoadOwner(id){
+  try{
+    const a=await sb.from('event_invites').select('*').eq('wedding_id',id).maybeSingle();
+    if(a.error)return{err:a.error.message};
+    if(!a.data)return null;
+    const r=await sb.from('invite_rsvps').select('id,name,attending,party,dietary,message,source,created_at,updated_at').eq('wedding_id',id).order('created_at',{ascending:false});
+    const g=await sb.from('invite_guests').select('id,name,allowed,side,phone,note,created_at').eq('wedding_id',id).order('name_key');
+    return{inv:a.data,rsvps:r.data||[],guests:g.data||[]};
+  }catch(e){return{err:String(e&&e.message||e)}}
+}
+async function ivLoadShared(){try{const r=await sb.rpc('shared_invite_get',{p_token:TOKEN});return r.error||!r.data?null:{inv:r.data.inv,rsvps:r.data.rsvps||[],guests:r.data.guests||[]}}catch(_){return null}}
+async function ivReload(){if(!wed)return;const id=wed.id;const x=TOKEN?await ivLoadShared():await ivLoadOwner(id);if(!wed||(!TOKEN&&wed.id!==id))return;wed.invite=x;render()}
+function ivSlug(n){
+  const b=String(n||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&|\band\b/g,' ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40).replace(/-+$/,'');
+  const r=crypto.getRandomValues(new Uint8Array(4)),A='abcdefghjkmnpqrstuvwxyz23456789';
+  return(b.length>=3?b:'invite')+'-'+[...r].map(x=>A[x%A.length]).join('')}
+/* switch the invitation on for an event (from the Invitation tab, or when a booking with the extra is accepted) */
+async function ivEnable(wid,o){
+  const ex=await sb.from('event_invites').select('wedding_id').eq('wedding_id',wid).maybeSingle();
+  if(ex.error)throw ex.error;
+  if(ex.data){const u=await sb.from('event_invites').update({enabled:true}).eq('wedding_id',wid);if(u.error)throw u.error;return}
+  const kind=ivKindFor(o.ty),K=IVK[kind],nm=String(o.name||'').trim();
+  const data={hosts:K.big==='hon'?'':nm,honoree:'',title:'',date:/^\d{4}-\d{2}-\d{2}$/.test(o.date||'')?o.date:'',time:'',end:'',venue:'',address:String(o.address||'').slice(0,200),dress:'',message:'',deadline:'',max_party:1,ask_diet:true,photos:[],schedule:[],contact:''};
+  for(let i=0;i<4;i++){const r=await sb.from('event_invites').insert({wedding_id:wid,slug:ivSlug(nm),kind,data});if(!r.error)return;if(!/duplicate|unique/i.test(r.error.message))throw r.error}
+}
+const IVA={
+  save:(I,pub)=>TOKEN?sb.rpc('shared_invite_save',{p_token:TOKEN,p_kind:I.kind,p_theme:I.theme,p_data:I.data,p_published:pub}):sb.from('event_invites').update({kind:I.kind,theme:I.theme,data:I.data,published:pub}).eq('wedding_id',wed.id),
+  gSave:g=>TOKEN?sb.rpc('shared_invite_guest_save',{p_token:TOKEN,p_id:g.id||null,p_name:g.name,p_allowed:g.allowed,p_side:g.side||'',p_phone:g.phone||'',p_note:g.note||''}):g.id?sb.from('invite_guests').update({name:g.name,allowed:g.allowed,side:g.side||'',phone:g.phone||'',note:g.note||''}).eq('id',g.id):sb.from('invite_guests').insert({wedding_id:wed.id,name:g.name,allowed:g.allowed,side:g.side||'',phone:g.phone||'',note:g.note||''}),
+  gBulk:rows=>TOKEN?sb.rpc('shared_invite_guests_add',{p_token:TOKEN,p_rows:rows}):sb.from('invite_guests').upsert(rows.map(r=>({wedding_id:wed.id,name:r.name,allowed:r.allowed,name_key:ivKey(r.name)})),{onConflict:'wedding_id,name_key',ignoreDuplicates:true}),
+  gDel:id=>TOKEN?sb.rpc('shared_invite_guest_delete',{p_token:TOKEN,p_id:id}):sb.from('invite_guests').delete().eq('id',id),
+  rSave:r=>TOKEN?sb.rpc('shared_invite_rsvp_save',{p_token:TOKEN,p_id:r.id||null,p_name:r.name,p_attending:r.attending,p_party:r.party,p_diet:r.dietary||'',p_msg:r.message||''}):r.id?sb.from('invite_rsvps').update({name:r.name,attending:r.attending,party:r.attending?r.party:0,dietary:r.dietary||'',message:r.message||''}).eq('id',r.id):sb.from('invite_rsvps').insert({wedding_id:wed.id,name:r.name,attending:r.attending,party:r.attending?r.party:0,dietary:r.dietary||'',message:r.message||'',source:'host'}),
+  rDel:id=>TOKEN?sb.rpc('shared_invite_rsvp_delete',{p_token:TOKEN,p_id:id}):sb.from('invite_rsvps').delete().eq('id',id)};
+const ivErr=e=>{const m=String(e&&e.message||e||'');return/duplicate|unique/i.test(m)?'That name is already there.':/function|schema cache|relation/i.test(m)?'Run the invitations SQL in Supabase first, then refresh.':m};
+async function ivDo(p,ok){let r;try{r=await p}catch(e){r={error:e}}if(r.error){toast('Could not save: '+ivErr(r.error));return null}if(ok)toast(ok);await ivReload();return r}
+
+function ivStats(X){
+  const R=(X&&X.rsvps)||[],G=(X&&X.guests)||[],rk=new Map(R.map(r=>[ivKey(r.name),r]));
+  const yes=R.filter(r=>r.attending),no=R.filter(r=>!r.attending),pend=G.filter(g=>!rk.has(ivKey(g.name)));
+  return{R,G,rk,yes,no,pend,ppl:yes.reduce((a,r)=>a+(+r.party||1),0)}}
+/* the draft being edited on the Design tab */
+function ivDraft(){
+  const I=wed.invite.inv;
+  if(!ui.ivD||ui.ivD.wid!==wed.id)ui.ivD={wid:wed.id,dirty:false,kind:IVK[I.kind]?I.kind:'wedding',theme:ivTheme(I.theme),data:JSON.parse(JSON.stringify(I.data||{}))};
+  const d=ui.ivD.data;if(!Array.isArray(d.photos))d.photos=[];if(!Array.isArray(d.schedule))d.schedule=[];if(d.ask_diet===undefined)d.ask_diet=true;
+  return ui.ivD}
+function ivSec(){
+  const X=wed.invite,own=!TOKEN;
+  const H=`<h2>${own?'Invitation &amp; RSVP':'Your Invitation &amp; RSVP'}</h2>`;
+  if(own&&X&&X.err)return H+`<section class="card"><p class="intro" style="margin:0">Digital invitations aren’t set up in Supabase yet. Run <b>zema-invitations.sql</b> once in the SQL Editor, then refresh this page.</p></section>`;
+  if(!ivOn())return own?H+`<section class="card"><div class="lbl">Digital Invitations &amp; RSVP</div><p class="intro" style="margin:10px 0 16px">Not switched on for this event. It turns on by itself when a client books the Digital Invitations &amp; RSVP extra, or you can switch it on here. The client then designs their invitation and sees their replies on their private link.</p><button class="btn fill" data-z="ivon">Switch on invitations</button></section>`:'';
+  const I=X.inv,live=!!I.published,link=ivLink(I.slug),s=ivStats(X),tab=ui.ivTab||(live&&s.R.length?'replies':'design');ui.ivTab=tab;
+  return H+`${own?'':`<p class="intro">Design your invitation, publish it, then share your link with guests. They reply without an account, and every reply appears here.</p>`}
+<section class="card"><div class="ivh"><span class="ivst ${live?'ivlive':''}">${live?'Live':'Draft · not visible to guests yet'}</span><span class="meta" style="margin:0">${esc(IVK[I.kind]?IVK[I.kind].n:'Invitation')}</span></div>
+<div class="ivlk">${esc(link)}</div>
+<div class="cta" style="margin-top:12px">${live?`<button class="btn fill" data-z="ivshare">Share on WhatsApp</button><button class="btn" data-z="ivcopy">Copy link</button>`:`<button class="btn fill" data-z="ivpub">Publish invitation</button><button class="btn" data-z="ivprev">Preview</button>`}</div>
+<div class="ivlinks">${live?`<a href="${esc(link)}" target="_blank" rel="noopener">Open as a guest</a><button data-z="ivprev">Preview changes</button><button data-z="ivunpub">Unpublish</button>`:''}${own?'<button data-z="ivoff">Switch off for this event</button>':''}</div></section>
+<div class="tabs" style="margin:22px 0 6px">${[['design','Design'],['replies','Replies · '+s.R.length],['guests','Guest list · '+s.G.length]].map(([k,v])=>`<button class="tab ${tab===k?'on':''}" data-z="ivtab" data-k="${k}">${v}</button>`).join('')}</div>
+${tab==='replies'?ivDash(X):tab==='guests'?ivGuests(X):ivEd()}`}
+function ivEd(){
+  const D=ivDraft(),K=IVK[D.kind],d=D.data;
+  const F=(k,l,ph,t,x)=>`<div class="f"><span class="l">${l}</span><input data-zf="${k}" type="${t||'text'}" value="${esc(d[k]==null?'':d[k])}" placeholder="${esc(ph||'')}" ${x||''}></div>`;
+  const T=(k,l,ph,r)=>`<div class="f"><span class="l">${l}</span><textarea data-zf="${k}" rows="${r||3}" placeholder="${esc(ph||'')}" maxlength="900">${esc(d[k]||'')}</textarea></div>`;
+  const two=(a,b)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${a}${b}</div>`;
+  return`<section class="card"><div class="lbl">Occasion</div><div class="ivk" style="margin-top:12px">${IVKINDS.map(k=>`<button class="tab ${D.kind===k?'on':''}" data-z="ivkind" data-k="${k}">${esc(IVK[k].n)}</button>`).join('')}</div>
+<div class="lbl">Style</div><div class="ivth" style="margin-top:12px">${IVTH.map(([k,n,b,t,g])=>`<button data-z="ivtheme" data-k="${k}" class="${D.theme===k?'on':''}" aria-pressed="${D.theme===k}"><i style="background:${b};color:${t};border-bottom:2px solid ${g}"></i><span>${n}</span></button>`).join('')}</div></section>
+<section class="card"><div class="lbl" style="margin-bottom:14px">Names and wording</div>
+${K.ttl?F('title',K.ttl,K.ttlPh,'','maxlength="80"'):''}${K.hon?F('honoree',K.hon,K.honPh,'','maxlength="80"'):''}${K.det?F('detail',K.det,K.detPh,'','maxlength="60"'):''}${K.who?F('hosts',K.who,K.whoPh,'','maxlength="100"'):''}
+${F('pre','Opening line · optional',K.pre,'','maxlength="120"')}${F('line','Invitation line · optional',K.line||'e.g. join us for an evening to remember','','maxlength="200"')}
+${T('message','Your personal message · optional',K.msg,4)}</section>
+<section class="card"><div class="lbl" style="margin-bottom:14px">When and where</div>
+${F('date','Date','','date')}${two(F('time','Start time','','time'),F('end','Ends · optional','','time'))}
+${F('venue','Venue','e.g. The Orangery, Kensington','','maxlength="120"')}${F('address','Address and postcode','','','maxlength="200"')}
+${F('map','Map link · optional','Leave empty and we make one from the address','url','maxlength="500"')}
+${F('dress','Dress code · optional',K.dress?'e.g. '+K.dress:'','','maxlength="80"')}</section>
+<section class="card"><div class="lbl">Photos</div><p class="intro" style="margin:8px 0 6px;font-size:14px">The first photo is your full-screen cover. Up to 8.</p>
+<div class="ivph">${d.photos.map((u,i)=>`<div style="${ivBg(ivSafe(u))}">${i?'':'<em>Cover</em>'}<span>${i?`<button data-z="ivphc" data-i="${i}">Make cover</button>`:'<i></i>'}<button data-z="ivphx" data-i="${i}">Remove</button></span></div>`).join('')}
+${d.photos.length<8?`<label><b>+</b>Add photos<input type="file" accept="image/*" multiple data-zup="ivph" style="display:none"></label>`:''}</div><div class="meta" id="ivphm" style="margin:6px 0 0"></div></section>
+<section class="card"><div class="lbl" style="margin-bottom:14px">Order of the day · optional</div>
+${d.schedule.map((x,i)=>`<div class="ivsc"><input type="time" data-zsc="${i}" data-zk="t" value="${esc(x.t||'')}" aria-label="Time"><input data-zsc="${i}" data-zk="l" value="${esc(x.l||'')}" placeholder="e.g. Ceremony" maxlength="80" aria-label="Moment"><button data-z="ivscx" data-i="${i}" aria-label="Remove">×</button></div>`).join('')}
+${d.schedule.length<10?'<button class="btn" data-z="ivsca">+ Add a moment</button>':''}</section>
+<section class="card"><div class="lbl" style="margin-bottom:14px">Replies</div>
+${F('deadline','Reply by · optional','','date')}
+<div class="f"><span class="l">How many people can one reply include?</span><select data-zf="max_party">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${ivMax(d)===i+1?'selected':''}>${i?'Up to '+(i+1)+' people':'Just the guest'}</option>`).join('')}</select></div>
+<p class="intro" style="margin:-4px 0 14px;font-size:13px">A guest on your guest list can bring the number you set for them there instead.</p>
+<label class="chk" style="margin:0 0 16px"><input type="checkbox" data-zf="ask_diet" ${d.ask_diet!==false?'checked':''}> Ask about dietary requirements</label>
+${F('contact','Contact for questions · optional','e.g. Call Ruth on 07…','','maxlength="120"')}</section>
+<div class="ivsave"><button class="btn" data-z="ivprev">Preview</button><button class="btn fill" data-z="ivsave">${D.dirty?'Save changes':'Saved'}</button></div>`}
+function ivRowsHtml(X,f,q,demo){
+  const s=ivStats(X);q=ivKey(q);const m=x=>!q||ivKey(x.name).includes(q);
+  const list=f==='pending'?[]:(f==='yes'?s.yes:f==='no'?s.no:s.R).filter(m);
+  const pend=f==='pending'||f==='all'?s.pend.filter(m):[];
+  if(!list.length&&!pend.length)return`<p class="empty">${s.R.length||s.G.length?'Nobody here matches.':'No replies yet. Share your link and they’ll appear here.'}</p>`;
+  return list.map(r=>`<div class="ivr"><div><div class="ivn">${esc(r.name)}${r.you?' <span class="ivp w">Your test</span>':''}</div><div class="ivs">${r.attending?(+r.party>1?'Party of '+(+r.party):'Just them'):'Can’t make it'} · ${esc(ivShort(new Date(r.updated_at||r.created_at)))}${r.source==='host'?' · added by '+(TOKEN?'you':'host'):''}</div>${r.dietary?`<span class="ivd">${esc(r.dietary)}</span>`:''}</div>
+<div style="text-align:right"><span class="ivp ${r.attending?'y':'n'}">${r.attending?'Attending':'Declined'}</span>${demo?'':`<div class="ivx"><button data-z="ivred" data-id="${esc(r.id)}">Edit</button><button data-z="ivrdel" data-id="${esc(r.id)}">Remove</button></div>`}</div>
+${r.message?`<div class="ivmsg">“${esc(r.message)}”</div>`:''}</div>`).join('')+pend.map(g=>`<div class="ivr"><div><div class="ivn">${esc(g.name)}</div><div class="ivs">On the guest list${+g.allowed>1?' · up to '+(+g.allowed):''}</div></div><div style="text-align:right"><span class="ivp w">Pending</span></div></div>`).join('')}
+function ivDash(X,demo){
+  const s=ivStats(X),f=demo?(apS&&apS.f)||'all':ui.ivF||'all',q=demo?'':ui.ivQ||'';
+  const tiles=[['Responses',s.R.length],['Attending',s.yes.length],['Declined',s.no.length],['Pending',s.pend.length],['Confirmed guests',s.ppl,1]];
+  const dz=s.yes.filter(r=>r.dietary);
+  return`<div class="ivg">${tiles.map(([l,n,h])=>`<div class="${h?'hl':''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div>
+${s.G.length?`<div class="bar" style="margin:0 0 6px"><i style="width:${Math.round((s.G.length-s.pend.length)/s.G.length*100)}%"></i></div><p class="meta" style="margin:0 0 14px">${s.G.length-s.pend.length} of ${s.G.length} on the guest list have replied</p>`:''}
+${demo?'':`<div class="ivsr"><input type="search" data-zq="1" placeholder="Search guest names" value="${esc(q)}" aria-label="Search guest names"><button class="btn" data-z="ivcsv">Export</button><button class="btn" data-z="ivradd">+ Record a reply</button></div>`}
+<div class="ivk">${[['all','All'],['yes','Attending'],['no','Declined'],['pending','Pending']].map(([k,v])=>`<button class="tab ${f===k?'on':''}" data-z="${demo?'apf':'ivf'}" data-k="${k}">${v}</button>`).join('')}</div>
+<div id="${demo?'apdl':'ivlist'}">${ivRowsHtml(X,f,q,demo)}</div>
+${dz.length?`<section class="card" style="margin-top:20px"><div class="lbl">Dietary requirements · ${dz.length}</div>${dz.map(r=>`<div class="row2" style="margin-top:10px"><span>${esc(r.name)}${+r.party>1?' · party of '+(+r.party):''}</span><span style="color:var(--tx);text-align:right">${esc(r.dietary)}</span></div>`).join('')}</section>`:''}`}
+function ivGuests(X){
+  const s=ivStats(X);
+  return`<section class="card"><div class="lbl" style="margin-bottom:14px">Add a guest</div>
+<div class="f"><span class="l">Name, as they’ll write it</span><input id="ivgn" maxlength="80" placeholder="e.g. Ruth Haile"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="f"><span class="l">Party size</span><select id="ivga">${Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1} ${i?'people':'person'}</option>`).join('')}</select></div><div class="f"><span class="l">Side or group · optional</span><input id="ivgs" maxlength="40" placeholder="e.g. Bride’s family"></div></div>
+<button class="btn fill" data-z="ivgadd">Add to guest list</button>
+<details style="margin-top:18px"><summary class="lnk" style="cursor:pointer">Paste a whole list</summary><p class="intro" style="font-size:13px;margin:10px 0">One name per line. For more than one person add a comma and the number, for example: The Haile family, 4</p><textarea id="ivgp" rows="6" style="width:100%" placeholder="Ruth Haile&#10;Tom Smith, 2"></textarea><button class="btn" style="margin-top:10px" data-z="ivgbulk">Add all</button></details></section>
+${s.G.length?`<p class="meta" style="margin:18px 0 0">${s.G.length} on the list · ${s.G.reduce((a,g)=>a+(+g.allowed||1),0)} people invited · ${s.pend.length} still to reply</p>`:''}
+${s.G.map(g=>{const r=s.rk.get(ivKey(g.name));return`<div class="ivr"><div><div class="ivn">${esc(g.name)}</div><div class="ivs">${+g.allowed>1?'Up to '+(+g.allowed)+' people':'1 person'}${g.side?' · '+esc(g.side):''}</div></div><div style="text-align:right"><span class="ivp ${r?r.attending?'y':'n':'w'}">${r?r.attending?'Attending · '+(+r.party):'Declined':'Pending'}</span><div class="ivx"><button data-z="ivged" data-id="${esc(g.id)}">Edit</button><button data-z="ivgdel" data-id="${esc(g.id)}">Remove</button></div></div></div>`}).join('')||'<p class="empty">No guests yet. Adding them lets you see who hasn’t replied.</p>'}`}
+function ivModal(html){const el=document.createElement('div');el.className='ivm';el.innerHTML=`<div role="dialog" aria-modal="true">${html}</div>`;el.addEventListener('click',e=>{if(e.target===el)el.remove()});document.body.appendChild(el);const f=el.querySelector('input');if(f)setTimeout(()=>f.focus(),60);return el}
+function ivReplyModal(r){
+  r=r||{name:'',attending:true,party:1,dietary:'',message:''};
+  const el=ivModal(`<h3>${r.id?'Edit reply':'Record a reply'}</h3><p class="intro" style="margin:-8px 0 16px;font-size:14px">For replies you got by phone, message or in person.</p>
+<div class="f"><span class="l">Name</span><input id="ivrn" maxlength="80" value="${esc(r.name)}"></div>
+<div class="ivyn"><button data-zyn="1" class="${r.attending?'on':''}">Attending</button><button data-zyn="0" class="${r.attending?'':'on'}">Not attending</button></div>
+<div class="f"><span class="l">Number of people</span><select id="ivrp">${Array.from({length:20},(_,i)=>`<option ${+r.party===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Dietary requirements</span><input id="ivrd" maxlength="300" value="${esc(r.dietary||'')}"></div>
+<div class="f"><span class="l">Message</span><textarea id="ivrm" rows="2" maxlength="600">${esc(r.message||'')}</textarea></div>
+<div class="bt"><button class="btn" data-zc="1">Cancel</button><button class="btn fill" data-zs="1">Save</button></div>`);
+  let att=!!r.attending;
+  el.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.zyn){att=t.dataset.zyn==='1';el.querySelectorAll('[data-zyn]').forEach(b=>b.classList.toggle('on',b===t))}
+    else if(t.dataset.zc)el.remove();
+    else if(t.dataset.zs){const n=$('#ivrn').value.trim().replace(/\s+/g,' ');if(n.length<2){$('#ivrn').classList.add('err');return}t.disabled=true;
+      const ok=await ivDo(IVA.rSave({id:r.id,name:n,attending:att,party:+$('#ivrp').value||1,dietary:$('#ivrd').value.trim(),message:$('#ivrm').value.trim()}),'Reply saved');if(ok)el.remove();else t.disabled=false}})}
+function ivGuestModal(g){
+  const el=ivModal(`<h3>Edit guest</h3><div class="f"><span class="l">Name</span><input id="iven" maxlength="80" value="${esc(g.name)}"></div>
+<div class="f"><span class="l">Party size</span><select id="ivea">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${+g.allowed===i+1?'selected':''}>${i+1}</option>`).join('')}</select></div>
+<div class="f"><span class="l">Side or group</span><input id="ives" maxlength="40" value="${esc(g.side||'')}"></div>
+<div class="f"><span class="l">Phone · optional</span><input id="ivep" maxlength="40" value="${esc(g.phone||'')}" type="tel"></div>
+<div class="f"><span class="l">Note · optional</span><input id="iveo" maxlength="300" value="${esc(g.note||'')}"></div>
+<div class="bt"><button class="btn" data-zc="1">Cancel</button><button class="btn fill" data-zs="1">Save</button></div>`);
+  el.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;if(t.dataset.zc)el.remove();
+    else if(t.dataset.zs){const n=$('#iven').value.trim();if(!n){$('#iven').classList.add('err');return}t.disabled=true;const ok=await ivDo(IVA.gSave({id:g.id,name:n,allowed:+$('#ivea').value||1,side:$('#ives').value.trim(),phone:$('#ivep').value.trim(),note:$('#iveo').value.trim()}),'Guest saved');if(ok)el.remove();else t.disabled=false}})}
+function ivCsv(){
+  const X=wed.invite,s=ivStats(X),gk=new Map(s.G.map(g=>[ivKey(g.name),g]));
+  const rows=[['Name','Reply','People','Dietary requirements','Message','On guest list','Party size allowed','Side or group','Replied on']];
+  s.R.forEach(r=>{const g=gk.get(ivKey(r.name));rows.push([r.name,r.attending?'Attending':'Declined',r.attending?+r.party:0,r.dietary||'',r.message||'',g?'Yes':'No',g?g.allowed:'',g?g.side:'',String(r.updated_at||r.created_at||'').slice(0,10)])});
+  s.pend.forEach(g=>rows.push([g.name,'No reply yet','','','','Yes',g.allowed,g.side||'','']));
+  const csv=rows.map(r=>r.map(v=>{const x=String(v==null?'':v);return'"'+(/^[=+\-@]/.test(x)?"'":'')+x.replace(/"/g,'""')+'"'}).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=(wed.invite.inv.slug||'guests')+'-rsvps.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function ivReady(D){const K=IVK[D.kind],d=D.data;const miss=[];if(K.big==='who'&&!String(d.hosts||'').trim())miss.push('names');if(K.big==='hon'&&!String(d.honoree||'').trim())miss.push(K.hon.split(' ·')[0].toLowerCase());if(K.big==='ttl'&&!String(d.title||'').trim())miss.push('the name of the celebration');if(!ivDate(d.date))miss.push('the date');if(!String(d.venue||d.address||'').trim())miss.push('the venue');return miss}
+async function ivSave(pub){
+  const D=ivDraft(),I=wed.invite.inv,p=pub==null?!!I.published:pub;
+  D.data.schedule=(D.data.schedule||[]).filter(x=>x&&(String(x.t||'').trim()||String(x.l||'').trim()));
+  D.data.photos=(D.data.photos||[]).map(ivSafe).filter(u=>/^https:/.test(u)).slice(0,8);
+  D.data.max_party=ivMax(D.data);
+  if(p){const m=ivReady(D);if(m.length){ui.ivTab='design';render();toast('Add '+(m.length>1?m.slice(0,-1).join(', ')+' and '+m[m.length-1]:m[0])+' before publishing.');return false}}
+  let r;try{r=await IVA.save(D,p)}catch(e){r={error:e}}
+  if(r.error){toast('Could not save: '+ivErr(r.error));render();return false}
+  ui.ivD=null;toast(pub===true?'Your invitation is live':pub===false?'Invitation unpublished':'Invitation saved');await ivReload();return true}
+async function ivUpload(input){
+  const fs=[...(input.files||[])],m=$('#ivphm'),D=ivDraft(),key=wed.invite.inv.upload_key;input.value='';
+  if(!fs.length)return;if(!key){toast('Run the invitations SQL in Supabase first, then refresh.');return}
+  let n=0;
+  for(const f of fs){if(D.data.photos.length>=8)break;if(m)m.textContent='Uploading '+(n+1)+' of '+fs.length+'…';
+    try{const blob=await shrink(f),path='invite/'+key+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
+      const{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});if(error)throw error;
+      D.data.photos.push(sb.storage.from('covers').getPublicUrl(path).data.publicUrl);n++}catch(e){toast('Upload failed: '+ivErr(e));break}}
+  if(n){D.dirty=true;render();toast(n+(n>1?' photos added':' photo added')+'. Tap Save to keep '+(n>1?'them':'it')+'.')}else if(m)m.textContent='';
+}
+const ivDirty=()=>{const D=ui.ivD;if(!D)return;D.dirty=true;const b=document.querySelector('[data-z="ivsave"]');if(b)b.textContent='Save changes'};
+document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset)return;
+  if(t.dataset.zf&&wed&&ivOn()){const D=ivDraft(),k=t.dataset.zf;D.data[k]=t.type==='checkbox'?t.checked:k==='max_party'?+t.value:t.value;ivDirty()}
+  else if(t.dataset.zsc!=null&&wed&&ivOn()){const x=ivDraft().data.schedule[+t.dataset.zsc];if(x){x[t.dataset.zk]=t.value;ivDirty()}}
+  else if(t.dataset.zq&&wed&&wed.invite){ui.ivQ=t.value;const l=$('#ivlist');if(l)l.innerHTML=ivRowsHtml(wed.invite,ui.ivF||'all',ui.ivQ)}
+  else if(t.dataset.zap&&apS){apS[t.dataset.zap]=t.value;apLive()}});
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return;
+  if(t.dataset.zf&&wed&&ivOn()&&(t.type==='checkbox'||t.tagName==='SELECT')){const D=ivDraft(),k=t.dataset.zf;D.data[k]=t.type==='checkbox'?t.checked:k==='max_party'?+t.value:t.value;ivDirty()}
+  else if(t.dataset.zup==='ivph')ivUpload(t);
+  else if(t.dataset.zup==='pkph')pkPhUp(t)});
+
+/* ===================== Add-on previews (packages page) ===================== */
+let apS=null,apT=null;
+const apType=a=>{const k=String(a.ic||a.id||'').toLowerCase(),n=String(a.n||'').toLowerCase();return k==='invite'||/invitation|rsvp/.test(n)?'invite':k==='album'||/album/.test(n)?'album':k==='board'||k==='signboard'||/sign(ing)? ?board/.test(n)?'board':k==='drone'||/drone|aerial/.test(n)?'drone':k==='usb'||/usb|box/.test(n)?'usb':k==='pre'||a.pre||/pre-?wedding|engagement shoot/.test(n)?'pre':'gen'};
+const APINC={invite:['A personalised invitation website for your guests','Your photos, wording and choice of style','Online RSVP with guest numbers and dietary needs','Private dashboard: replies, guest list and export','Your own link to share on WhatsApp, text and social'],
+album:['Hand-finished luxury album','Your favourite photographs, professionally designed','Choice of cover finish','Made to be held and passed down'],
+board:['Personalised with your names and date','Your choice of design','Displayed on the day for guests to sign','A keepsake to frame at home'],
+drone:['Aerial footage of your venue and celebration','Woven into your wedding film','Licensed pilot, subject to venue and flight permissions'],
+usb:['Personalised keepsake box','Engraved with your names and date','USB with your wedding film and photographs'],
+pre:['Pre-wedding photoshoot','20–50 professionally edited photographs','Cinematic pre-wedding highlight film'],gen:[]};
+function apPool(a){const s=new Set(),o=[],add=u=>{u=ivSafe(u);if(u&&!/^data:/.test(u)&&!s.has(u)){s.add(u);o.push(u)}};(a.ph||[]).forEach(add);add(a.img);return o}
+function apAll(a){const o=apPool(a),s=new Set(o),add=u=>{u=ivSafe(u);if(u&&!/^data:/.test(u)&&!s.has(u)){s.add(u);o.push(u)}};if(pkd){(pkd.addons||[]).forEach(x=>{(x.ph||[]).forEach(add);add(x.img)});add(pkd.hero);(pkd.wed||[]).forEach(k=>add(k.img));(pkd.ev||[]).forEach(k=>add(k.img));add(pkd.hr&&pkd.hr.img)}return o}
+const apPh=(P,i,sc)=>P.length?P[i%P.length]:ivScene(sc==null?i:sc);
+function adPrev(id){
+  const a=pkd&&pkd.addons.find(x=>x.id===id);if(!a)return;
+  apS={id,t:0,occ:'wedding',th:'ivory',pg:0,cv:0,ds:0,md:0,fn:0,op:false,f:'all',nm:'',dt:''};
+  ivG={slug:'demo',key:'',mine:null,ans:null,busy:false,demo:ivG.demo&&ivG.slug==='demo'?ivG.demo:[],o:null};
+  zlOpen(apHtml(a),'zap');apMount(a);
+}
+function apFoot(a){
+  const inc=colIncl(a),on=!inc&&col.add.includes(a.id),c=colCalc();
+  return`<div class="t"><span>${c.k?'Your collection total':EVM?'Choose your occasion and coverage to see your total':'Choose a package to see your total'}</span>${c.k&&!pkd.hide&&c.total!=null?`<b class="ctot">${gbp(c.total)}</b>`:''}</div>
+${inc?`<button class="ap-add on" disabled>Included in ${esc(col.pkg)}</button>`:on?`<button class="ap-add on" data-z="apadd" aria-pressed="true">✓ Added to your package</button><button class="ap-rm" data-z="aprm">Remove from package</button>`:`<button class="ap-add" data-z="apadd" aria-pressed="false">Add to package${pkd.hide||!a.p?'':' · '+esc(a.p)}</button>`}`}
+function apHtml(a){
+  const t=apType(a),inc=(a.f&&a.f.length?a.f:APINC[t]);
+  return`<div class="ap" role="dialog" aria-modal="true" aria-label="${esc(a.n)}"><button class="zl-x" data-z="zlx" aria-label="Close preview">×</button>
+<div class="ap-st" id="apst">${apStage(a)}</div>
+<div class="ap-pn"><div class="ap-sc"><div class="ap-k">Personalise your Zema experience</div><div class="ap-n">${esc(a.n)}</div><div class="ap-p">${esc(pkd.hide?'Price on request':a.p||'')}</div>${a.d?`<p class="ap-d">${esc(a.d)}</p>`:''}
+${inc.length?`<ul class="ap-l">${inc.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+${t==='invite'?'<button class="ap-demo" data-z="apfull">Open the sample invitation full screen</button>':''}
+<p class="meta" style="margin:22px 0 0;font-size:12px;color:#8E8E93">Previewing never adds anything. Only “Add to package” does.</p></div>
+<div class="ap-ft" id="apft">${apFoot(a)}</div></div></div>`}
+const apTabs=(L,cur,z)=>L.map((x,i)=>`<button class="${cur===i?'on':''}" data-z="${z||'apt'}" data-k="${i}">${esc(x)}</button>`).join('');
+const apSw=(L,cur,z)=>`<div class="swt">${L.map((c,i)=>`<button class="${cur===i?'on':''}" style="background:${c[1]}" data-z="${z}" data-k="${i}" aria-label="${esc(c[0])}" title="${esc(c[0])}"></button>`).join('')}</div>`;
+const APOCC=[['wedding','Wedding'],['birthday','Birthday'],['christening','Christening']];
+function apDemoInv(){
+  const s=apS,k=APOCC[s.occ==='birthday'?1:s.occ==='christening'?2:0][0];
+  const D={wedding:{hosts:'Amani & Daniel',date:'2027-05-22',time:'14:00',end:'23:00',venue:'The Orangery, Kensington',address:'Kensington Gardens, London W8 4PX',dress:'Black tie',message:'We would be honoured to have you with us as we begin our forever.',deadline:'2027-04-01',max_party:2,ask_diet:true,schedule:[{t:'14:00',l:'Ceremony'},{t:'15:30',l:'Drinks reception'},{t:'18:00',l:'Dinner and speeches'},{t:'21:00',l:'First dance'}]},
+  birthday:{honoree:'Hana',detail:'30',hosts:'Her family',date:'2027-03-13',time:'19:30',venue:'The Rooftop, Shoreditch',address:'1 Rivington Street, London EC2A 3AY',dress:'Glamorous · gold and black',message:'An evening of good food, music and the people we love.',deadline:'2027-02-20',max_party:2,ask_diet:true,schedule:[{t:'19:30',l:'Welcome drinks'},{t:'21:00',l:'Dinner'},{t:'22:30',l:'Dancing'}]},
+  christening:{honoree:'Noah',hosts:'Ruth & Michael',date:'2027-06-06',time:'11:00',venue:'St Mary’s Church',address:'Church Road, Stanmore HA7 4AQ',dress:'Smart attire',message:'Please join us as we give thanks and celebrate this blessing, followed by lunch at home.',deadline:'2027-05-15',max_party:4,ask_diet:true,schedule:[{t:'11:00',l:'Christening service'},{t:'13:00',l:'Family lunch'}]}}[k];
+  const a=pkd.addons.find(x=>x.id===s.id)||{},P=apAll(a);
+  return{kind:k,theme:s.th,data:{...D,photos:P.length?P.slice(0,4):[]},mode:'demo',scene:k==='birthday'?3:k==='christening'?2:0}}
+function apDemoX(){
+  const base=[{name:'Ruth Haile',attending:true,party:2,dietary:'Vegetarian',message:'We wouldn’t miss it for the world!'},{name:'Tom Smith',attending:true,party:1,dietary:'',message:''},{name:'Selam Bekele',attending:true,party:2,dietary:'Nut allergy',message:'So happy for you both.'},{name:'James Carter',attending:false,party:0,dietary:'',message:'Sorry to miss it, we’ll be abroad. Love to you both.'},{name:'Mekdes Alemu',attending:true,party:2,dietary:'Halal',message:''},{name:'Grace Okafor',attending:true,party:1,dietary:'',message:'Can’t wait!'},{name:'Daniel Lee',attending:false,party:0,dietary:'',message:''}].map((r,i)=>({...r,id:'s'+i,source:'guest',created_at:new Date(Date.now()-(i+1)*864e5*2).toISOString()}));
+  const guests=['Ruth Haile','Tom Smith','Selam Bekele','James Carter','Mekdes Alemu','Grace Okafor','Daniel Lee','Aster Desta','Paul Martin','Hanna Girma','Leo Brown'].map((n,i)=>({id:'g'+i,name:n,allowed:i%3?1:2}));
+  return{rsvps:[...ivG.demo,...base.filter(b=>!ivG.demo.some(x=>ivKey(x.name)===ivKey(b.name)))],guests}}
+function apDashRefresh(){const p=$('#apdash');if(p)p.innerHTML=apDashInner()}
+const apDashInner=()=>`<div class="zsm">Sample couple’s dashboard${ivG.demo.length?' · includes your test reply':''}</div><h5>Amani &amp; Daniel · Replies</h5>${ivDash(apDemoX(),1)}`;
+function apStage(a){
+  const t=apType(a),s=apS,own=apPool(a).length>0,P=apAll(a),lab=`<div class="ap-sm">${own?'From our portfolio':'Sample preview'}</div>`;
+  if(t==='invite'){
+    const top=`<div class="ap-tb">${apTabs(['Invitation','Guest RSVP','Couple’s dashboard'],s.t)}<span class="sp"></span>${s.t<2?apSw(IVTH.map(x=>[x[1],x[2]]),IVTH.findIndex(x=>x[0]===s.th),'apth'):''}</div>`;
+    if(s.t===2)return top+`<div class="ap-cv"><div class="pnl" id="apdash">${apDashInner()}</div></div><div class="ap-sm">Sample data · not real guests</div>`;
+    return top+`<div class="ap-tb" style="padding-top:8px">${APOCC.map(([k,n])=>`<button class="${s.occ===k?'on':''}" data-z="apocc" data-k="${k}" style="font-size:11px;padding:6px 12px">${n}</button>`).join('')}</div><div class="ap-cv"><div class="zph"><div class="ph-in" id="apph">${ivRender(apDemoInv())}</div></div></div><div class="ap-sm">Sample invitation · tap to explore</div>`}
+  if(t==='album'){
+    const CV=[['Ivory linen','#E9E1D3','#7A6240'],['Black leather','#1E1C1A','#C9A86A'],['Sage','#A9B2A0','#3B4237'],['Blush','#E7D3CC','#7A5048']],c=CV[s.cv];
+    const top=`<div class="ap-tb">${apTabs(['Cover','Inside pages'],s.t)}<span class="sp"></span>${s.t===0?apSw(CV,s.cv,'apcv'):''}</div>`;
+    if(s.t===0)return top+`<div class="ap-cv"><div class="alb-cov" style="--cv:${c[1]};--ct:${c[2]}"><b>A &amp; D</b><small>22 · 05 · 2027</small></div></div><div class="ap-sm">${esc(c[0])} cover · sample</div>`;
+    const sp=apSpreads(P);const i=Math.min(s.pg,sp.length-1);
+    return top+`<div class="ap-cv"><div class="alb" id="apalb"><div class="alb-sp">${sp[i]}</div><div class="alb-nav" style="bottom:-58px"><button class="cnb" data-z="appv" aria-label="Previous spread">‹</button><div class="dots">${sp.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div><button class="cnb" data-z="apnx" aria-label="Next spread">›</button></div></div></div>${lab}`}
+  if(t==='board'){
+    const nm=s.nm||'Amani & Daniel',dt=s.dt||'22 May 2027',DS=['Ivory ink','Photo canvas','Clear acrylic'];
+    const st=s.ds===0?'background:#F7F2E8;color:#2A251E':s.ds===1?`${ivBg(apPh(P,0,0))};background-size:cover;background-position:center;color:#fff`:`background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.06));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.45)`;
+    const deco=s.ds===0?'<svg class="bs" viewBox="0 0 400 500" preserveAspectRatio="none"><rect x="14" y="14" width="372" height="472" fill="none" stroke="#A8864F" stroke-width="1.2"/><rect x="22" y="22" width="356" height="456" fill="none" stroke="#A8864F" stroke-width=".5"/></svg>':s.ds===1?'<div class="bs" style="background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55))"></div>':'';
+    return`<div class="ap-tb">${apTabs(DS,s.ds,'apds')}</div><div class="ap-cv" style="flex-direction:column">${s.ds===2?`<div style="position:absolute;inset:0;${ivBg(apPh(P,1,2))};background-size:cover;background-position:center;filter:blur(2px) brightness(.55)"></div>`:''}<div class="brd"><div class="brd-b" style="${st}">${deco}<div style="position:relative;z-index:1${s.ds===1?';margin-top:auto':''}"><div class="bk" style="color:${s.ds===0?'#A8864F':'inherit'}">Welcome to the wedding of</div><div class="bn" id="apbn">${esc(nm)}</div><div class="bk" id="apbd">${esc(dt)}</div><div style="font:italic 15px var(--serif);margin-top:16px;opacity:.8">Please leave us a message</div></div></div>
+<svg class="brd-legs" viewBox="0 0 280 90"><path d="M80 0 L30 90 M200 0 L250 90 M140 0 L140 70" stroke="#6B5236" stroke-width="7" stroke-linecap="round"/></svg></div>
+<div class="brd-ip"><input data-zap="nm" placeholder="Try your names" maxlength="40" value="${esc(s.nm)}" aria-label="Your names"><input data-zap="dt" placeholder="Your date" maxlength="24" value="${esc(s.dt)}" aria-label="Your date"></div></div>${lab}`}
+  if(t==='drone'){
+    const v=apVid(a.vid);
+    if(v)return`<div class="drn">${v}</div><div class="ap-sm">From our portfolio</div>`;
+    const M=['Reveal','Top-down','Orbit'],img=apPool(a)[0]||ivScene(4);
+    return`<div class="drn m${s.md}"><div class="dsc" style="${ivBg(img)}"></div><div class="hud"><i class="c c1"></i><i class="c c2"></i><i class="c c3"></i><i class="c c4"></i><div class="rec" id="aprec">REC 00:00</div><div class="alt">ALT ${[120,90,60][s.md]}M<br>4K · 60FPS<br>${['DESCEND','HOVER','ORBIT'][s.md]}</div><i class="hx"></i></div></div>
+<div class="ap-tb">${apTabs(M,s.md,'apmd')}</div><div class="ap-sm" style="z-index:3">${apPool(a).length?'From our portfolio':'Sample aerial · your venue here'}</div>`}
+  if(t==='usb'){
+    const FN=[['Walnut','#5B3A24','#3A2416','#E8D3AE'],['Ivory linen','#E9E1D3','#CFC3AE','#7A6240'],['Black velvet','#1A1918','#2B2926','#C9A86A']],f=FN[s.fn];
+    return`<div class="ap-tb"><button class="${s.op?'':'on'}" data-z="aplid" data-k="0">Closed</button><button class="${s.op?'on':''}" data-z="aplid" data-k="1">Open</button><span class="sp"></span>${apSw(FN,s.fn,'apfn')}</div>
+<div class="ap-cv" style="flex-direction:column"><div class="usb ${s.op?'op':''}" style="--fb:${f[1]};--ft:${f[2]};--fx:${f[3]}"><div class="usb-b"><div class="usb-tray"><div class="usb-key"></div></div></div><div class="usb-l" data-z="aplid" data-k="${s.op?0:1}"><b id="apun">${esc(s.nm||'Amani & Daniel')}</b><small id="apud">${esc(s.dt||'22 · 05 · 2027')}</small></div></div>
+<div class="brd-ip" style="margin-top:34px"><input data-zap="nm" placeholder="Engrave your names" maxlength="32" value="${esc(s.nm)}" aria-label="Names to engrave"><input data-zap="dt" placeholder="Your date" maxlength="20" value="${esc(s.dt)}" aria-label="Date to engrave"></div></div><div class="ap-sm">${esc(f[0])} finish · sample</div>`}
+  if(t==='pre'){
+    const S=[['Golden hour','Warm, soft light at the end of the day'],['City editorial','Bold, modern frames in the city'],['Timeless','Classic black and white']],k=s.t;
+    return`<div class="ap-tb">${apTabs(S.map(x=>x[0]),k)}</div><div class="pws s${k}">${[0,1,2].map(i=>`<div style="${ivBg(apPh(P,i+k,[0,1,2][(i+k)%3]))};animation-delay:${i*.12}s"></div>`).join('')}</div><div class="pwc">${esc(S[k][1])}</div>${lab}`}
+  const P2=P.length?P:[ivScene(0),ivScene(3),ivScene(2)];
+  return`<div class="gnc" style="${ivBg(P2[s.pg%P2.length])}"></div>${P2.length>1?`<div class="alb-nav" style="bottom:20px"><button class="cnb" data-z="appv" aria-label="Previous">‹</button><div class="dots">${P2.map((_,j)=>`<i class="${j===s.pg%P2.length?'on':''}"></i>`).join('')}</div><button class="cnb" data-z="apnx" aria-label="Next">›</button></div>`:''}${lab}`}
+function apSpreads(P){
+  const im=(i,sc,x)=>`<div class="alb-im" style="${ivBg(apPh(P,i,sc))};${x||''}"></div>`,cap=(b,s)=>`<div class="alb-cap"><b>${b}</b><small>${s}</small></div>`;
+  return[`<div class="alb-pg">${cap('Amani<br>&amp; Daniel','22 May 2027 · London')}</div><div class="alb-pg" style="padding:0">${im(0,0)}</div>`,
+  `<div class="alb-pg" style="padding:0">${im(1,2)}</div><div class="alb-pg"><div style="display:grid;grid-template-rows:1.4fr 1fr;gap:6%;height:100%">${im(2,3)}${cap('The vows','Two-page layout')}</div></div>`,
+  `<div class="alb-pg"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6%;height:100%">${im(3,1)}${im(4,0)}</div></div><div class="alb-pg"><div style="display:grid;grid-template-rows:1fr 1fr;gap:6%;height:100%">${im(5,3)}${im(6,2)}</div></div>`,
+  `<div class="alb-pg" style="padding:0;grid-column:span 2;box-shadow:none">${im(7,0,'background-position:center 40%')}</div>`,
+  `<div class="alb-pg">${cap('With love','The end, and the beginning')}</div><div class="alb-pg" style="padding:0">${im(8,1)}</div>`]}
+function apVid(u){u=String(u||'').trim();let m;
+  if((m=u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/)))return`<iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}&controls=0&playsinline=1" allow="autoplay; encrypted-media" title="Aerial film"></iframe>`;
+  if((m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/)))return`<iframe src="https://player.vimeo.com/video/${m[1]}?background=1&autoplay=1&loop=1&muted=1" allow="autoplay" title="Aerial film"></iframe>`;
+  if(/^https:\/\/\S+\.(mp4|webm|mov)(\?\S*)?$/i.test(u))return`<video src="${esc(u)}" autoplay muted loop playsinline></video>`;
+  return''}
+function apMount(a){
+  clearInterval(apT);apT=null;const t=apType(a);
+  if(t==='invite'&&apS.t<2){const ph=$('#apph');if(ph){ph.style.setProperty('--phh',ph.clientHeight+'px');ivG.o=apDemoInv();ivMount(ph);if(apS.t===1){ivOpenSeal(ph.querySelector('.zi'));setTimeout(()=>{const r=ph.querySelector('#zi-rsvp');if(r)ph.scrollTo({top:r.offsetTop-10,behavior:'smooth'})},450)}}}
+  if(t==='drone'&&!apVid(a.vid)){const st=Date.now();apT=setInterval(()=>{const r=$('#aprec');if(!r){clearInterval(apT);return}const s=Math.floor((Date.now()-st)/1000);r.textContent='REC '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},1000)}
+  if(t==='usb'&&!apS.op&&!apS.seen){apS.seen=1;setTimeout(()=>{if(apS&&apS.id===a.id&&!apS.op){apS.op=true;const u=document.querySelector('.usb');if(u)u.classList.add('op');document.querySelectorAll('[data-z="aplid"]').forEach(b=>{if(b.closest('.ap-tb'))b.classList.toggle('on',b.dataset.k==='1');else b.dataset.k='0'})}},900)}
+  if(t==='gen'&&apAll(a).length>1)apT=setInterval(()=>{if(!apS){clearInterval(apT);return}apS.pg++;apRe(a)},4000);
+  const st=$('#apst');if(st&&(t==='album'||t==='gen')){let x0=null;st.ontouchstart=e=>{x0=e.touches[0].clientX};st.ontouchend=e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>40)apStep(a,dx<0?1:-1)}}
+}
+function apRe(a){const st=$('#apst');if(!st)return;st.innerHTML=apStage(a);if(apType(a)!=='gen')apMount(a)}
+function apStep(a,d){const t=apType(a);if(t==='album'){if(apS.t!==1)return;const n=apSpreads(apAll(a)).length;const sp=document.querySelector('.alb-sp');apS.pg=(apS.pg+d+n)%n;if(sp){sp.classList.add('out');setTimeout(()=>apRe(a),260)}else apRe(a)}else{apS.pg=Math.max(0,apS.pg+d);clearInterval(apT);apT=null;apRe(a)}}
+function apLive(){const s=apS;if(!s)return;const n=s.nm||'Amani & Daniel';['#apbn','#apun'].forEach(q=>{const e=$(q);if(e)e.textContent=n});const e1=$('#apbd');if(e1)e1.textContent=s.dt||'22 May 2027';const e2=$('#apud');if(e2)e2.textContent=s.dt||'22 · 05 · 2027'}
+function apFootRe(a){const f=$('#apft');if(f)f.innerHTML=apFoot(a);document.querySelectorAll('#apft .ctot').forEach(t=>{t.classList.remove('fl');void t.offsetWidth;t.classList.add('fl')})}
+
+/* Edit packages: preview photos and video for each extra */
+const ivPkFields=(a,i)=>`<div class="f" style="margin-bottom:0"><span class="l">Preview photos · one link per line. Your own work shows in this extra’s preview on the packages page</span><textarea id="pkph-a${i}" data-f="addons.${i}.ph" data-list="1" rows="3">${esc((a.ph||[]).join('\n'))}</textarea></div><div class="up"><label class="btn">Upload preview photos<input type="file" accept="image/*" multiple data-zup="pkph" data-t="pkph-a${i}" style="display:none"></label><span class="upm" id="upm-pkph-a${i}"></span></div><div style="height:16px"></div><div class="f"><span class="l">Preview video · optional (YouTube, Vimeo or an .mp4 link)</span><input data-f="addons.${i}.vid" value="${esc(a.vid||'')}" placeholder="https://"></div>`;
+async function pkPhUp(input){
+  const fs=[...(input.files||[])],ta=$('#'+input.dataset.t),m=$('#upm-'+input.dataset.t);input.value='';if(!fs.length||!ta)return;let n=0;
+  for(const f of fs){if(m)m.textContent='Uploading '+(n+1)+' of '+fs.length+'…';
+    try{const blob=await shrink(f),path='addons/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg';const{error}=await sb.storage.from('covers').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});if(error)throw error;
+      ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+sb.storage.from('covers').getPublicUrl(path).data.publicUrl;n++}catch(e){if(m)m.textContent='Upload failed: '+String(e&&e.message||e);return}}
+  if(m)m.textContent=n+(n>1?' photos':' photo')+' uploaded. Tap Save changes to keep them.'}
+
+/* ---------------- clicks ---------------- */
+document.addEventListener('click',async e=>{
+  const t=e.target&&e.target.closest&&e.target.closest('[data-z]');if(!t)return;
+  const z=t.dataset.z,k=t.dataset.k;
+  /* the invitation (live, demo, preview) */
+  if(z==='ivopen'){ivOpenSeal(t.closest('.zi'));return}
+  if(z==='ivyn'){const f=t.closest('.zi-form');ivG.ans=t.dataset.v==='1';f.querySelectorAll('[data-z="ivyn"]').forEach(b=>{b.classList.toggle('on',b===t);b.setAttribute('aria-pressed',b===t)});const at=f.querySelector('.zi-att');if(at)at.hidden=!ivG.ans;f.querySelector('.zi-bad').textContent='';return}
+  if(z==='ivsend'){ivSend(t);return}
+  if(z==='ivchange'){const box=t.closest('.zi-rf');ivG.ans=ivG.mine?ivG.mine.attending:null;box.innerHTML=ivForm(ivG.o,ivG.mine);return}
+  if(z==='ivkeycopy'){const u=ivLink(ivG.slug)+'&r='+ivG.key;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>{t.textContent='Link copied · keep it private'},()=>prompt('Your private reply link:',u));return}
+  if(z==='zlx'){zlClose();return}
+  /* packages page previews */
+  if(apS&&pkd){const a=pkd.addons.find(x=>x.id===apS.id);if(a){
+    if(z==='apadd'){if(!colIncl(a)&&!col.add.includes(a.id))colTog(a.id);apFootRe(a);return}
+    if(z==='aprm'){if(col.add.includes(a.id))colTog(a.id);apFootRe(a);return}
+    if(z==='apt'){apS.t=+k;apS.pg=0;apRe(a);return}
+    if(z==='apth'){apS.th=IVTH[+k][0];apRe(a);return}
+    if(z==='apocc'){apS.occ=k;apRe(a);return}
+    if(z==='apcv'){apS.cv=+k;apRe(a);return}
+    if(z==='apds'){apS.ds=+k;apRe(a);return}
+    if(z==='apmd'){apS.md=+k;apRe(a);return}
+    if(z==='apfn'){apS.fn=+k;apRe(a);return}
+    if(z==='aplid'){apS.op=k==='1';apRe(a);return}
+    if(z==='apnx'||z==='appv'){apStep(a,z==='apnx'?1:-1);return}
+    if(z==='apf'){apS.f=k;apDashRefresh();return}
+    if(z==='apfull'){const o=apDemoInv();o.flag=1;ivG.o=o;ivFull(o,1);return}
+  }}
+  /* the Invitation tab */
+  if(!wed)return;
+  if(z==='ivon'&&!TOKEN){t.disabled=true;try{await ivEnable(wed.id,{name:wed.couple,ty:etype(wed),date:wed.wedding_date,address:((wed.places||[])[0]||{}).address||''});ui.ivD=null;ui.ivTab='design';await ivReload();toast('Invitations are on. The client can design theirs on their link.')}catch(er){t.disabled=false;toast('Could not switch on: '+ivErr(er))}return}
+  if(!ivOn())return;
+  const I=wed.invite.inv;
+  if(z==='ivoff'&&!TOKEN){ask('Switch off invitations for this event? The guest link stops working and the client no longer sees the tab. Replies and the guest list are kept.',()=>ivDo(sb.from('event_invites').update({enabled:false,published:false}).eq('wedding_id',wed.id),'Invitations switched off'));return}
+  if(z==='ivtab'){ui.ivTab=k;render();return}
+  if(z==='ivkind'){const D=ivDraft();D.kind=k;D.dirty=true;render();return}
+  if(z==='ivtheme'){const D=ivDraft();D.theme=k;D.dirty=true;render();return}
+  if(z==='ivsave'){t.disabled=true;await ivSave(null);return}
+  if(z==='ivpub'){t.disabled=true;if(!await ivSave(true))t.disabled=false;return}
+  if(z==='ivunpub'){ask('Unpublish? Guests opening the link will see that the invitation isn’t available until you publish again.',()=>ivSave(false));return}
+  if(z==='ivprev'){const D=ivDraft();ivG={slug:I.slug,key:'',mine:null,ans:null,busy:false,demo:[],o:{kind:D.kind,theme:D.theme,data:D.data,mode:'preview'}};ivFull(ivG.o);return}
+  if(z==='ivcopy'){const u=ivLink(I.slug);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Invitation link copied'),()=>prompt('Copy this link:',u));return}
+  if(z==='ivshare'){const h=ivHead(I.kind,I.data||{}),d=ivDate((I.data||{}).date);window.open('https://wa.me/?text='+encodeURIComponent(`You’re invited! ${h.kick}${h.short?' · '+h.short:''}${d?' · '+ivShort(d):''}\n\nPlease open your invitation and let us know if you can come:\n${ivLink(I.slug)}`),'_blank','noopener');return}
+  if(z==='ivphx'){const D=ivDraft();D.data.photos.splice(+t.dataset.i,1);D.dirty=true;render();return}
+  if(z==='ivphc'){const D=ivDraft(),i=+t.dataset.i,[p]=D.data.photos.splice(i,1);D.data.photos.unshift(p);D.dirty=true;render();return}
+  if(z==='ivsca'){const D=ivDraft();D.data.schedule.push({t:'',l:''});D.dirty=true;render();const n=document.querySelectorAll('[data-zk="l"]');if(n.length)n[n.length-1].focus();return}
+  if(z==='ivscx'){const D=ivDraft();D.data.schedule.splice(+t.dataset.i,1);D.dirty=true;render();return}
+  if(z==='ivf'){ui.ivF=k;render();return}
+  if(z==='ivcsv'){ivCsv();return}
+  if(z==='ivradd'){ivReplyModal();return}
+  if(z==='ivred'){const r=wed.invite.rsvps.find(x=>String(x.id)===t.dataset.id);if(r)ivReplyModal(r);return}
+  if(z==='ivrdel'){const r=wed.invite.rsvps.find(x=>String(x.id)===t.dataset.id);if(r)ask(`Remove the reply from “${r.name}”?`,()=>ivDo(IVA.rDel(r.id),'Reply removed'));return}
+  if(z==='ivgadd'){const n=$('#ivgn'),nm=n.value.trim().replace(/\s+/g,' ');if(!nm){n.classList.add('err');n.focus();return}t.disabled=true;const ok=await ivDo(IVA.gSave({name:nm,allowed:+$('#ivga').value||1,side:$('#ivgs').value.trim()}),'Added '+nm);t.disabled=false;if(ok){const x=$('#ivgn');if(x)x.focus()}return}
+  if(z==='ivgbulk'){const L=($('#ivgp').value||'').split('\n').map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*?)[,;\t]\s*(\d{1,2})\s*$/);return{name:(m?m[1]:x).trim().replace(/\s+/g,' ').slice(0,80),allowed:m?Math.max(1,Math.min(20,+m[2])):1}}).filter(x=>x.name);if(!L.length)return;t.disabled=true;await ivDo(IVA.gBulk(L.slice(0,500)),L.length+' names added (any already on the list were skipped)');return}
+  if(z==='ivged'){const g=wed.invite.guests.find(x=>String(x.id)===t.dataset.id);if(g)ivGuestModal(g);return}
+  if(z==='ivgdel'){const g=wed.invite.guests.find(x=>String(x.id)===t.dataset.id);if(g)ask(`Remove ${g.name} from the guest list?`,()=>ivDo(IVA.gDel(g.id),'Removed'));return}
+});
+
 init();
 </script></body></html>
