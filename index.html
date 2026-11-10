@@ -1161,6 +1161,8 @@ html.zi-lock,html.zi-lock body{overflow:hidden}
 @media (min-width:560px){.zp-st{grid-template-columns:repeat(3,1fr)}}
 .zp-st>div{background:var(--s);border:1px solid var(--line);border-radius:14px;padding:12px}
 .zp-st b{display:block;font:300 30px/1 var(--serif)}.zp-st span{display:block;font:500 11px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--mu);margin-top:6px}.zp-st small{font-size:12px;color:var(--mu)}
+@media(max-width:699px){.ca.cpvc{flex-direction:column}.ca.cpvc .cai{flex:none;width:100%;aspect-ratio:16/9;min-height:0}.ca.cpvc .cai img{width:100%;height:100%;object-fit:cover}
+.pnl .ivg{grid-template-columns:repeat(3,1fr)}.pnl .ivg>div:nth-child(5){grid-column:span 2}}
 </style>
 <script>try{var zt=localStorage.getItem("zemaTheme");if(zt==="light"||zt==="dark")document.documentElement.dataset.theme=zt}catch(_){}</script></head>
 <body>
@@ -1916,7 +1918,7 @@ const colAdFoot=(a,inc,on)=>colPv(a)?`<span class="cap">${inc?'Included in '+esc
   :`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="ad" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-pressed="${on}" aria-label="${inc?'Included':on?'Remove':'Add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'+ Add'}</button>`;
 function colAds(){return colAdList().map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
   const pv=colPv(a);
-  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="${pv?'adv':'ad'}" data-k="${esc(a.id)}" ${pv?`role="button" tabindex="0" aria-label="Preview ${esc(a.n)}"`:''}>
+  return`<article class="ca ${pv?'cpvc':''} ${on?'on':''} ${inc?'inc':''}" data-c="${pv?'adv':'ad'}" data-k="${esc(a.id)}" ${pv?`role="button" tabindex="0" aria-label="Preview ${esc(a.n)}"`:''}>
 <div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}${pv?'<span class="cpv">Preview</span>':''}</div>
 <div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
 <div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
