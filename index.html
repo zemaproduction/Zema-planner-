@@ -1626,11 +1626,12 @@ const demoRows=wid=>DEMO.map((d,i)=>({wedding_id:wid,category:d[0],name:d[1],peo
 const CONTACT={tel:'+447449727801',wa:'https://wa.me/447449727801',ig:'https://www.instagram.com/zemaproduction_'};
 /* Wedding packages. star = the flagship collection, pre = includes the pre-wedding experience (so that extra is free) */
 const WPK=[
-{n:'Platinum',p:'£4,000',star:true,pre:true,tag:'The flagship collection',img:'',d:'Our most complete wedding experience, combining full-day photography and filmmaking with a personalised pre-wedding shoot and cinematic film.',f:[
+{n:'Platinum',p:'£4,000',star:true,pre:true,inc:['invite'],tag:'The flagship collection',img:'',d:'Our most complete wedding experience, combining full-day photography and filmmaking with a personalised pre-wedding shoot and cinematic film.',f:[
 'Up to 15 hours of wedding-day coverage',
 'One professional photographer',
 'Two professional videographers',
 'Pre-wedding photoshoot',
+'Digital Invitations & RSVP',
 '20–50 professionally edited pre-wedding photographs',
 'Cinematic pre-wedding highlight film',
 'Cinematic wedding highlight film',
@@ -1781,7 +1782,7 @@ async function acceptBk(id){
     const pkI=pk&&pk.wed.find(x=>x.n===pn),preA=pk&&pk.addons.find(x=>x.pre);
     if(ty==='Wedding'&&((pkI&&pkI.pre)||(preA&&ids.includes(preA.id))))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
     /* the Digital Invitations & RSVP extra switches the invitation on for the couple's link */
-    if(ids.includes('invite'))await ivEnable(data.id,{name:b.name,ty,date:b.event_date,address:b.location||''}).catch(()=>{});
+    if(ids.includes('invite')||(ty==='Wedding'&&pkI&&Array.isArray(pkI.inc)&&pkI.inc.includes('invite')))await ivEnable(data.id,{name:b.name,ty,date:b.event_date,address:b.location||''}).catch(()=>{});
   }
   const locs=[b.location,b.location2,b.location3].filter(Boolean);
   if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
@@ -1807,7 +1808,7 @@ function pkNorm(d){
   const o=JSON.parse(JSON.stringify({...PKDEF,...(d&&typeof d==='object'?d:{}),...(old?{wed:WPK,addons:ADDONS}:{})}));
   if(!Array.isArray(o.wed))o.wed=[];if(!Array.isArray(o.ev))o.ev=[];if(!Array.isArray(o.terms))o.terms=[];if(!Array.isArray(o.addons))o.addons=[];
   if(!o.hr||typeof o.hr!=='object')o.hr={p:'',d:''};
-  o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
+  o.wed.forEach(k=>{if(!Array.isArray(k.f))k.f=[];k.inc=Array.isArray(k.inc)?k.inc.map(String):[];k.pre=!!k.pre;k.star=!!k.star;k.img=k.img||'';k.tag=k.tag||''});
   o.hr.img=o.hr.img||'';o.ev.forEach(k=>{k.img=k.img||'';k.h=Number(k.h)||Number((String(k.d||'').match(/(\d+(?:\.\d+)?)\s*hours?/i)||[])[1])||null;k.inc=Array.isArray(k.inc)?k.inc.map(String):(/album/i.test(String(k.d||''))?['album']:[])});
   o.addons.forEach((a,i)=>{if(!a.id)a.id='x'+i;a.id=String(a.id);if(!Array.isArray(a.f))a.f=[];a.pre=!!a.pre;a.img=a.img||'';a.ic=a.ic||'';a.ph=Array.isArray(a.ph)?a.ph.map(String).filter(Boolean):[];a.vid=String(a.vid||'')});
   if(!o.brand||typeof o.brand!=='object'||Array.isArray(o.brand))o.brand={};['photos','films'].forEach(k=>{if(!Array.isArray(o.brand[k]))o.brand[k]=[]});
@@ -1870,7 +1871,7 @@ const colPk=()=>{
     if(col.pkg==='__hr'){const r=HRK.find(x=>x[0]===col.hk),rt=colRate(col.hk);return r&&rt!=null?{hr:1,n:'By the hour · '+r[1]+' · '+col.hh+' hours',kind:r[1],rate:rt,inc:[]}:null}
     return pkd.ev.find(k=>k.n&&k.n===col.pkg)||null}
   return pkd.wed.find(k=>k.n&&k.n===col.pkg)||null};
-const colIncl=a=>{const k=colPk();if(!a||!k)return false;return EVM?(Array.isArray(k.inc)&&k.inc.includes(a.id)):!!(a.pre&&k.pre)};
+const colIncl=a=>{const k=colPk();if(!a||!k)return false;return EVM?(Array.isArray(k.inc)&&k.inc.includes(a.id)):!!(a.pre&&k.pre)||(!a.pre&&Array.isArray(k.inc)&&k.inc.includes(a.id))};
 const colAdList=()=>pkd?pkd.addons.filter(a=>a.n&&!(EVM&&a.pre)):[];
 /* drop anything that is no longer on the price list, and extras the chosen package already includes */
 function colCheck(){
@@ -2085,7 +2086,7 @@ ${pkErr?'<p class="intro" style="margin-top:16px">Saving isn’t set up yet. Run
 <h2>Wedding packages</h2>
 ${TA('Note above the wedding packages','wedNote',d.wedNote,3)}
 ${IM('Wedding section photo · optional, shown above the packages','hero',d.hero,'pkimg-hero')}
-${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Wedding package ${i+1}</div>${F('Name','wed.'+i+'.n',k.n)}${F('Price','wed.'+i+'.p',k.p,'£0,000')}${TA('Short description','wed.'+i+'.d',k.d,3)}${TA('What’s included · one item per line','wed.'+i+'.f',k.f,10,1)}${IM('Photo · optional','wed.'+i+'.img',k.img,'pkimg-w'+i)}${CB('Includes the pre-wedding experience (that extra shows as included, at no charge)','wed.'+i+'.pre',k.pre)}${CB('Flagship collection (gold edge and label)','wed.'+i+'.star',k.star)}${k.star?F('Flagship label','wed.'+i+'.tag',k.tag,'The flagship collection'):''}${acts('wed',i)}</section>`).join('')}
+${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Wedding package ${i+1}</div>${F('Name','wed.'+i+'.n',k.n)}${F('Price','wed.'+i+'.p',k.p,'£0,000')}${TA('Short description','wed.'+i+'.d',k.d,3)}${TA('What’s included · one item per line','wed.'+i+'.f',k.f,10,1)}${IM('Photo · optional','wed.'+i+'.img',k.img,'pkimg-w'+i)}${CB('Includes the pre-wedding experience (that extra shows as included, at no charge)','wed.'+i+'.pre',k.pre)}${d.addons.filter(a=>a.n&&!a.pre).length?`<div class="lbl" style="margin:2px 0 10px">Extras included at no charge</div>${d.addons.filter(a=>a.n&&!a.pre).map(a=>`<label class="chk" style="margin:0 0 10px"><input type="checkbox" data-winc="${i}" value="${esc(a.id)}" ${(k.inc||[]).includes(a.id)?'checked':''}> ${esc(a.n)}</label>`).join('')}`:''}${CB('Flagship collection (gold edge and label)','wed.'+i+'.star',k.star)}${k.star?F('Flagship label','wed.'+i+'.tag',k.tag,'The flagship collection'):''}${acts('wed',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="wed">+ Add wedding package</button></div>
 <h2>Wedding extras</h2>
 <p class="intro">Shown as “Personalise Your Zema Experience”. Couples add them to any wedding package and the total updates as they go. Prices here are the ones checked when a booking comes in.</p>
@@ -2107,6 +2108,8 @@ ${TA('One paragraph per line','terms',d.terms,16,1)}
 function collectPk(){
   const ib={};document.querySelectorAll('[data-inc]').forEach(el=>{(ib[el.dataset.inc]=ib[el.dataset.inc]||[]);if(el.checked)ib[el.dataset.inc].push(el.value)});
   Object.keys(ib).forEach(i=>{if(pk&&pk.ev[+i])pk.ev[+i].inc=ib[i]});
+  const wb={};document.querySelectorAll('[data-winc]').forEach(el=>{(wb[el.dataset.winc]=wb[el.dataset.winc]||[]);if(el.checked)wb[el.dataset.winc].push(el.value)});
+  Object.keys(wb).forEach(i=>{if(pk&&pk.wed[+i])pk.wed[+i].inc=wb[i]});
   document.querySelectorAll('[data-f]').forEach(el=>{
     const path=el.dataset.f.split('.');let o=pk;
     for(let i=0;i<path.length-1;i++){o=o&&o[path[i]]}
