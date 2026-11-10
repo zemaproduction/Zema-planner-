@@ -1910,10 +1910,14 @@ ${k.d?`<p class="cpd">${esc(k.d)}</p>`:''}
 ${F.length?`<ul class="cpl">${F.slice(0,lim).map(colLi).join('')}</ul>`:''}
 ${F.length>lim?`<details class="cpm"><summary>All ${F.length} inclusions</summary><ul class="cpl">${F.slice(lim).map(colLi).join('')}</ul></details>`:''}
 <div class="cpf"><div class="cps">${colSel(k.n,on)}</div></div></div></article>`}).join('')}
-const colAdFoot=(a,inc,on)=>`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="adv" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-label="${inc?'Included':on?'Added · preview':'Preview and add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'Preview & add'}</button>`;
+/* only the invitation extra opens a preview; the other extras add straight from the card */
+const colPv=a=>apType(a)==='invite';
+const colAdFoot=(a,inc,on)=>colPv(a)?`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="adv" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-label="${inc?'Included':on?'Added · preview':'Preview and add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'Preview & add'}</button>`
+  :`<span class="cap">${inc?'Included in '+esc(col.pkg):esc(pkd.hide?'':a.p)}</span><button type="button" class="cbt" data-c="ad" data-k="${esc(a.id)}" ${inc?'disabled':''} aria-pressed="${on}" aria-label="${inc?'Included':on?'Remove':'Add'} ${esc(a.n)}">${inc?'Included':on?'✓ Added':'+ Add'}</button>`;
 function colAds(){return colAdList().map(a=>{const inc=colIncl(a),on=!inc&&col.add.includes(a.id);
-  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="adv" data-k="${esc(a.id)}" role="button" tabindex="0" aria-label="Preview ${esc(a.n)}">
-<div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}<span class="cpv">Preview</span></div>
+  const pv=colPv(a);
+  return`<article class="ca ${on?'on':''} ${inc?'inc':''}" data-c="${pv?'adv':'ad'}" data-k="${esc(a.id)}" ${pv?`role="button" tabindex="0" aria-label="Preview ${esc(a.n)}"`:''}>
+<div class="cai">${a.img?`<img src="${esc(a.img)}" alt="" loading="lazy">`:colIcon(a.ic||(a.pre?'pre':''))}${pv?'<span class="cpv">Preview</span>':''}</div>
 <div class="cab"><div class="can">${esc(a.n)}</div>${a.d?`<p class="cad">${esc(a.d)}</p>`:''}${a.f.length?`<ul class="cpl">${a.f.map(colLi).join('')}</ul>`:''}
 <div class="caf">${colAdFoot(a,inc,on)}</div></div></article>`}).join('')}
 function colSum(inBar){
@@ -2084,7 +2088,7 @@ ${d.wed.map((k,i)=>`<section class="card pk"><div class="lbl" style="margin-bott
 <h2>Wedding extras</h2>
 <p class="intro">Shown as “Personalise Your Zema Experience”. Couples add them to any wedding package and the total updates as they go. Prices here are the ones checked when a booking comes in.</p>
 ${TA('Introduction','adIntro',d.adIntro,2)}
-${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Extra ${i+1}</div>${F('Name','addons.'+i+'.n',a.n)}${F('Price','addons.'+i+'.p',a.p,'£000')}${TA('Short description','addons.'+i+'.d',a.d,3)}${TA('What’s included · optional, one item per line','addons.'+i+'.f',a.f,3,1)}${IM('Photo · optional (a gold line drawing shows until you add one)','addons.'+i+'.img',a.img,'pkimg-a'+i)}${ivPkFields(a,i)}${CB('This is the pre-wedding experience (free with packages that include it)','addons.'+i+'.pre',a.pre)}${acts('addons',i)}</section>`).join('')}
+${d.addons.map((a,i)=>`<section class="card pk"><div class="lbl" style="margin-bottom:14px">Extra ${i+1}</div>${F('Name','addons.'+i+'.n',a.n)}${F('Price','addons.'+i+'.p',a.p,'£000')}${TA('Short description','addons.'+i+'.d',a.d,3)}${TA('What’s included · optional, one item per line','addons.'+i+'.f',a.f,3,1)}${IM('Photo · optional (a gold line drawing shows until you add one)','addons.'+i+'.img',a.img,'pkimg-a'+i)}${apType(a)==='invite'?ivPkFields(a,i):''}${CB('This is the pre-wedding experience (free with packages that include it)','addons.'+i+'.pre',a.pre)}${acts('addons',i)}</section>`).join('')}
 <div class="cta"><button class="btn" data-a="pkAdd" data-g="addons">+ Add extra</button></div>
 <h2>Small events</h2>
 ${TA('Introduction','evIntro',d.evIntro,3)}
