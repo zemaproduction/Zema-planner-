@@ -697,6 +697,392 @@ html.zi-lock,html.zi-lock body{overflow:hidden}
   .zi-done{padding:34px 18px}
   .ap-cv{padding:10px 16px 34px}
 }
+/* ================= Zema Invitation Studio · templates ================= */
+.zi.zt{--zn:var(--serif)}
+.zi.zt .zi-nm,.zi.zt .zi-h{font-family:var(--zn)}
+.zi.zt .zi-pre,.zi.zt .zi-line,.zi.zt .zi-time,.zi.zt .zi-date .zd,.zi.zt .zi-cd b,.zi.zt .zi-dg h4,.zi.zt .zi-sch b,.zi.zt .zi-sch span,.zi.zt .zi-done h3,.zi.zt .zi-yn button{font-family:var(--serif)}
+.zi.zt .zi-msg,.zi.zt input,.zi.zt textarea,.zi.zt select{font-family:var(--sans)}
+.zi.zst *{animation:none!important}
+.zi.zst [data-rv]{opacity:1;transform:none}
+.zart{display:block;width:100%;height:auto;overflow:visible}
+.zi .zorn{width:120px;margin:0 auto 22px;color:var(--zi-gd)}.zi .zorn.sm{width:26px}.zi .zorn.wide{width:180px}.zi .zorn.sp{width:22px}
+.zi .zorn svg{display:block;width:100%;height:auto}
+.zi-iv .zi-h em{font-size:.6em;margin:0 .1em;color:var(--zi-gd)}
+.zi-mus{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:7;width:46px;height:46px;border-radius:50%;border:1px solid var(--zi-ln);background:var(--zi-pa);color:var(--zi-tx);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.zi-mus svg{width:18px;height:18px;fill:currentColor}.zi-mus .pa{display:none}.zi-mus[aria-pressed="true"] .pa{display:block}.zi-mus[aria-pressed="true"] .pl{display:none}
+.ph-in .zi-mus,.zs-scr .zi-mus{position:sticky;float:right;margin:-64px 14px 0 0;top:auto;bottom:14px}
+.zi .zbgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+.zi-vf{margin-top:24px;aspect-ratio:16/9;background:#000;position:relative}.zi-vf iframe,.zi-vf video{position:absolute;inset:0;width:100%;height:100%;border:0}
+/* date styles */
+.zd-line{margin:40px auto 0;font-family:var(--serif);font-size:clamp(20px,4.8cqw,28px);line-height:1.5;max-width:520px}
+.zd-line small{display:block;margin-top:12px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-gd)}
+.zd-stack{margin:44px auto 0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.zd-stack b{font:400 clamp(80px,22cqw,150px)/.85 var(--zn);color:var(--zi-gd)}
+.zd-stack span{font:500 12px var(--sans);letter-spacing:.34em;text-transform:uppercase}
+.zd-stack small{margin-top:12px;font-family:var(--serif);font-style:italic;font-size:20px;color:var(--zi-mu)}
+.zd-circle{margin:44px auto 0;width:clamp(160px,40cqw,210px);aspect-ratio:1;border-radius:50%;border:1px solid var(--zi-gd);outline:1px solid var(--zi-ln);outline-offset:7px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.zd-circle b{font:400 clamp(56px,14cqw,82px)/1 var(--serif)}.zd-circle span{font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-gd)}
+.zd-ticket{margin:40px auto 0;max-width:460px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--zi-pa);border:1.5px dashed var(--zi-gd);border-radius:18px;overflow:hidden}
+.zd-ticket div{padding:20px 8px}.zd-ticket div+div{border-left:1.5px dashed var(--zi-ln)}
+.zd-ticket b{white-space:nowrap;font-size:clamp(18px,5.6cqw,26px)!important}
+.zd-ticket small{display:block;font:600 10px var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--zi-mu)}.zd-ticket b{display:block;margin-top:6px;font:400 26px var(--zn)}
+/* detail styles */
+.zi-dg.zdet-list{background:none;border:0;gap:0;text-align:left;max-width:560px;margin-left:auto;margin-right:auto}
+.zi-dg.zdet-list>div{background:none;border-top:1px solid var(--zi-ln);padding:26px 0;display:grid;grid-template-columns:110px 1fr;gap:4px 18px;align-items:baseline}
+.zi-dg.zdet-list>div>.zk{grid-row:span 3}.zi-dg.zdet-list h4{margin:0}.zi-dg.zdet-list .zi-btn{justify-self:start}
+@container (min-width:640px){.zi-dg.zdet-list{grid-template-columns:1fr}}
+.zi-dg.zdet-cards{background:none;border:0;gap:14px}
+.zi-dg.zdet-cards>div{background:var(--zi-pa);border-radius:22px;border:1px solid var(--zi-ln)}
+/* ---- intros (shared stage) ---- */
+.zi .zin{gap:6px;overflow:hidden}
+.zi .zin .zt{font-family:var(--serif)}
+.zi.op .zin .zt,.zi.op .zin>.zk{opacity:0;transition:opacity .4s}
+/* envelope */
+.zi-env{position:relative;width:min(300px,74cqw);aspect-ratio:1.45;margin-bottom:26px;perspective:900px}
+.zenv{position:absolute;inset:0}
+.zenv-b{position:absolute;inset:0;background:var(--a2);box-shadow:0 24px 50px rgba(0,0,0,.18);border-radius:4px}
+.zenv-c{position:absolute;left:7%;right:7%;top:8%;bottom:6%;background:var(--zi-pa);border-radius:2px;transition:transform 1s .5s cubic-bezier(.22,.61,.36,1)}
+.zenv-b:after{content:"";position:absolute;inset:0;background:linear-gradient(to top right,var(--a3) 49.5%,transparent 50%) left/50% 100% no-repeat,linear-gradient(to top left,var(--a3) 49.5%,transparent 50%) right/50% 100% no-repeat;z-index:2;clip-path:polygon(0 0,50% 58%,100% 0,100% 100%,0 100%);opacity:.9}
+.zenv-f{position:absolute;left:0;right:0;top:0;height:62%;background:var(--a3);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .7s cubic-bezier(.4,0,.2,1);z-index:3;filter:brightness(.97)}
+.zenv-s{position:absolute;left:50%;top:62%;width:24%;transform:translate(-50%,-50%);z-index:4;transition:opacity .3s,transform .4s}
+.zi.op .zenv-s{opacity:0;transform:translate(-50%,-50%) scale(1.2)}
+.zi.op .zenv-f{transform:rotateX(180deg);z-index:1}
+.zi.op .zenv-c{transform:translateY(-62%);z-index:2}
+/* wax seal */
+.zi-wax{position:relative;width:min(150px,40cqw);aspect-ratio:1;margin-bottom:26px}
+.zi-wax>div{position:absolute;inset:0;transition:transform .9s cubic-bezier(.4,0,.2,1),opacity .9s}
+.zw-l{clip-path:polygon(0 0,52% 0,46% 40%,54% 60%,48% 100%,0 100%)}.zw-r{clip-path:polygon(52% 0,100% 0,100% 100%,48% 100%,54% 60%,46% 40%)}
+.zi.op .zw-l{transform:translateX(-40%) rotate(-24deg);opacity:0}.zi.op .zw-r{transform:translateX(40%) rotate(24deg);opacity:0}
+.zwax{width:100%;height:100%;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+.zi-wax{filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}.zi-wax .zwax{filter:none}
+/* curtain */
+.zi-cur{position:absolute;top:0;bottom:0;width:50.5%;background:var(--zi-tx);transition:transform 1.1s cubic-bezier(.76,0,.24,1)}
+.zi-cur.l{left:0}.zi-cur.r{right:0}
+.zi-cm{position:relative;z-index:1;color:var(--zi-bg);display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .4s}
+.zi-cm .zk{color:var(--zi-bg);opacity:.7}.zm2{font:400 64px/1 var(--zn);letter-spacing:.06em}
+.zin-curtain{background:transparent!important}
+.zi.op .zi-cur.l{transform:translateX(-101%)}.zi.op .zi-cur.r{transform:translateX(101%)}.zi.op .zi-cm{opacity:0}
+/* film leader */
+.zin-leader{background:#050505!important;color:#E9E4DA}
+.zi-ld{display:flex;flex-direction:column;align-items:center;gap:18px}
+.zld-c{position:relative;width:min(170px,44cqw);aspect-ratio:1;color:rgba(233,228,218,.7)}
+.zld-c svg{width:100%;height:100%}.zld-n{position:absolute;inset:0;display:grid;place-items:center;font:400 72px var(--zn);color:#E9E4DA}
+.zld-n i{grid-area:1/1;font-style:normal;opacity:0}.zld-n i:first-child{opacity:1}
+.zi.op .zld-n i{animation:zLead .6s steps(1) both}.zi.op .zld-n i:nth-child(1){animation-delay:0s}.zi.op .zld-n i:nth-child(2){animation-delay:.6s}.zi.op .zld-n i:nth-child(3){animation-delay:1.2s}
+@keyframes zLead{0%{opacity:1}99%{opacity:1}100%{opacity:0}}
+.zi.op .zld-c svg{animation:zSpin .6s linear 3}
+@keyframes zSpin{to{transform:rotate(360deg)}}
+.zin-leader .zk{color:rgba(233,228,218,.6)}
+/* church doors */
+.zin-doors{background:transparent!important;perspective:1200px}
+.zi-door{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#5A4632,#6E573E 50%,#5A4632);transition:transform 1.3s cubic-bezier(.65,0,.35,1);box-shadow:inset 0 0 0 10px rgba(0,0,0,.12)}
+.zi-door span{position:absolute;inset:14% 16%;border:2px solid rgba(255,230,190,.25);border-radius:999px 999px 6px 6px}
+.zi-door.l{left:0;transform-origin:left}.zi-door.r{right:0;transform-origin:right}
+.zi-dc{position:relative;z-index:1;color:#F6E9D2;display:flex;flex-direction:column;align-items:center;gap:10px;transition:opacity .4s}
+.zi-dc .zk{color:#F6E9D2}.zdx{width:44px;color:#E9CF98}
+.zi.op .zi-door.l{transform:rotateY(-100deg)}.zi.op .zi-door.r{transform:rotateY(100deg)}.zi.op .zi-dc{opacity:0}
+/* light rays */
+.zi-ray{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg,var(--zi-gd) 0 2deg,transparent 2deg 14deg);opacity:.14;animation:zSpin 60s linear infinite;mask:radial-gradient(circle,#000 0,transparent 60%);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%)}
+.zi-rc{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px}.zrx{width:56px;color:var(--zi-gd)}
+.zi.op .zi-ray{opacity:.5;transition:opacity .8s}
+/* dove */
+.zi-dv{width:min(260px,64cqw);color:var(--zi-gd);animation:zFloat 4s ease-in-out infinite}
+.zi.op .zi-dv{animation:zFly 1.2s cubic-bezier(.4,0,.2,1) both}
+@keyframes zFloat{50%{transform:translateY(-10px)}}
+@keyframes zFly{to{transform:translate(60cqw,-60%) scale(.6) rotate(-8deg);opacity:0}}
+/* candles */
+.zi-cn,.zi-wish{width:min(260px,64cqw);color:var(--zi-gd);margin-bottom:10px}
+.zin .zfl,.zin .zglow{opacity:0;transition:opacity .4s}
+.zi.op .zin .zfl,.zi.op .zin .zglow{opacity:1}
+.zi.op .zin g:nth-of-type(2) .zfl{transition-delay:.35s}.zi.op .zin g:nth-of-type(3) .zfl{transition-delay:.7s}
+.zi.op .zi-wish .zfl{transition-delay:calc(var(--i,0)*.1s)}
+.zfl{transform-box:fill-box;transform-origin:50% 100%;animation:zFlick 1.6s ease-in-out infinite alternate}
+.zglow{animation:zGlow 2.4s ease-in-out infinite alternate}
+@keyframes zFlick{0%{transform:scale(1,1)}50%{transform:scale(.92,1.08) skewX(2deg)}100%{transform:scale(1.04,.95) skewX(-2deg)}}
+@keyframes zGlow{to{opacity:.7}}
+/* confetti */
+.zi-cf{font:400 clamp(90px,26cqw,150px)/1 var(--zn);background:linear-gradient(135deg,#F7E4B5,var(--zi-gd) 45%,#8C6A35 70%,#F3DDA8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.zi-burst{position:absolute;left:50%;top:44%;width:0;height:0}
+.zi-burst i{position:absolute;width:8px;height:14px;background:var(--c);opacity:0;border-radius:2px}
+.zi.op .zi-burst i{animation:zBurst 1.1s cubic-bezier(.1,.7,.3,1) both}
+@keyframes zBurst{0%{opacity:1;transform:rotate(var(--a)) translateY(0)}100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r)*-1)) rotate(320deg)}}
+/* balloons */
+.zi-bl{width:min(300px,74cqw);color:var(--zi-tx)}
+.zi.op .zi-bl .zbal{animation:zUp 1.3s cubic-bezier(.4,0,.6,1) both;animation-delay:var(--d,0s)}
+@keyframes zUp{to{transform:translateY(-140%)}}
+.zi-bl .zbal{transform-box:fill-box}
+/* gift */
+.zi-gf{width:min(200px,52cqw);color:var(--zi-tx)}
+.zgl{transition:transform .8s cubic-bezier(.3,1.4,.5,1);transform-origin:50% 100%;transform-box:fill-box}
+.zi.op .zgl{transform:translateY(-70%) rotate(-18deg)}
+.zi-gf .zgb,.zi-gf .zgl{animation:zWob 2.4s ease-in-out infinite}
+.zi.op .zi-gf .zgb{animation:none}
+@keyframes zWob{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-3deg)}90%{transform:rotate(3deg)}95%{transform:rotate(-2deg)}}
+/* caps */
+.zi-cp{position:relative;width:min(200px,50cqw);height:120px;color:var(--zi-gd)}
+.zi-cp i{position:absolute;left:calc(var(--i)*18% - 10%);bottom:0;width:46%;opacity:calc(1 - var(--i)*.12)}
+.zi-cp i:nth-child(3){left:27%;bottom:20px;width:52%;opacity:1}
+.zi.op .zi-cp i{animation:zToss 1.4s cubic-bezier(.2,.7,.4,1) both;animation-delay:calc(var(--i)*.06s)}
+@keyframes zToss{40%{transform:translateY(-60cqh) rotate(calc(var(--i)*70deg - 140deg))}100%{transform:translateY(-120cqh) rotate(calc(var(--i)*120deg - 240deg));opacity:0}}
+/* scroll */
+.zi-sc{position:relative;width:min(260px,66cqw);height:180px;margin-bottom:18px}
+.zsc-p{position:absolute;left:8%;right:8%;top:50%;height:0;background:var(--zi-pa);border:1px solid var(--zi-ln);transform:translateY(-50%);transition:height 1.1s cubic-bezier(.65,0,.35,1)}
+.zsc-r{position:absolute;left:4%;right:4%;height:22px;border-radius:11px;background:linear-gradient(180deg,var(--zi-pa),var(--a3) 40%,var(--zi-pa));border:1px solid var(--zi-ln);transition:top 1.1s cubic-bezier(.65,0,.35,1)}
+.zsc-r.t{top:calc(50% - 22px)}.zsc-r.b{top:50%}
+.zsc-rb{position:absolute;left:50%;top:50%;width:14px;height:60px;background:var(--a2);transform:translate(-50%,-30%);transition:opacity .3s}
+.zi.op .zsc-p{height:100%}.zi.op .zsc-r.t{top:-11px}.zi.op .zsc-r.b{top:calc(100% - 11px)}.zi.op .zsc-rb{opacity:0}
+/* stars */
+.zi-st{position:absolute;inset:0;color:var(--zi-gd)}.zi-st svg{width:100%;height:100%}
+.ztw{animation:zTw 2.6s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes zTw{50%{opacity:.25}}
+.zi.op .zi-st{transform:scale(1.5);opacity:0;transition:transform 1s,opacity 1s}
+
+/* ======== covers ======== */
+.zi.zt .zi-cov{justify-content:center;padding:0 24px;color:var(--zi-tx)}
+.zi.zt .zi-cov.np:after{display:none}
+/* Maison */
+.zc-maison{justify-content:flex-end!important;align-items:flex-start!important;text-align:left;padding:0 clamp(24px,7cqw,80px) 12vh!important;color:#FBF8F2!important}
+.zc-maison.np{color:var(--zi-tx)!important}
+.zc-maison:not(.np):after{display:block}
+.mz-in{position:relative;z-index:1;max-width:760px}
+.mz-nm{font-size:clamp(56px,17cqw,150px)!important;line-height:.88!important;letter-spacing:-.02em;margin:16px 0 0!important}
+.mz-nm span,.mz-nm em{display:block}.mz-nm em{font-size:.42em!important;margin:.15em 0;color:var(--zi-gd)!important}
+.mz-rule{width:64px;height:1px;background:currentColor;margin:28px 0 18px;opacity:.7}
+.mz-meta{display:flex;gap:6px 22px;flex-wrap:wrap;font:500 12px var(--sans);letter-spacing:.26em;text-transform:uppercase}
+.mz-side{position:absolute;right:clamp(14px,3cqw,34px);top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;font:500 10px var(--sans);letter-spacing:.4em;z-index:1;opacity:.8}
+.mz-mono{position:absolute;right:-4%;top:6%;font:300 clamp(200px,60cqw,520px)/1 var(--zn);color:var(--zi-gd);opacity:.12}
+/* Florence */
+.zc-flo{padding:clamp(18px,5cqw,48px)!important}
+.fl-card{position:relative;width:100%;max-width:640px;min-height:calc(var(--zi-vh) - clamp(36px,10cqw,96px));background:var(--zi-pa);border:1px solid var(--zi-ln);outline:1px solid var(--zi-gd);outline-offset:-10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(48px,12cqw,90px) clamp(22px,6cqw,60px);overflow:hidden}
+.fl-c{position:absolute;width:clamp(120px,38cqw,230px);color:var(--zi-gd)}
+.fl-tl{left:-16px;top:-12px;transform:rotate(180deg) scaleX(-1)}.fl-br{right:-16px;bottom:-12px}
+.fl-arch{width:clamp(150px,44cqw,240px);aspect-ratio:3/4;border-radius:999px 999px 0 0;background-size:cover;background-position:center;margin-bottom:28px;border:6px solid var(--zi-bg);outline:1px solid var(--zi-gd)}
+.fl-nm{font-size:clamp(52px,15cqw,104px)!important;line-height:1!important;margin-top:14px!important}
+.fl-nm em{font-family:var(--serif)!important;font-size:.36em!important;display:block}
+.fl-d{margin-top:22px;font:500 11px/1.9 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--zi-mu)}
+/* Monochrome */
+.zc-mono{display:grid!important;grid-template-rows:55% 45%;padding:0!important;align-items:stretch!important;justify-items:stretch!important}
+.zc-mono.nophoto{grid-template-rows:1fr}
+@container (min-width:720px){.zc-mono{grid-template-rows:none;grid-template-columns:1fr 1fr}.zc-mono.nophoto{grid-template-columns:1fr}}
+.mo-ph{background-size:cover;background-position:center;filter:grayscale(1) contrast(1.06)}
+.mo-tx{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;padding:clamp(24px,6cqw,70px);overflow:hidden}
+.mo-amp{position:absolute;right:-6%;bottom:-18%;font:400 clamp(260px,70cqw,620px)/1 var(--zn);color:var(--zi-tx);opacity:.06;pointer-events:none}
+.mo-nm{font-size:clamp(40px,11.5cqw,96px)!important;line-height:.95!important;text-transform:uppercase;letter-spacing:.02em;margin:14px 0 0!important}
+.mo-nm span,.mo-nm em{display:block}.mo-nm em{font-size:.5em!important;color:var(--zi-mu)!important;text-transform:none}
+.mo-dt{margin-top:26px;font:500 clamp(18px,4cqw,26px) ui-monospace,Menlo,monospace;letter-spacing:.06em}
+.mo-pl{margin-top:6px;font:500 11px var(--sans);letter-spacing:.26em;text-transform:uppercase;color:var(--zi-mu)}
+.zc-mono .zk{color:var(--zi-mu)}
+/* Cinéma */
+.zc-cin{color:#F1ECE2!important;background:#000}
+.zc-cin .zbg{opacity:.5!important;transform:none!important;filter:saturate(.8)}
+.zc-cin:after{display:block!important;background:radial-gradient(80% 60% at 50% 50%,transparent,rgba(0,0,0,.6))!important}
+.zc-cin.grain:before{content:"";position:absolute;inset:-50%;z-index:2;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");animation:zGrain 1s steps(4) infinite}
+@keyframes zGrain{25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}}
+.cn-bar{position:absolute;left:0;right:0;height:9%;background:#000;z-index:3}.cn-bar.t{top:0}.cn-bar.b{bottom:0}
+.cn-in{position:relative;z-index:3;max-width:820px}
+.cn-pre{font-family:var(--serif);font-style:italic;font-size:clamp(16px,3.6cqw,22px);opacity:.8}
+.cn-nm{font-size:clamp(46px,13cqw,120px)!important;letter-spacing:.14em!important;text-transform:uppercase;line-height:1.02!important;margin:18px 0!important}
+.cn-nm span,.cn-nm em{display:block}.cn-nm em{letter-spacing:0;font-size:.4em!important;color:var(--zi-gd)!important}
+.cn-tag{font:500 11px var(--sans);letter-spacing:.4em;text-transform:uppercase;color:var(--zi-gd)}
+.cn-pr{margin-top:26px;font:400 12px var(--sans);letter-spacing:.24em;text-transform:uppercase;opacity:.8}
+/* Chapel */
+.zc-chp{gap:4px;padding-top:4vh!important}
+.ch-x{width:30px;color:var(--zi-gd);margin-bottom:14px}
+.ch-a{width:clamp(170px,50cqw,280px);color:var(--zi-gd);margin-bottom:24px}.ch-a svg{width:100%;height:auto;display:block}
+.ch-nm{font-size:clamp(44px,12cqw,92px)!important;letter-spacing:.06em;margin:10px 0 0!important;line-height:1!important}
+.ch-sub{margin-top:14px;font-family:var(--serif);font-style:italic;font-size:20px;color:var(--zi-mu)}
+.ch-d{margin-top:18px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Stained glass */
+.zc-gls{overflow:hidden}
+.gl-rays{position:absolute;left:50%;top:32%;width:180cqw;aspect-ratio:1;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,var(--a2) 0 3deg,transparent 3deg 15deg);opacity:.12;animation:zSpin 90s linear infinite;mask:radial-gradient(circle,#000 0,transparent 55%);-webkit-mask:radial-gradient(circle,#000 0,transparent 55%)}
+.gl-w{position:relative;width:clamp(200px,58cqw,340px);color:var(--zi-gd);margin-bottom:30px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.12))}
+.gl-nm{font-size:clamp(46px,12cqw,92px)!important;margin:12px 0 0!important;line-height:1!important}
+.gl-sub{margin-top:12px;font-family:var(--serif);font-size:20px;color:var(--zi-mu)}
+.gl-d{margin-top:18px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+.zc-gls .zk,.zc-gls .zi-nm,.zc-gls .gl-sub,.zc-gls .gl-d{position:relative}
+/* Dove */
+.zc-dov{padding-top:2vh!important}
+.dv-bird{width:clamp(180px,52cqw,300px);color:var(--zi-gd);animation:zFloat 5s ease-in-out infinite;margin-bottom:6px}
+.dv-nm .zi-nm{font-size:clamp(70px,22cqw,150px)!important;line-height:1!important;margin:0 0 6px!important}
+.dv-sub{margin-top:10px;font-family:var(--serif);font-size:19px;color:var(--zi-mu)}
+.dv-ph{width:clamp(110px,30cqw,170px);aspect-ratio:1;border-radius:50%;background-size:cover;background-position:center;margin-top:26px;border:5px solid var(--zi-pa);box-shadow:0 0 0 1px var(--zi-gd)}
+.dv-d{margin-top:20px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Candlelight */
+.zc-can{background:radial-gradient(60% 40% at 50% 78%,color-mix(in srgb,var(--zi-gd) 22%,transparent),transparent 70%)}
+.cd-x{width:24px;color:var(--zi-gd);margin-bottom:18px}
+.cd-nm{font-size:clamp(48px,13cqw,100px)!important;font-style:italic;margin:12px 0 0!important;line-height:1!important}
+.cd-sub{margin-top:12px;font-family:var(--serif);font-size:20px;color:var(--zi-mu)}
+.cd-c{width:clamp(200px,56cqw,300px);color:var(--zi-gd);margin-top:26px}
+.zc-can.still .zfl,.zc-can.still .zglow{animation:none}
+.cd-d{margin-top:16px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Velvet */
+.zc-vel{overflow:hidden}
+.vl-n{font:400 clamp(150px,52cqw,340px)/.8 var(--zn);background:linear-gradient(135deg,#F8E7BB 0%,var(--zi-gd) 38%,#7E5D2C 62%,#F4DCA4 82%,var(--zi-gd));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 10px 30px rgba(0,0,0,.35))}
+.vl-k{margin-top:10px;font:500 12px var(--sans);letter-spacing:.42em;text-transform:uppercase;color:var(--zi-gd)}
+.vl-nm{font-size:clamp(40px,11cqw,84px)!important;font-style:italic;margin:12px 0 0!important;line-height:1!important}
+.vl-nm span{font-style:italic}
+.vl-ph{width:clamp(110px,30cqw,170px);aspect-ratio:4/5;background-size:cover;background-position:center;margin-top:24px;border:6px solid var(--zi-pa);transform:rotate(-4deg);box-shadow:0 18px 30px rgba(0,0,0,.35)}
+.vl-d{margin-top:22px;font:500 11px var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--zi-mu)}
+.zconf{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,var(--zi-gd) 1.5px,transparent 2px),radial-gradient(circle,#F3DDA8 1px,transparent 1.6px),linear-gradient(transparent,transparent);background-size:90px 110px,60px 70px;animation:zFall 14s linear infinite;opacity:.6}
+@keyframes zFall{to{background-position:0 880px,30px 560px}}
+.zc-vel .zk{display:none}
+/* Make a wish */
+.zc-cak .zk{color:var(--zi-gd)}
+.ck-nm{font-size:clamp(60px,18cqw,130px)!important;line-height:1!important;margin:10px 0 0!important;color:var(--a3)}
+.ck-a{margin-top:6px;font-family:var(--serif);font-style:italic;font-size:clamp(22px,5cqw,30px)}
+.ck-c{width:clamp(200px,58cqw,320px);color:var(--zi-tx);margin-top:18px}
+.zc-cak.spr .ck-c{filter:drop-shadow(0 18px 26px rgba(0,0,0,.08))}
+.ck-d{margin-top:14px;font:600 11px var(--sans);letter-spacing:.28em;text-transform:uppercase}
+.zc-cak:not(.zon) .ck-c .zfl{opacity:0}
+.zi.in .zc-cak .ck-c .zfl,.zi.zst .zc-cak .ck-c .zfl,.zi.zpv .zc-cak .ck-c .zfl{opacity:1}
+/* Party time */
+.zc-pty{overflow:hidden}
+.pt-bun{position:absolute;left:0;right:0;top:0;height:clamp(54px,14cqw,90px)}.pt-bun svg{width:100%;height:100%}
+.pt-bal{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;color:var(--zi-tx)}
+.pt-bal .zbal{animation:zBob 4s ease-in-out infinite;animation-delay:var(--d);transform-box:fill-box}
+@keyframes zBob{50%{translate:0 -12px}}
+.pt-nm{font-size:clamp(72px,24cqw,170px)!important;font-weight:600;line-height:1!important;margin:10px 0 0!important;position:relative;letter-spacing:.02em}
+.pt-nm span{display:inline-block;text-shadow:0 4px 0 rgba(0,0,0,.06)}
+.pt-nm span:nth-child(odd){transform:rotate(-4deg)}.pt-nm span:nth-child(even){transform:rotate(3deg) translateY(4px)}
+.pt-a{position:relative;margin-top:6px;font:600 clamp(20px,5cqw,30px) var(--serif)}.pt-a b{color:var(--zi-gd)}
+.pt-ph{position:relative;width:clamp(120px,32cqw,190px);aspect-ratio:1;border-radius:28px;background-size:cover;background-position:center;margin-top:22px;border:6px solid #fff;transform:rotate(3deg);box-shadow:0 14px 30px rgba(0,0,0,.12)}
+.pt-d{position:relative;margin-top:20px;font:700 12px var(--sans);letter-spacing:.24em;text-transform:uppercase}
+.zc-pty .zk{position:relative;color:var(--a2)}
+/* The Present */
+.zc-prs{overflow:hidden}
+.pr-rib{position:absolute;right:-60px;top:40px;width:260px;height:46px;background:var(--zi-gd);transform:rotate(38deg);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.pr-rib:after{content:"";position:absolute;inset:8px 0;border-top:1px dashed rgba(255,255,255,.5);border-bottom:1px dashed rgba(255,255,255,.5)}
+.pr-g{width:clamp(110px,30cqw,170px);color:var(--zi-tx);margin-bottom:22px}
+.pr-nm{font-size:clamp(56px,17cqw,124px)!important;line-height:.95!important;margin:12px 0 0!important}
+.pr-ph{width:clamp(130px,36cqw,200px);aspect-ratio:1;border-radius:50%;background-size:cover;background-position:center;margin-top:24px;border:4px solid var(--zi-gd)}
+.pr-d{margin-top:20px;font:600 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Laureate */
+.zc-lau{overflow:hidden}
+.la-sf{position:absolute;inset:0;color:var(--zi-gd);opacity:.7}.la-sf svg{width:100%;height:100%}
+.la-cap{position:relative;width:clamp(90px,26cqw,140px);color:var(--zi-gd);margin-bottom:-6px;animation:zFloat 5s ease-in-out infinite}
+.la-w{position:relative;width:clamp(260px,78cqw,440px);color:var(--zi-gd)}
+.la-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16%}
+.la-nm{font-size:clamp(28px,8cqw,54px)!important;line-height:1.05!important;margin:10px 0 0!important;letter-spacing:.04em}
+.la-s{position:relative;margin-top:16px;font-family:var(--serif);font-style:italic;font-size:19px;color:var(--zi-mu)}
+.la-d{position:relative;margin-top:14px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Diploma */
+.zc-dip{padding:clamp(16px,4cqw,44px)!important}
+.dp-f{width:100%;max-width:720px;min-height:calc(var(--zi-vh) - clamp(32px,8cqw,88px));background:var(--zi-pa);border:2px solid var(--zi-gd);outline:1px solid var(--zi-gd);outline-offset:-12px;position:relative;display:flex;padding:clamp(28px,7cqw,60px)}
+.dp-f:before{content:"";position:absolute;inset:18px;border:1px solid var(--zi-ln);background:repeating-radial-gradient(circle at 50% 50%,transparent 0 6px,var(--zi-ln) 6px 7px);opacity:.25;pointer-events:none}
+.dp-in{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.dp-u{font-family:var(--serif);font-size:clamp(18px,4.6cqw,28px);letter-spacing:.08em;text-transform:uppercase;color:var(--zi-gd)}
+.dp-c{margin-top:22px;font-family:var(--serif);font-style:italic;font-size:clamp(17px,4cqw,22px);color:var(--zi-mu)}
+.dp-nm{font-size:clamp(52px,15cqw,110px)!important;line-height:1.05!important;margin:14px 0 0!important;color:var(--a2)}
+.dp-row{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%;max-width:440px;margin-top:40px}
+.dp-row span{border-top:1px solid var(--zi-tx);padding-top:8px;font-family:var(--serif);font-size:16px}.dp-row i{display:block;font:500 10px var(--sans);letter-spacing:.24em;text-transform:uppercase;font-style:normal;color:var(--zi-mu);margin-top:4px}
+.dp-seal{position:absolute;right:-4%;bottom:-6%;width:clamp(70px,18cqw,110px);color:var(--zi-gd)}
+/* Campus */
+.zc-cam{overflow:hidden;padding-top:2vh!important}
+.cm-band{position:absolute;left:0;right:0;top:0;height:16px;background:linear-gradient(90deg,var(--zi-gd) 0 33%,var(--a2) 33% 66%,var(--zi-gd) 66%)}
+.cm-b{width:clamp(220px,66cqw,380px);color:var(--zi-gd);margin-bottom:22px}
+.cm-ph{width:clamp(130px,34cqw,190px);aspect-ratio:4/5;border-radius:50%;background-size:cover;background-position:center;border:4px solid var(--zi-pa);outline:1px solid var(--zi-gd);margin-bottom:22px}
+.cm-nm{font-size:clamp(40px,11cqw,84px)!important;line-height:1!important;margin:12px 0 0!important;color:var(--zi-gd)}
+.cm-s{margin-top:12px;font-family:var(--serif);font-size:19px;font-style:italic;color:var(--zi-mu)}
+.cm-d{margin-top:16px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+/* Honours */
+.zc-hon{display:grid!important;grid-template-rows:56% 44%;padding:0!important;align-items:stretch!important;justify-items:stretch!important;overflow:hidden}
+.zc-hon.nophoto{grid-template-rows:1fr}
+@container (min-width:720px){.zc-hon{grid-template-rows:none;grid-template-columns:1.1fr 1fr}.zc-hon.nophoto{grid-template-columns:1fr}}
+.hn-ph{background-size:cover;background-position:center top}
+.hn-sf{position:absolute;inset:0;color:var(--zi-gd);opacity:.7;pointer-events:none}.hn-sf svg{width:100%;height:100%}
+.hn-tx{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;padding:clamp(24px,6cqw,64px)}
+.hn-y{display:flex;flex-direction:column;font:400 clamp(90px,28cqw,220px)/.8 var(--zn);color:var(--zi-gd);margin:6px 0 10px}
+.hn-y.sm{font-size:clamp(50px,14cqw,90px);flex-direction:row}
+.hn-nm{font-size:clamp(30px,8cqw,58px)!important;line-height:1!important;margin:8px 0 0!important;text-transform:uppercase;letter-spacing:.06em}
+.hn-k{margin-top:10px;font-family:var(--serif);font-size:18px;font-style:italic;color:var(--zi-mu)}
+.hn-d{margin-top:14px;font:500 11px var(--sans);letter-spacing:.3em;text-transform:uppercase}
+
+/* ================= Studio: browser, editor, preview frames, demo ================= */
+.zs-wide{width:min(1180px,calc(100vw - 32px));margin-left:50%;transform:translateX(-50%)}
+.zs-cols{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}.zs-cols::-webkit-scrollbar{display:none}
+.zs-cols button{flex:0 0 auto;border:1px solid var(--line2);background:var(--s);border-radius:999px;padding:10px 16px;font:500 14px var(--sans);cursor:pointer;color:var(--tx);text-align:left}
+.zs-cols button small{display:block;font-size:11px;color:var(--mu);font-weight:400}
+.zs-cols button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}.zs-cols button.on small{color:inherit;opacity:.7}
+.zs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media (min-width:760px){.zs-grid{grid-template-columns:repeat(4,1fr)}}
+.zs-card{border:0;padding:0;background:none;text-align:left;cursor:pointer;color:var(--tx)}
+.zs-th{position:relative;aspect-ratio:9/15;border-radius:16px;overflow:hidden;background:var(--s2);box-shadow:0 1px 0 var(--line),0 12px 30px rgba(0,0,0,.08);transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.zs-card:hover .zs-th{transform:translateY(-3px);box-shadow:0 1px 0 var(--line),0 20px 40px rgba(0,0,0,.14)}
+.zs-card.on .zs-th{outline:2px solid var(--ac);outline-offset:3px}
+.zs-th>.zs-tin{position:absolute;left:0;top:0;width:390px;height:650px;transform-origin:0 0;pointer-events:none}
+.zs-th .zi{min-height:650px}.zs-th .zi-cov{min-height:650px}
+.zs-th .zs-badge{position:absolute;left:10px;top:10px;z-index:2;font:600 10px var(--sans);letter-spacing:.08em;background:var(--ac);color:#fff;border-radius:6px;padding:3px 8px}
+.zs-cn{margin-top:10px;font:500 15px var(--sans)}.zs-cd{font-size:13px;color:var(--mu);line-height:1.45;margin-top:2px}
+.zs-ed{display:grid;gap:22px;align-items:start}
+@media (min-width:980px){.zs-ed{grid-template-columns:minmax(330px,400px) 1fr}}
+.zs-ctl{display:grid;gap:12px;min-width:0}
+.zs-ctl details{background:var(--s);border:1px solid var(--line);border-radius:18px;padding:0 18px}
+.zs-ctl summary{list-style:none;cursor:pointer;padding:18px 0;font:500 15px var(--sans);display:flex;justify-content:space-between;align-items:center}
+.zs-ctl summary::-webkit-details-marker{display:none}
+.zs-ctl summary:after{content:"+";font:300 22px var(--sans);color:var(--mu)}.zs-ctl details[open] summary:after{content:"–"}
+.zs-ctl details>div{padding:0 0 18px}
+.zs-cur{display:flex;gap:14px;align-items:center;background:var(--s);border:1px solid var(--line);border-radius:18px;padding:12px}
+.zs-cur .zs-th{width:74px;flex:0 0 74px;border-radius:10px;box-shadow:none}
+.zs-cur b{display:block;font:500 16px var(--sans)}.zs-cur span{font-size:13px;color:var(--mu)}
+.zs-sw{display:flex;gap:10px;flex-wrap:wrap}
+.zs-sw button{border:1px solid var(--line2);background:var(--s);border-radius:12px;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px;cursor:pointer;font:500 13px var(--sans);color:var(--tx)}
+.zs-sw button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.zs-sw i{width:30px;height:30px;border-radius:8px;display:block;position:relative;overflow:hidden}
+.zs-sw i:after{content:"";position:absolute;right:0;bottom:0;width:50%;height:50%;background:var(--x)}
+.zs-ft{display:grid;gap:8px}
+.zs-ft button{border:1px solid var(--line2);background:var(--s);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;color:var(--tx);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.zs-ft button.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
+.zs-ft b{font-weight:400;font-size:24px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.zs-ft small{font-size:12px;color:var(--mu);flex:0 0 auto}
+.zs-row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+.zs-lab{font:500 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:16px 0 8px}
+.zs-lab:first-child{margin-top:0}
+.zs-acc{display:flex;gap:10px;align-items:center}.zs-acc input[type=color]{width:46px;height:36px;border:1px solid var(--line2);border-radius:10px;background:var(--s);padding:2px}
+.zs-pv{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));display:grid;gap:10px;min-width:0}
+.zs-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.zs-seg{display:inline-flex;background:var(--s2);border-radius:999px;padding:3px}
+.zs-seg button{border:0;background:none;border-radius:999px;padding:8px 14px;font:500 13px var(--sans);cursor:pointer;color:var(--mu)}
+.zs-seg button.on{background:var(--s);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.zs-bar .zs-sp{flex:1}
+.zs-bar .lnk{background:none;border:0;color:var(--mu);font:500 13px var(--sans);text-decoration:underline;cursor:pointer}
+.zs-stage{position:relative;height:min(78svh,820px);border-radius:22px;background:radial-gradient(120% 90% at 30% 10%,var(--s2),var(--s3,#E6E2DA));overflow:hidden;display:flex;align-items:center;justify-content:center}
+.zs-box{position:relative;flex:0 0 auto;overflow:hidden;border-radius:26px;box-shadow:0 30px 60px rgba(0,0,0,.25),0 0 0 8px #0B0B0B}
+.zs-box.desk{border-radius:10px;box-shadow:0 30px 60px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.25)}
+.zs-scl{position:absolute;left:0;top:0;transform-origin:0 0}
+.zs-scr{position:absolute;inset:0;overflow:hidden auto;scrollbar-width:thin}
+.zs-scr:has(.zi:not(.in) .zi-seal){overflow:hidden}
+.zs-tabsm{display:none}
+@media (max-width:979px){.zs-tabsm{display:inline-flex}.zs-ed[data-p="edit"] .zs-pv,.zs-ed[data-p="preview"] .zs-ctl{display:none}.zs-stage{height:72svh}.zs-pv{position:relative;top:0}}
+.zs-pill{font:500 12px var(--sans);color:var(--mu)}
+.zs-note{font-size:13px;color:var(--mu);margin:8px 0 0}
+/* demo overlay */
+.zdm{position:absolute;inset:0;display:flex;flex-direction:column;background:#0D0D0E;color:#F5F5F7}
+.zdm-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid rgba(255,255,255,.08)}
+.zdm-badge{font:700 10px var(--sans);letter-spacing:.2em;text-transform:uppercase;background:#C9AB7F;color:#0A0A0B;border-radius:6px;padding:4px 8px}
+.zdm-t{font:400 22px var(--serif)}.zdm-t small{display:block;font:400 12px var(--sans);color:#8E8E93}
+.zdm-bar .zs-sp{flex:1}
+.zdm .zs-seg{background:rgba(255,255,255,.08)}.zdm .zs-seg button{color:#B9B9BE}.zdm .zs-seg button.on{background:#F5F5F7;color:#0A0A0B}
+.zdm-b{border:1px solid rgba(255,255,255,.2);background:transparent;color:#F5F5F7;border-radius:999px;padding:9px 16px;font:500 13px var(--sans);cursor:pointer}
+.zdm-b.pri{background:#C9AB7F;border-color:#C9AB7F;color:#0A0A0B;font-weight:600}
+.zdm-x{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font:300 24px/1 var(--sans);cursor:pointer}
+.zdm-st{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:18px}
+.zdm-ft{padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;color:#8E8E93;border-top:1px solid rgba(255,255,255,.06)}
+@media (max-width:640px){.zdm-dev{display:none}.zdm-t{font-size:18px}}
+/* packages preview: design strip */
+.ap-tpl{display:flex;gap:8px;overflow-x:auto;padding:0 18px 14px;position:relative;z-index:2;scrollbar-width:none}.ap-tpl::-webkit-scrollbar{display:none}
+.ap-tpl button{flex:0 0 auto;width:62px;border:0;padding:0;background:none;cursor:pointer;text-align:center;color:#B9B9BE;font:500 10px var(--sans)}
+.ap-tpl .zs-th{border-radius:8px;box-shadow:none;outline:1px solid rgba(255,255,255,.15);margin-bottom:5px}
+.ap-tpl button.on .zs-th{outline:2px solid #C9AB7F}
+.ap-tpl button.on{color:#F5F5F7}
+.ap-cols{display:flex;gap:6px;padding:8px 18px 0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2}.ap-cols::-webkit-scrollbar{display:none}
+.ap-cols button{flex:0 0 auto;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#D1D1D6;border-radius:999px;padding:6px 12px;font:500 11px var(--sans);cursor:pointer}
+.ap-cols button.on{background:#F5F5F7;color:#0A0A0B;border-color:#F5F5F7}
+.zs-scr .zi{--zi-vh:var(--phh)}
+.zs-tin .zi{--zi-vh:650px}
+.zi-root .zs-scr .zi-seal{position:absolute}
+
+.ap-fr{padding:8px!important}
+.ap-fr .zs-box{border-radius:30px}
+.zs-ctl .f input,.zs-ctl .f textarea,.zs-ctl .f select,.zs-ctl .ivsc input{box-sizing:border-box;max-width:100%;min-width:0}
 </style>
 <script>try{var zt=localStorage.getItem("zemaTheme");if(zt==="light"||zt==="dark")document.documentElement.dataset.theme=zt}catch(_){}</script></head>
 <body>
@@ -1715,7 +2101,7 @@ const mins=m=>m+' min'+(m==1?'':'s');
 const locked=()=>TOKEN&&wed&&wed.approval_status==='approved';
 function stats(){const g=G(),d=g.filter(x=>x.done).length;return{d,n:g.length,p:g.length?Math.round(d/g.length*100):0,left:g.filter(x=>!x.done).reduce((a,x)=>a+x.minutes,0)}}
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',5000)}
-const setApp=h=>{try{cineDark()}catch(_){}$('#app').innerHTML=h;try{heroMount()}catch(_){}};
+const setApp=h=>{try{cineDark()}catch(_){}$('#app').innerHTML=h;try{heroMount()}catch(_){}try{zAfter();if(ui.ivD&&ui.ivD.dirty)zAutoSoon()}catch(_){}};
 
 /* ---- Live updates: the photographer sends a tiny "refresh" signal, family pages refetch ---- */
 function notifyFamily(){
@@ -5256,6 +5642,7 @@ const ivScene=n=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://ww
 
 /* ---------------- the invitation itself ---------------- */
 function ivRender(o){
+  if(o&&o.data&&IVT[o.data.tpl])return ivRender2(o);
   const kind=IVK[o.kind]?o.kind:'wedding',K=IVK[kind],d=o.data||{},th=ivTheme(o.theme),h=ivHead(kind,d),dt=ivDate(d.date),demo=o.mode==='demo',pv=o.mode==='preview';
   const ph=(Array.isArray(d.photos)?d.photos:[]).map(ivSafe).filter(Boolean),hero=ph[0]||(demo?ivScene(o.scene||0):'');
   const names=h.big.map(x=>x==='&'?'<em>&amp;</em>':`<span>${esc(x)}</span>`).join('');
@@ -5285,17 +5672,18 @@ ${d.contact?`<p class="zi-note" style="margin-top:28px">Questions? ${esc(d.conta
 <footer class="zi-foot">With love · ${esc(h.short)}<div style="margin-top:14px;opacity:.7">Digital invitation by Zema Production</div></footer></div>`;
 }
 function ivForm(o,v){
-  const d=o.data||{},max=ivMax(d),diet=d.ask_diet!==false,a=v?v.attending:null,h=ivHead(o.kind,d);
+  const d=o.data||{},max=ivMax(d),kind=IVK[o.kind]?o.kind:'other',Q=IVQ[kind]||IVQ.other,diet=zAskDiet(kind,d),a=v?v.attending:null,pv=o.mode==='preview',two=v&&+v.party>=2;
+  const party=max<=1?'':Q.plus&&max===2?`<div class="zi-f"><span>Bringing a plus-one?</span><div class="zi-yn"><button type="button" data-z="ivplus" data-v="1" class="${two?'':'on'}">Just me<small>One guest</small></button><button type="button" data-z="ivplus" data-v="2" class="${two?'on':''}">With a plus-one<small>Two guests</small></button></div><input type="hidden" class="zi-p" value="${two?2:1}"></div>`
+    :`<label class="zi-f"><span>${Q.plus?'Number of guests, including you and a plus-one':'Number of guests, including you'}</span><select class="zi-p">${Array.from({length:max},(_,i)=>`<option value="${i+1}" ${v&&+v.party===i+1?'selected':''}>${i+1}${i?' guests':' guest · just me'}</option>`).join('')}</select></label>`;
   return`<div class="zi-form">
 <label class="zi-f"><span>Your full name</span><input class="zi-n" autocomplete="name" maxlength="80" value="${esc(v?v.name:'')}" ${v?'readonly':''} placeholder="As it appears on your invitation"></label>
 <div class="zi-f"><span>Will you be joining us?</span><div class="zi-yn"><button type="button" data-z="ivyn" data-v="1" class="${a===true?'on':''}" aria-pressed="${a===true}">Joyfully accepts<small>Attending</small></button><button type="button" data-z="ivyn" data-v="0" class="${a===false?'on':''}" aria-pressed="${a===false}">Regretfully declines<small>Unable to attend</small></button></div></div>
-<div class="zi-att" ${a===true?'':'hidden'}>
-${max>1?`<label class="zi-f"><span>Number of guests, including you</span><select class="zi-p">${Array.from({length:max},(_,i)=>`<option value="${i+1}" ${v&&+v.party===i+1?'selected':''}>${i+1}${i?' guests':' guest · just me'}</option>`).join('')}</select></label>`:''}
+<div class="zi-att" ${a===true?'':'hidden'}>${party}
 ${diet?`<label class="zi-f"><span>Dietary requirements · optional</span><input class="zi-d" maxlength="300" placeholder="Vegetarian, allergies, halal…" value="${esc(v&&v.dietary||'')}"></label>`:''}</div>
-<label class="zi-f"><span>A message for ${esc(h.short)} · optional</span><textarea class="zi-m" rows="3" maxlength="600">${esc(v&&v.message||'')}</textarea></label>
-<button type="button" class="zi-btn zfill" style="width:100%" data-z="ivsend" ${o.mode==='preview'?'disabled':''}>${v?'Update my reply':'Send my reply'}</button>
+<label class="zi-f"><span>${esc(Q.msg)} · optional</span><textarea class="zi-m" rows="3" maxlength="600">${esc(v&&v.message||'')}</textarea></label>
+<button type="button" class="zi-btn zfill" style="width:100%" data-z="ivsend" ${pv?'disabled':''}>${v?'Update my reply':'Send my reply'}</button>
 <div class="zi-bad" role="alert"></div>
-${o.mode==='preview'?'<p class="zi-note">This is a preview. Guests can reply once the invitation is published.</p>':''}</div>`}
+${pv?'<p class="zi-note">This is a preview. Guests can reply once the invitation is published.</p>':''}</div>`}
 function ivDone(r,o,back){
   const yes=r.attending,first=String(r.name||'').split(' ')[0],max=ivMax(o.data);
   return`<div class="zi-done"><div class="zk">${back?'Your reply':yes?'With thanks':'Thank you'}</div>
@@ -5312,7 +5700,7 @@ let ivG={slug:'',key:'',mine:null,o:null,busy:false,demo:[]},ivCdT=null;
 function ivMount(root){
   if(!root)return;
   const z=root.querySelector('.zi');if(!z)return;
-  const sc=root.closest('.ph-in,.zl-full')||null;
+  const sc=root.closest('.ph-in,.zl-full,.zs-scr')||null;
   const els=[...z.querySelectorAll('[data-rv]')];
   if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{root:sc,threshold:.12,rootMargin:'0px 0px -6% 0px'});els.forEach(x=>io.observe(x))}else els.forEach(x=>x.classList.add('on'));
   if(!z.querySelector('.zi-seal'))z.classList.add('in');
@@ -5320,9 +5708,9 @@ function ivMount(root){
   const tick=()=>document.querySelectorAll('[data-cd]').forEach(c=>{const ms=Math.max(0,+c.dataset.cd-Date.now()),v=[Math.floor(ms/864e5),Math.floor(ms/36e5)%24,Math.floor(ms/6e4)%60,Math.floor(ms/1e3)%60];c.querySelectorAll('b').forEach((b,i)=>b.textContent=String(v[i]).padStart(i?2:1,'0'))});
   tick();ivCdT=setInterval(tick,1000);
 }
-function ivOpenSeal(z){if(!z||z.classList.contains('in'))return;z.classList.add('in');document.documentElement.classList.remove('zi-lock');setTimeout(()=>z.querySelectorAll('.zi-cov [data-rv]').forEach(x=>x.classList.add('on')),300)}
+function ivOpenSeal(z){if(!z||z.classList.contains('in')||z.classList.contains('op'))return;const sl=z.querySelector('.zi-seal'),ms=sl?(+sl.dataset.ms||0):0;z.classList.add('op');const au=z.querySelector('.zi-au'),mb=z.querySelector('.zi-mus');if(au&&z.dataset.mode!=='preview')au.play().then(()=>{if(mb)mb.setAttribute('aria-pressed','true')}).catch(()=>{});setTimeout(()=>{z.classList.add('in');document.documentElement.classList.remove('zi-lock')},ms)}
 async function ivSend(btn){
-  const z=btn.closest('.zi'),f=btn.closest('.zi-form'),bad=f.querySelector('.zi-bad'),o=ivG.o;if(ivG.busy||!o)return;
+  const z=btn.closest('.zi'),f=btn.closest('.zi-form'),bad=f.querySelector('.zi-bad'),o=z._o||ivG.o;if(ivG.busy||!o)return;
   const nmEl=f.querySelector('.zi-n'),name=(nmEl.value||'').trim().replace(/\s+/g,' '),a=ivG.ans;
   nmEl.classList.remove('err');bad.textContent='';
   if(name.length<2){nmEl.classList.add('err');bad.textContent=IVERR.name;nmEl.focus();return}
@@ -5362,8 +5750,8 @@ async function ivBoot(){
   if(key){try{const m=await sb.rpc('invite_rsvp_mine',{p_slug:IPAGE,p_key:key});mine=m.error?null:m.data}catch(_){}if(!mine){key='';try{localStorage.removeItem('zinv:'+IPAGE)}catch(_){}}}
   ivG={slug:IPAGE,key,mine,ans:null,busy:false,demo:[],o:{kind:v.kind,theme:v.theme,data:v.data||{},mode:'live',open:v.open!==false}};
   const h=ivHead(v.kind,v.data||{});document.title=h.kick+' · '+h.short;
-  const bg=(IVTH.find(x=>x[0]===ivTheme(v.theme))||IVTH[0])[2];document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content=bg);document.documentElement.style.background=bg;document.body.style.background=bg;
-  root.innerHTML=ivRender(ivG.o);
+  const T2=IVT[(v.data||{}).tpl],bg=T2?T2.pal[Math.max(0,Math.min(T2.pal.length-1,parseInt(v.data.pal,10)||0))].bg:(IVTH.find(x=>x[0]===ivTheme(v.theme))||IVTH[0])[2];document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.content=bg);document.documentElement.style.background=bg;document.body.style.background=bg;
+  root.innerHTML=ivRender(ivG.o);{const zr=root.querySelector('.zi');if(zr)zr._o=ivG.o}
   if(mine&&ivG.o.open)root.querySelector('.zi-rf').innerHTML=ivDone({...mine,key},ivG.o,1);
   document.documentElement.classList.add('zi-lock');
   ivMount(root);
@@ -5433,7 +5821,7 @@ function ivStats(X){
 function ivDraft(){
   const I=wed.invite.inv;
   if(!ui.ivD||ui.ivD.wid!==wed.id)ui.ivD={wid:wed.id,dirty:false,kind:IVK[I.kind]?I.kind:'wedding',theme:ivTheme(I.theme),data:JSON.parse(JSON.stringify(I.data||{}))};
-  const d=ui.ivD.data;if(!Array.isArray(d.photos))d.photos=[];if(!Array.isArray(d.schedule))d.schedule=[];if(d.ask_diet===undefined)d.ask_diet=true;
+  const d=ui.ivD.data;if(!Array.isArray(d.photos))d.photos=[];if(!Array.isArray(d.schedule))d.schedule=[];
   return ui.ivD}
 function ivSec(){
   const X=wed.invite,own=!TOKEN;
@@ -5447,7 +5835,7 @@ function ivSec(){
 <div class="cta" style="margin-top:12px">${live?`<button class="btn fill" data-z="ivshare">Share on WhatsApp</button><button class="btn" data-z="ivcopy">Copy link</button>`:`<button class="btn fill" data-z="ivpub">Publish invitation</button><button class="btn" data-z="ivprev">Preview</button>`}</div>
 <div class="ivlinks">${live?`<a href="${esc(link)}" target="_blank" rel="noopener">Open as a guest</a><button data-z="ivprev">Preview changes</button><button data-z="ivunpub">Unpublish</button>`:''}${own?'<button data-z="ivoff">Switch off for this event</button>':''}</div></section>
 <div class="tabs" style="margin:22px 0 6px">${[['design','Design'],['replies','Replies · '+s.R.length],['guests','Guest list · '+s.G.length]].map(([k,v])=>`<button class="tab ${tab===k?'on':''}" data-z="ivtab" data-k="${k}">${v}</button>`).join('')}</div>
-${tab==='replies'?ivDash(X):tab==='guests'?ivGuests(X):ivEd()}`}
+${tab==='replies'?ivDash(X):tab==='guests'?ivGuests(X):ivStudio()}`}
 function ivEd(){
   const D=ivDraft(),K=IVK[D.kind],d=D.data;
   const F=(k,l,ph,t,x)=>`<div class="f"><span class="l">${l}</span><input data-zf="${k}" type="${t||'text'}" value="${esc(d[k]==null?'':d[k])}" placeholder="${esc(ph||'')}" ${x||''}></div>`;
@@ -5557,7 +5945,7 @@ async function ivUpload(input){
       D.data.photos.push(sb.storage.from('covers').getPublicUrl(path).data.publicUrl);n++}catch(e){toast('Upload failed: '+ivErr(e));break}}
   if(n){D.dirty=true;render();toast(n+(n>1?' photos added':' photo added')+'. Tap Save to keep '+(n>1?'them':'it')+'.')}else if(m)m.textContent='';
 }
-const ivDirty=()=>{const D=ui.ivD;if(!D)return;D.dirty=true;const b=document.querySelector('[data-z="ivsave"]');if(b)b.textContent='Save changes'};
+const ivDirty=()=>{const D=ui.ivD;if(!D)return;D.dirty=true;const b=document.querySelector('[data-z="ivsave"]');if(b)b.textContent=wed&&wed.invite&&wed.invite.inv&&wed.invite.inv.published?'Update live invitation':'Save';zLiveSoon();zAutoSoon()};
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset)return;
   if(t.dataset.zf&&wed&&ivOn()){const D=ivDraft(),k=t.dataset.zf;D.data[k]=t.type==='checkbox'?t.checked:k==='max_party'?+t.value:t.value;ivDirty()}
   else if(t.dataset.zsc!=null&&wed&&ivOn()){const x=ivDraft().data.schedule[+t.dataset.zsc];if(x){x[t.dataset.zk]=t.value;ivDirty()}}
@@ -5571,7 +5959,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return
 /* ===================== Add-on previews (packages page) ===================== */
 let apS=null,apT=null;
 const apType=a=>{const k=String(a.ic||a.id||'').toLowerCase(),n=String(a.n||'').toLowerCase();return k==='invite'||/invitation|rsvp/.test(n)?'invite':k==='album'||/album/.test(n)?'album':k==='board'||k==='signboard'||/sign(ing)? ?board/.test(n)?'board':k==='drone'||/drone|aerial/.test(n)?'drone':k==='usb'||/usb|box/.test(n)?'usb':k==='pre'||a.pre||/pre-?wedding|engagement shoot/.test(n)?'pre':'gen'};
-const APINC={invite:['A personalised invitation website for your guests','Your photos, wording and choice of style','Online RSVP with guest numbers and dietary needs','Private dashboard: replies, guest list and export','Your own link to share on WhatsApp, text and social'],
+const APINC={invite:['Sixteen designs in four collections: weddings, christenings, birthdays and graduations','A personalised invitation website for your guests','Your photos, wording and choice of style','Online RSVP with guest numbers and dietary needs','Private dashboard: replies, guest list and export','Your own link to share on WhatsApp, text and social'],
 album:['Hand-finished luxury album','Your favourite photographs, professionally designed','Choice of cover finish','Made to be held and passed down'],
 board:['Personalised with your names and date','Your choice of design','Displayed on the day for guests to sign','A keepsake to frame at home'],
 drone:['Aerial footage of your venue and celebration','Woven into your wedding film','Licensed pilot, subject to venue and flight permissions'],
@@ -5582,7 +5970,7 @@ function apAll(a){const o=apPool(a),s=new Set(o),add=u=>{u=ivSafe(u);if(u&&!/^da
 const apPh=(P,i,sc)=>P.length?P[i%P.length]:ivScene(sc==null?i:sc);
 function adPrev(id){
   const a=pkd&&pkd.addons.find(x=>x.id===id);if(!a)return;
-  apS={id,t:0,occ:'wedding',th:'ivory',pg:0,cv:0,ds:0,md:0,fn:0,op:false,f:'all',nm:'',dt:''};
+  apS={id,col:'signature',tpl:'maison',t:0,occ:'wedding',th:'ivory',pg:0,cv:0,ds:0,md:0,fn:0,op:false,f:'all',nm:'',dt:''};
   ivG={slug:'demo',key:'',mine:null,ans:null,busy:false,demo:ivG.demo&&ivG.slug==='demo'?ivG.demo:[],o:null};
   zlOpen(apHtml(a),'zap');apMount(a);
 }
@@ -5596,19 +5984,13 @@ function apHtml(a){
 <div class="ap-st" id="apst">${apStage(a)}</div>
 <div class="ap-pn"><div class="ap-sc"><div class="ap-k">Personalise your Zema experience</div><div class="ap-n">${esc(a.n)}</div><div class="ap-p">${esc(pkd.hide?'Price on request':a.p||'')}</div>${a.d?`<p class="ap-d">${esc(a.d)}</p>`:''}
 ${inc.length?`<ul class="ap-l">${inc.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
-${t==='invite'?'<button class="ap-demo" data-z="apfull">Open the sample invitation full screen</button>':''}
+${t==='invite'?'<button class="ap-demo" data-z="apfull">Open this design as a full demo</button>':''}
 <p class="meta" style="margin:22px 0 0;font-size:12px;color:#8E8E93">Previewing never adds anything. Only “Add to package” does.</p></div>
 <div class="ap-ft" id="apft">${apFoot(a)}</div></div></div>`}
 const apTabs=(L,cur,z)=>L.map((x,i)=>`<button class="${cur===i?'on':''}" data-z="${z||'apt'}" data-k="${i}">${esc(x)}</button>`).join('');
 const apSw=(L,cur,z)=>`<div class="swt">${L.map((c,i)=>`<button class="${cur===i?'on':''}" style="background:${c[1]}" data-z="${z}" data-k="${i}" aria-label="${esc(c[0])}" title="${esc(c[0])}"></button>`).join('')}</div>`;
 const APOCC=[['wedding','Wedding'],['birthday','Birthday'],['christening','Christening']];
-function apDemoInv(){
-  const s=apS,k=APOCC[s.occ==='birthday'?1:s.occ==='christening'?2:0][0];
-  const D={wedding:{hosts:'Amani & Daniel',date:'2027-05-22',time:'14:00',end:'23:00',venue:'The Orangery, Kensington',address:'Kensington Gardens, London W8 4PX',dress:'Black tie',message:'We would be honoured to have you with us as we begin our forever.',deadline:'2027-04-01',max_party:2,ask_diet:true,schedule:[{t:'14:00',l:'Ceremony'},{t:'15:30',l:'Drinks reception'},{t:'18:00',l:'Dinner and speeches'},{t:'21:00',l:'First dance'}]},
-  birthday:{honoree:'Hana',detail:'30',hosts:'Her family',date:'2027-03-13',time:'19:30',venue:'The Rooftop, Shoreditch',address:'1 Rivington Street, London EC2A 3AY',dress:'Glamorous · gold and black',message:'An evening of good food, music and the people we love.',deadline:'2027-02-20',max_party:2,ask_diet:true,schedule:[{t:'19:30',l:'Welcome drinks'},{t:'21:00',l:'Dinner'},{t:'22:30',l:'Dancing'}]},
-  christening:{honoree:'Noah',hosts:'Ruth & Michael',date:'2027-06-06',time:'11:00',venue:'St Mary’s Church',address:'Church Road, Stanmore HA7 4AQ',dress:'Smart attire',message:'Please join us as we give thanks and celebrate this blessing, followed by lunch at home.',deadline:'2027-05-15',max_party:4,ask_diet:true,schedule:[{t:'11:00',l:'Christening service'},{t:'13:00',l:'Family lunch'}]}}[k];
-  const a=pkd.addons.find(x=>x.id===s.id)||{},P=apAll(a);
-  return{kind:k,theme:s.th,data:{...D,photos:P.length?P.slice(0,4):[]},mode:'demo',scene:k==='birthday'?3:k==='christening'?2:0}}
+function apDemoInv(){const a=pkd.addons.find(x=>x.id===apS.id)||{};return zDemoOf(apS.tpl||'maison',apAll(a))}
 function apDemoX(){
   const base=[{name:'Ruth Haile',attending:true,party:2,dietary:'Vegetarian',message:'We wouldn’t miss it for the world!'},{name:'Tom Smith',attending:true,party:1,dietary:'',message:''},{name:'Selam Bekele',attending:true,party:2,dietary:'Nut allergy',message:'So happy for you both.'},{name:'James Carter',attending:false,party:0,dietary:'',message:'Sorry to miss it, we’ll be abroad. Love to you both.'},{name:'Mekdes Alemu',attending:true,party:2,dietary:'Halal',message:''},{name:'Grace Okafor',attending:true,party:1,dietary:'',message:'Can’t wait!'},{name:'Daniel Lee',attending:false,party:0,dietary:'',message:''}].map((r,i)=>({...r,id:'s'+i,source:'guest',created_at:new Date(Date.now()-(i+1)*864e5*2).toISOString()}));
   const guests=['Ruth Haile','Tom Smith','Selam Bekele','James Carter','Mekdes Alemu','Grace Okafor','Daniel Lee','Aster Desta','Paul Martin','Hanna Girma','Leo Brown'].map((n,i)=>({id:'g'+i,name:n,allowed:i%3?1:2}));
@@ -5617,10 +5999,7 @@ function apDashRefresh(){const p=$('#apdash');if(p)p.innerHTML=apDashInner()}
 const apDashInner=()=>`<div class="zsm">Sample couple’s dashboard${ivG.demo.length?' · includes your test reply':''}</div><h5>Amani &amp; Daniel · Replies</h5>${ivDash(apDemoX(),1)}`;
 function apStage(a){
   const t=apType(a),s=apS,own=apPool(a).length>0,P=apAll(a),lab=`<div class="ap-sm">${own?'From our portfolio':'Sample preview'}</div>`;
-  if(t==='invite'){
-    const top=`<div class="ap-tb">${apTabs(['Invitation','Guest RSVP','Couple’s dashboard'],s.t)}<span class="sp"></span>${s.t<2?apSw(IVTH.map(x=>[x[1],x[2]]),IVTH.findIndex(x=>x[0]===s.th),'apth'):''}</div>`;
-    if(s.t===2)return top+`<div class="ap-cv"><div class="pnl" id="apdash">${apDashInner()}</div></div><div class="ap-sm">Sample data · not real guests</div>`;
-    return top+`<div class="ap-tb" style="padding-top:8px">${APOCC.map(([k,n])=>`<button class="${s.occ===k?'on':''}" data-z="apocc" data-k="${k}" style="font-size:11px;padding:6px 12px">${n}</button>`).join('')}</div><div class="ap-cv"><div class="zph"><div class="ph-in" id="apph">${ivRender(apDemoInv())}</div></div></div><div class="ap-sm">Sample invitation · tap to explore</div>`}
+  if(t==='invite')return apInvStage(a);
   if(t==='album'){
     const CV=[['Ivory linen','#E9E1D3','#7A6240'],['Black leather','#1E1C1A','#C9A86A'],['Sage','#A9B2A0','#3B4237'],['Blush','#E7D3CC','#7A5048']],c=CV[s.cv];
     const top=`<div class="ap-tb">${apTabs(['Cover','Inside pages'],s.t)}<span class="sp"></span>${s.t===0?apSw(CV,s.cv,'apcv'):''}</div>`;
@@ -5664,7 +6043,7 @@ function apVid(u){u=String(u||'').trim();let m;
   return''}
 function apMount(a){
   clearInterval(apT);apT=null;const t=apType(a);
-  if(t==='invite'&&apS.t<2){const ph=$('#apph');if(ph){ph.style.setProperty('--phh',ph.clientHeight+'px');ivG.o=apDemoInv();ivMount(ph);if(apS.t===1){ivOpenSeal(ph.querySelector('.zi'));setTimeout(()=>{const r=ph.querySelector('#zi-rsvp');if(r)ph.scrollTo({top:r.offsetTop-10,behavior:'smooth'})},450)}}}
+  if(t==='invite'&&apS.t<2){zFitThumbs();const f=zFrame($('#apfr'),apDemoInv(),'mobile');if(f&&f.z){ivG.o=f.z._o;if(apS.t===1){ivOpenSeal(f.z);const ms=+((f.z.querySelector('.zi-seal')||{dataset:{}}).dataset.ms||0);setTimeout(()=>{const r=f.scr.querySelector('#zi-rsvp');if(r)f.scr.scrollTo({top:r.offsetTop-10,behavior:'smooth'})},ms+450)}}}
   if(t==='drone'&&!apVid(a.vid)){const st=Date.now();apT=setInterval(()=>{const r=$('#aprec');if(!r){clearInterval(apT);return}const s=Math.floor((Date.now()-st)/1000);r.textContent='REC '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},1000)}
   if(t==='usb'&&!apS.op&&!apS.seen){apS.seen=1;setTimeout(()=>{if(apS&&apS.id===a.id&&!apS.op){apS.op=true;const u=document.querySelector('.usb');if(u)u.classList.add('op');document.querySelectorAll('[data-z="aplid"]').forEach(b=>{if(b.closest('.ap-tb'))b.classList.toggle('on',b.dataset.k==='1');else b.dataset.k='0'})}},900)}
   if(t==='gen'&&apAll(a).length>1)apT=setInterval(()=>{if(!apS){clearInterval(apT);return}apS.pg++;apRe(a)},4000);
@@ -5692,7 +6071,7 @@ document.addEventListener('click',async e=>{
   if(z==='ivopen'){ivOpenSeal(t.closest('.zi'));return}
   if(z==='ivyn'){const f=t.closest('.zi-form');ivG.ans=t.dataset.v==='1';f.querySelectorAll('[data-z="ivyn"]').forEach(b=>{b.classList.toggle('on',b===t);b.setAttribute('aria-pressed',b===t)});const at=f.querySelector('.zi-att');if(at)at.hidden=!ivG.ans;f.querySelector('.zi-bad').textContent='';return}
   if(z==='ivsend'){ivSend(t);return}
-  if(z==='ivchange'){const box=t.closest('.zi-rf');ivG.ans=ivG.mine?ivG.mine.attending:null;box.innerHTML=ivForm(ivG.o,ivG.mine);return}
+  if(z==='ivchange'){const box=t.closest('.zi-rf'),zo=t.closest('.zi')._o||ivG.o;ivG.ans=ivG.mine?ivG.mine.attending:null;box.innerHTML=ivForm(zo,ivG.mine);return}
   if(z==='ivkeycopy'){const u=ivLink(ivG.slug)+'&r='+ivG.key;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>{t.textContent='Link copied · keep it private'},()=>prompt('Your private reply link:',u));return}
   if(z==='zlx'){zlClose();return}
   /* packages page previews */
@@ -5709,7 +6088,7 @@ document.addEventListener('click',async e=>{
     if(z==='aplid'){apS.op=k==='1';apRe(a);return}
     if(z==='apnx'||z==='appv'){apStep(a,z==='apnx'?1:-1);return}
     if(z==='apf'){apS.f=k;apDashRefresh();return}
-    if(z==='apfull'){const o=apDemoInv();o.flag=1;ivG.o=o;ivFull(o,1);return}
+    if(z==='apfull'){zDemo(apS.tpl||'maison',{pool:apAll(a)});return}
   }}
   /* the Invitation tab */
   if(!wed)return;
@@ -5723,6 +6102,7 @@ document.addEventListener('click',async e=>{
   if(z==='ivsave'){t.disabled=true;await ivSave(null);return}
   if(z==='ivpub'){t.disabled=true;if(!await ivSave(true))t.disabled=false;return}
   if(z==='ivunpub'){ask('Unpublish? Guests opening the link will see that the invitation isn’t available until you publish again.',()=>ivSave(false));return}
+  if(z==='ivprev'&&IVT[ivDraft().data.tpl]){const D=ivDraft();zDemo(D.data.tpl,{o:{kind:D.kind,theme:D.theme,data:JSON.parse(JSON.stringify(D.data)),mode:'preview',intro:true,samples:!D.data.photos.length},title:ivHead(D.kind,D.data).short||'Your invitation'});return}
   if(z==='ivprev'){const D=ivDraft();ivG={slug:I.slug,key:'',mine:null,ans:null,busy:false,demo:[],o:{kind:D.kind,theme:D.theme,data:D.data,mode:'preview'}};ivFull(ivG.o);return}
   if(z==='ivcopy'){const u=ivLink(I.slug);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Invitation link copied'),()=>prompt('Copy this link:',u));return}
   if(z==='ivshare'){const h=ivHead(I.kind,I.data||{}),d=ivDate((I.data||{}).date);window.open('https://wa.me/?text='+encodeURIComponent(`You’re invited! ${h.kick}${h.short?' · '+h.short:''}${d?' · '+ivShort(d):''}\n\nPlease open your invitation and let us know if you can come:\n${ivLink(I.slug)}`),'_blank','noopener');return}
@@ -5740,6 +6120,410 @@ document.addEventListener('click',async e=>{
   if(z==='ivged'){const g=wed.invite.guests.find(x=>String(x.id)===t.dataset.id);if(g)ivGuestModal(g);return}
   if(z==='ivgdel'){const g=wed.invite.guests.find(x=>String(x.id)===t.dataset.id);if(g)ask(`Remove ${g.name} from the guest list?`,()=>ivDo(IVA.gDel(g.id),'Removed'));return}
 });
+
+/* =====================================================================
+   ZEMA INVITATION STUDIO · four collections, sixteen templates
+   A template only changes how the invitation looks. Everything a client chooses
+   (template, palette, fonts, background, decoration, music, film) is kept in the
+   invitation's existing details, so RSVP, links and the dashboard are untouched.
+   ===================================================================== */
+const ZCOL={
+signature:{n:'The Signature Collection',s:'Weddings',kinds:['wedding','engagement','anniversary'],k0:'wedding'},
+sacred:{n:'The Sacred Collection',s:'Christenings',kinds:['christening'],k0:'christening'},
+celebration:{n:'The Celebration Collection',s:'Birthdays',kinds:['birthday'],k0:'birthday'},
+achievement:{n:'The Achievement Collection',s:'Graduations',kinds:['graduation'],k0:'graduation'}};
+const zColOf=k=>Object.keys(ZCOL).find(c=>ZCOL[c].kinds.includes(k))||'';
+/* font pairings: n = names, d = headings, b = text */
+const IVF={
+atelier:{n:'Atelier',fn:'"Cormorant Garamond",Georgia,serif',fd:'"Cormorant Garamond",Georgia,serif',fb:'Inter,system-ui,sans-serif',g:['Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400','Inter:wght@400;500;600']},
+romance:{n:'Romance',fn:'"Pinyon Script",cursive',fd:'"Cormorant Garamond",Georgia,serif',fb:'Montserrat,system-ui,sans-serif',g:['Pinyon+Script','Cormorant+Garamond:ital,wght@0,300;0,400;1,400','Montserrat:wght@400;500;600']},
+vogue:{n:'Vogue',fn:'"Bodoni Moda",Didot,serif',fd:'"Bodoni Moda",Didot,serif',fb:'Inter,system-ui,sans-serif',g:['Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400','Inter:wght@400;500;600']},
+gallery:{n:'Gallery',fn:'Italiana,serif',fd:'Italiana,serif',fb:'Montserrat,system-ui,sans-serif',g:['Italiana','Montserrat:wght@400;500;600']},
+heritage:{n:'Heritage',fn:'Cinzel,serif',fd:'Cinzel,serif',fb:'"EB Garamond",Georgia,serif',g:['Cinzel:wght@400;500;600','EB+Garamond:ital,wght@0,400;0,500;1,400']},
+grace:{n:'Grace',fn:'"Great Vibes",cursive',fd:'Marcellus,serif',fb:'"Josefin Sans",system-ui,sans-serif',g:['Great+Vibes','Marcellus','Josefin+Sans:wght@400;500;600']},
+serene:{n:'Serene',fn:'Marcellus,serif',fd:'Marcellus,serif',fb:'"EB Garamond",Georgia,serif',g:['Marcellus','EB+Garamond:ital,wght@0,400;0,500;1,400']},
+gala:{n:'Gala',fn:'"Playfair Display",Georgia,serif',fd:'"Playfair Display",Georgia,serif',fb:'Montserrat,system-ui,sans-serif',g:['Playfair+Display:ital,wght@0,400;0,600;1,400','Montserrat:wght@400;500;600']},
+fete:{n:'Fête',fn:'"Abril Fatface",Georgia,serif',fd:'"Abril Fatface",Georgia,serif',fb:'"Josefin Sans",system-ui,sans-serif',g:['Abril+Fatface','Josefin+Sans:wght@400;500;600']},
+playful:{n:'Playful',fn:'Fredoka,system-ui,sans-serif',fd:'Fredoka,system-ui,sans-serif',fb:'Nunito,system-ui,sans-serif',g:['Fredoka:wght@400;500;600','Nunito:wght@400;600;700']},
+modern:{n:'Modern',fn:'"DM Serif Display",Georgia,serif',fd:'"DM Serif Display",Georgia,serif',fb:'"DM Sans",system-ui,sans-serif',g:['DM+Serif+Display:ital@0;1','DM+Sans:wght@400;500;600']},
+scholar:{n:'Scholar',fn:'"Cinzel Decorative",Cinzel,serif',fd:'Cinzel,serif',fb:'"EB Garamond",Georgia,serif',g:['Cinzel+Decorative:wght@400;700','Cinzel:wght@400;500;600','EB+Garamond:ital,wght@0,400;0,500;1,400']}};
+const zFontSeen=new Set();
+function zFonts(ids){const fams=[];ids.forEach(id=>(IVF[id]||{g:[]}).g.forEach(f=>{if(!zFontSeen.has(f)){zFontSeen.add(f);fams.push(f)}}));if(!fams.length)return;const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?'+fams.map(f=>'family='+f).join('&')+'&display=swap';document.head.appendChild(l)}
+const zA=(hex,a)=>{const m=String(hex).match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);return m?`rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`:hex};
+const zHex=v=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v):'';
+/* palette: name, background, paper, text, muted, accent, accent 2, accent 3, dark */
+const zP=(n,bg,pa,tx,mu,ac,a2,a3,dk)=>({n,bg,pa,tx,mu,ac,a2,a3,dk:!!dk});
+
+/* ---------------- illustration library (line art in the accent colour) ---------------- */
+const zStar=(cx,cy,r,ri)=>{ri=ri||r*.42;let p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?ri:r;p.push((cx+rr*Math.cos(a)).toFixed(1)+','+(cy+rr*Math.sin(a)).toFixed(1))}return`<polygon points="${p.join(' ')}"/>`};
+const zSpark=(x,y,s)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0-10Q1-1 10 0Q1 1 0 10Q-1 1-10 0Q-1-1 0-10Z"/>`;
+const ZART={
+sprig:(c)=>`<svg viewBox="0 0 160 160" class="zart" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M8 152C40 120 70 92 132 22"/><path d="M40 118c-14-2-24 4-30 14 12 2 22-2 30-14zM58 98c-4-14-14-20-26-20 2 12 12 20 26 20zM74 82c12-6 26-4 34 6-12 6-24 4-34-6zM88 64c-6-12-4-24 6-32 6 12 4 24-6 32zM104 48c12-4 22 0 28 10-12 4-22 0-28-10z"/></g><g style="fill:var(--a2)" stroke="currentColor" stroke-width=".8">${[[132,22],[116,36],[62,70]].map(([x,y])=>[0,72,144,216,288].map(a=>`<ellipse cx="${x+6*Math.cos(a*Math.PI/180)}" cy="${y+6*Math.sin(a*Math.PI/180)}" rx="5" ry="3.4" transform="rotate(${a} ${x+6*Math.cos(a*Math.PI/180)} ${y+6*Math.sin(a*Math.PI/180)})"/>`).join('')+`<circle cx="${x}" cy="${y}" r="2.6" style="fill:var(--zi-gd)"/>`).join('')}</g></svg>`,
+rose:()=>`<svg viewBox="0 0 120 120" class="zart" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"><path d="M60 34c-14 0-24 10-24 22 0 14 12 24 26 24 16 0 26-12 24-26-2-12-12-20-26-20z" style="fill:var(--a2)" fill-opacity=".55"/><path d="M60 44c-8 0-14 6-12 13 2 8 12 10 18 5s4-16-6-18zM54 50c4-4 12-2 12 4M46 66c8 8 22 8 30-2M40 56c-2 12 6 24 20 26"/><path d="M60 80c0 14-2 26-8 36M56 98c-10-6-22-4-28 4 10 6 20 4 28-4zM58 92c8-10 20-12 30-6-8 10-20 10-30 6z"/></g></svg>`,
+olive:()=>`<svg viewBox="0 0 200 60" class="zart" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"><path d="M6 30C60 26 130 26 194 30"/>${Array.from({length:9},(_,i)=>{const x=22+i*19,s=i%2?1:-1;return`<path d="M${x} 29c4 ${-12*s} 14 ${-16*s} 22 ${-14*s}-4 ${10*s}-12 ${16*s}-22 ${14*s}z" style="fill:var(--a2)" fill-opacity=".35"/>`}).join('')}</g></svg>`,
+cross:()=>`<svg viewBox="0 0 60 90" class="zart" aria-hidden="true"><path d="M26 4h8l1 20h19v8l-19 1-1 53h-8l-1-53-19-1v-8h19z" style="fill:currentColor"/><path d="M30 8v76M10 28h40" stroke="var(--zi-bg)" stroke-opacity=".35" stroke-width=".8"/></svg>`,
+dove:()=>`<svg viewBox="0 0 220 150" class="zart zdove" aria-hidden="true"><g style="fill:var(--zi-pa)" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M40 92c18-10 40-14 62-12 10-24 30-52 66-70-8 26-14 44-30 64 18 2 36-2 54-12-6 18-24 30-46 34-12 16-34 26-58 24-14 10-34 14-52 10 10-8 18-16 22-26-8 0-14-4-18-12z"/><path d="M102 80c16-6 30-22 42-46" fill="none"/><path d="M118 84c14 0 26-8 34-20" fill="none"/></g><circle cx="52" cy="90" r="2" style="fill:currentColor"/><path d="M40 92l-12 4 12 2" style="fill:var(--zi-gd)"/><g fill="none" stroke="currentColor" stroke-width="1"><path d="M30 97c-10 6-18 14-22 24"/><path d="M22 106c-8-2-14 2-16 8 8 2 14-2 16-8zM16 116c-6 2-8 8-6 14 6-2 8-8 6-14zM26 110c4-6 10-8 16-6-4 6-10 8-16 6z" style="fill:var(--a2)" fill-opacity=".6"/></g></svg>`,
+candle:(h,i)=>`<g transform="translate(${i} 0)"><ellipse cx="0" cy="${-h-30}" rx="22" ry="34" class="zglow" style="fill:var(--zi-gd)" fill-opacity=".18"/><path class="zfl" d="M0 ${-h-46}c7 10 9 17 6 22-2 4-10 4-12 0-3-5-1-12 6-22z" style="fill:#F6C569"/><path class="zfl" d="M0 ${-h-36}c3 5 4 8 2 10-1 2-4 2-5 0-1-2 0-5 3-10z" style="fill:#FFF3D1"/><line x1="0" y1="${-h}" x2="0" y2="${-h-9}" stroke="#3A2E22" stroke-width="1.5"/><rect x="-11" y="${-h}" width="22" height="${h}" rx="2" style="fill:var(--zi-pa)" stroke="currentColor" stroke-width="1"/><path d="M-11 ${-h+6}c4 3 6 9 4 16M6 ${-h}c2 6 5 7 5 14" stroke="currentColor" stroke-width=".8" fill="none" opacity=".5"/></g>`,
+candles:()=>`<svg viewBox="-120 -190 240 200" class="zart zcan" aria-hidden="true">${ZART.candle(110,-62)}${ZART.candle(150,0)}${ZART.candle(90,62)}<path d="M-100 0h200" stroke="currentColor" stroke-width="1"/></svg>`,
+rosewin:(n)=>{n=n||12;const R=90,pet=Array.from({length:n},(_,i)=>{const a=i*360/n;return`<path transform="rotate(${a})" d="M0-18C10-30 12-52 0-${R-16}C-12-52-10-30 0-18Z" style="fill:${['var(--a2)','var(--a3)','var(--zi-gd)'][i%3]}" fill-opacity=".72"/>`}).join(''),out=Array.from({length:n},(_,i)=>{const a=(i+.5)*360/n*Math.PI/180;return`<circle cx="${(R-8)*Math.cos(a)}" cy="${(R-8)*Math.sin(a)}" r="8" style="fill:${['var(--a3)','var(--a2)'][i%2]}" fill-opacity=".8"/>`}).join('');
+  return`<svg viewBox="-100 -100 200 200" class="zart zrw" aria-hidden="true"><circle r="98" style="fill:var(--zi-pa)" stroke="currentColor" stroke-width="2"/><g stroke="#3B3226" stroke-width="1.6">${pet}${out}</g><circle r="${R}" fill="none" stroke="currentColor" stroke-width="1.4"/><circle r="22" style="fill:var(--zi-gd)" fill-opacity=".85" stroke="#3B3226" stroke-width="1.6"/><path d="M-3-14h6v9h9v6h-9v13h-6V1h-9v-6h9z" style="fill:var(--zi-pa)"/></svg>`},
+laurel:()=>{const lv=s=>Array.from({length:11},(_,i)=>{const a=(s<0?118+i*12:62-i*12)*Math.PI/180,x=100+78*Math.cos(a),y=104+78*Math.sin(a),r=(s<0?118+i*12:62-i*12)+90+(s<0?28:-28);return`<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="11" ry="4.6" transform="rotate(${r} ${x.toFixed(1)} ${y.toFixed(1)})"/>`}).join('');
+  return`<svg viewBox="0 0 200 200" class="zart" aria-hidden="true"><g style="fill:currentColor" fill-opacity=".9">${lv(-1)}${lv(1)}</g><path d="M38 160C30 120 40 70 70 42M162 160c8-40-2-90-32-118" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M88 182l12-14 12 14" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`},
+cap:()=>`<svg viewBox="0 0 200 130" class="zart zcap" aria-hidden="true"><path d="M100 14L190 50 100 86 10 50z" style="fill:currentColor"/><path d="M48 66v30c14 14 36 20 52 20s38-6 52-20V66l-52 21z" style="fill:currentColor" fill-opacity=".85"/><path d="M100 50l58 16v38" fill="none" stroke="var(--a2)" stroke-width="2.4"/><path d="M152 104h12l-3 18h-6z" style="fill:var(--a2)"/><circle cx="100" cy="50" r="4" style="fill:var(--a2)"/></svg>`,
+gift:()=>`<svg viewBox="0 0 200 200" class="zart zgift" aria-hidden="true"><g class="zgb"><rect x="30" y="92" width="140" height="96" rx="4" style="fill:var(--a2)" stroke="currentColor" stroke-width="1.4"/><rect x="88" y="92" width="24" height="96" style="fill:var(--zi-gd)"/></g><g class="zgl"><rect x="22" y="70" width="156" height="26" rx="4" style="fill:var(--a2)" stroke="currentColor" stroke-width="1.4"/><rect x="88" y="70" width="24" height="26" style="fill:var(--zi-gd)"/><path d="M100 70C80 40 50 40 58 60c4 10 26 12 42 10zM100 70c20-30 50-30 42-10-4 10-26 12-42 10z" style="fill:var(--zi-gd)" stroke="currentColor" stroke-width="1.2"/></g></svg>`,
+balloon:(x,y,c,s,d)=>`<g class="zbal" style="--d:${d||0}s" transform="translate(${x} ${y}) scale(${s||1})"><path d="M0 60C-6 90 8 110 0 150" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><ellipse cx="0" cy="0" rx="34" ry="42" style="fill:${c}"/><path d="M-5 41h10l-5 9z" style="fill:${c}"/><ellipse cx="-12" cy="-16" rx="7" ry="12" fill="#fff" opacity=".35" transform="rotate(-20 -12 -16)"/></g>`,
+bunting:(n,cols)=>`<svg viewBox="0 0 400 70" class="zart zbun" preserveAspectRatio="none" aria-hidden="true"><path d="M0 8Q200 46 400 8" fill="none" stroke="currentColor" stroke-width="1.2"/>${Array.from({length:n},(_,i)=>{const t=(i+.5)/n,x=t*400,y=8+38*4*t*(1-t)*.95;return`<path d="M${x-14} ${y-2}L${x+14} ${y-2}L${x} ${y+26}Z" style="fill:${cols[i%cols.length]}"/>`}).join('')}</svg>`,
+cake:(age)=>{const a=parseInt(age,10),num=a>=10&&a<100,n=num?0:Math.max(1,Math.min(a||3,9)),cx=100;
+  const cand=num?String(a).split('').map((ch,i,arr)=>{const x=cx+(i-(arr.length-1)/2)*30;return`<g transform="translate(${x} 0)"><text x="0" y="78" text-anchor="middle" style="font:700 40px var(--zn);fill:var(--a3)" stroke="currentColor" stroke-width=".8">${ch}</text><path class="zfl" d="M0 26c6 9 7 15 4 19-2 3-8 3-10 0-2-4 0-10 6-19z" style="fill:#F6C569"/></g>`}).join(''):Array.from({length:n},(_,i)=>{const x=cx+(i-(n-1)/2)*(n>6?13:17);return`<g transform="translate(${x} 0)"><rect x="-3" y="52" width="6" height="30" rx="1.5" style="fill:${i%2?'var(--a3)':'var(--zi-gd)'}"/><path class="zfl" d="M0 34c5 8 6 13 3 16-2 2-5 2-6 0-2-3-2-8 3-16z" style="fill:#F6C569"/></g>`}).join('');
+  return`<svg viewBox="0 0 200 220" class="zart zcake" aria-hidden="true">${cand}<g stroke="currentColor" stroke-width="1.3"><rect x="52" y="82" width="96" height="46" rx="6" style="fill:var(--zi-pa)"/><path d="M52 92c8 8 12-4 20 4s12-6 20 2 12-6 20 2 12-6 20 2 10-4 16-2V88c0-3-3-6-6-6H58c-3 0-6 3-6 6z" style="fill:var(--a2)"/><rect x="32" y="128" width="136" height="60" rx="6" style="fill:var(--zi-pa)"/><path d="M32 138c10 10 14-6 24 4s14-6 24 4 14-6 24 4 14-6 24 4 14-6 24 4 10-2 12-4v-14c0-3-3-6-6-6H38c-3 0-6 3-6 6z" style="fill:var(--a2)"/><path d="M14 190h172" /><ellipse cx="100" cy="194" rx="92" ry="8" style="fill:var(--zi-gd)" fill-opacity=".35"/></g>${[48,74,100,126,152].map((x,i)=>`<circle cx="${x}" cy="${162+(i%2)*10}" r="3" style="fill:var(--a3)"/>`).join('')}</svg>`},
+building:()=>`<svg viewBox="0 0 300 170" class="zart" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M150 6c-20 0-34 14-36 34h72c-2-20-16-34-36-34z"/><path d="M150 0v6M128 40h44v12h-44z"/><path d="M40 78L150 52l110 26z"/><path d="M34 78h232v10H34z"/>${[56,92,128,172,208,244].map(x=>`<path d="M${x-7} 88h14v56h-14zM${x-9} 88h18M${x-9} 144h18"/>`).join('')}<path d="M30 144h240v8H30zM22 152h256v8H22zM14 160h272v8H14z"/><circle cx="150" cy="66" r="6"/></g></svg>`,
+scroll:()=>`<svg viewBox="0 0 220 120" class="zart" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3"><rect x="22" y="30" width="176" height="48" rx="6" style="fill:var(--zi-pa)"/><ellipse cx="22" cy="54" rx="10" ry="24" style="fill:var(--zi-pa)"/><ellipse cx="198" cy="54" rx="10" ry="24" style="fill:var(--zi-pa)"/><path d="M96 30v48M124 30v48" style="stroke:var(--a2)" stroke-width="7"/><path d="M110 78l-14 34 14-8 14 8z" style="fill:var(--a2)"/></g></svg>`,
+rosette:()=>`<svg viewBox="0 0 120 150" class="zart" aria-hidden="true"><path d="M44 80L26 146l20-12 12 16 10-60zM76 80l18 66-20-12-12 16-10-60z" style="fill:var(--a2)"/><g style="fill:var(--zi-gd)">${Array.from({length:24},(_,i)=>{const a=i*15*Math.PI/180;return`<circle cx="${60+46*Math.cos(a)}" cy="${60+46*Math.sin(a)}" r="9"/>`}).join('')}<circle cx="60" cy="60" r="48"/></g><circle cx="60" cy="60" r="36" fill="none" stroke="var(--zi-pa)" stroke-width="1.2" stroke-dasharray="2 3"/><g style="fill:var(--zi-pa)">${zStar(60,60,16)}</g></svg>`,
+books:()=>`<svg viewBox="0 0 120 70" class="zart" aria-hidden="true"><g stroke="currentColor" stroke-width="1.2"><rect x="10" y="48" width="100" height="16" rx="2" style="fill:var(--a2)"/><rect x="18" y="32" width="88" height="16" rx="2" style="fill:var(--zi-pa)"/><rect x="6" y="16" width="94" height="16" rx="2" style="fill:var(--zi-gd)" fill-opacity=".8"/></g><path d="M22 56h70M30 40h64M18 24h70" stroke="currentColor" stroke-width=".7" opacity=".6"/></svg>`,
+arch:(u,id)=>`<svg viewBox="0 0 200 270" class="zarch" aria-hidden="true"><defs><clipPath id="ca${id}"><path d="M14 266V120C14 60 60 22 100 8c40 14 86 52 86 112v146z"/></clipPath></defs>${u?`<image href="${esc(u)}" x="0" y="0" width="200" height="270" preserveAspectRatio="xMidYMid slice" clip-path="url(#ca${id})"/>`:`<g clip-path="url(#ca${id})"><rect width="200" height="270" style="fill:var(--a2)" fill-opacity=".35"/>${[0,1,2,3,4,5].map(i=>`<path d="M${30+i*28} 270V150c0-14 14-26 14-26s14 12 14 26v120" fill="none" stroke="currentColor" stroke-width=".9" opacity=".55"/>`).join('')}<circle cx="100" cy="92" r="30" fill="none" stroke="currentColor" stroke-width=".9" opacity=".7"/></g>`}<path d="M14 266V120C14 60 60 22 100 8c40 14 86 52 86 112v146" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 268V118C4 54 54 14 100 0c46 14 96 54 96 118v150" fill="none" stroke="currentColor" stroke-width=".8"/></svg>`,
+wax:(m,col)=>{let p=[];for(let i=0;i<28;i++){const a=i/28*Math.PI*2,r=46+(i%3?2.5:-1.5)+(i%7?0:3);p.push((50+r*Math.cos(a)).toFixed(1)+','+(50+r*Math.sin(a)).toFixed(1))}
+  return`<svg viewBox="0 0 100 100" class="zwax" aria-hidden="true"><polygon points="${p.join(' ')}" style="fill:${col||'var(--seal,#8A2E2E)'}"/><circle cx="50" cy="50" r="35" fill="none" stroke="#000" stroke-opacity=".22" stroke-width="2.5"/><circle cx="50" cy="50" r="35" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1" transform="translate(-1 -1)"/><text x="50" y="58" text-anchor="middle" style="font:400 22px var(--zn);fill:#000;fill-opacity:.32">${esc(m)}</text><text x="49.2" y="57.2" text-anchor="middle" style="font:400 22px var(--zn);fill:#fff;fill-opacity:.22">${esc(m)}</text></svg>`},
+envelope:()=>`<div class="zenv"><div class="zenv-b"></div><div class="zenv-c"></div><div class="zenv-f"></div></div>`,
+starfield:(n)=>`<svg viewBox="0 0 400 300" class="zart zsf" preserveAspectRatio="none" aria-hidden="true"><g style="fill:currentColor">${Array.from({length:n||22},(_,i)=>{const x=(i*97)%400,y=(i*53)%300,s=.3+((i*7)%10)/14;return`<g class="ztw" style="--d:${(i%6)*.5}s">${zSpark(x,y,s)}</g>`}).join('')}</g></svg>`};
+
+/* ---------------- background textures ---------------- */
+const zSvgUrl=s=>`url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const ZBG={
+plain:{n:'Plain',css:()=>'none'},
+paper:{n:'Paper',css:()=>zSvgUrl('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0"/></filter><rect width="240" height="240" filter="url(#n)"/></svg>')},
+linen:{n:'Linen',css:(p)=>`repeating-linear-gradient(0deg,${zA(p.tx,.035)} 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,${zA(p.tx,.03)} 0 1px,transparent 1px 5px)`},
+marble:{n:'Marble',css:()=>zSvgUrl('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><filter id="m"><feTurbulence type="fractalNoise" baseFrequency=".004 .012" numOctaves="4" seed="7"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .38  0 0 0 -9 4.2"/></filter><rect width="600" height="600" filter="url(#m)" opacity=".22"/></svg>')},
+glow:{n:'Soft light',css:(p)=>`radial-gradient(90% 60% at 50% 0%,${zA(p.ac,.22)},transparent 70%)`},
+sky:{n:'Sky',css:(p)=>`linear-gradient(180deg,${zA(p.a2,.55)} 0%,${zA(p.bg,0)} 60%)`},
+dots:{n:'Confetti',css:(p)=>zSvgUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120">${[[14,18,p.ac],[70,10,p.a2],[100,52,p.a3],[40,64,p.ac],[86,98,p.a2],[18,100,p.a3],[58,36,p.a3]].map(([x,y,c],i)=>i%2?`<rect x="${x}" y="${y}" width="7" height="3" rx="1" fill="${c}" opacity=".55" transform="rotate(${i*40} ${x} ${y})"/>`:`<circle cx="${x}" cy="${y}" r="3" fill="${c}" opacity=".55"/>`).join('')}</svg>`)},
+stars:{n:'Stars',css:(p)=>zSvgUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><g fill="${p.ac}" opacity=".35">${zStar(20,24,4)}${zStar(110,40,3)}${zStar(64,100,5)}${zStar(140,130,3)}${zStar(24,140,2.5)}</g></svg>`)},
+stripes:{n:'Collegiate',css:(p)=>`repeating-linear-gradient(135deg,transparent 0 22px,${zA(p.ac,.06)} 22px 24px,transparent 24px 46px)`}};
+
+/* ---------------- the sixteen templates ---------------- */
+/* each cover receives x = {h head, d data, p photos, t template, id unique id, kind} */
+const zNm=(h,cls)=>`<h1 class="zi-nm ${cls||''}">${h.big.map(x=>x==='&'?'<em>&amp;</em>':`<span>${esc(x)}</span>`).join('')}</h1>`;
+const zWhen=d=>{const t=ivDate(d.date);return t?ivShort(t):''};
+const zPl=d=>String(d.venue||'').trim();
+const zImg=(u,c,x)=>u?`<div class="${c}" style="${ivBg(u)};${x||''}" role="img" aria-label="Photo"></div>`:'';
+const zAge=d=>{const a=parseInt(d.detail,10);return a>0&&a<130?a:0};
+const zYear=d=>{const m=String(d.detail||'').match(/(20\d\d|19\d\d)/);if(m)return m[1];const t=ivDate(d.date);return t?String(t.getFullYear()):''};
+const IVT={
+/* ---- The Signature Collection ---- */
+maison:{c:'signature',n:'Maison',d:'Editorial photograph, names set like a magazine cover, envelope opening.',intro:'envelope',ms:1500,date:'trio',det:'grid',orn:'rule',photo:1,video:0,music:1,
+  fonts:['atelier','vogue','gallery'],bgs:['paper','plain','linen'],deco:{k:'seal',n:'Wax seal',o:[['#8A2E2E','Bordeaux'],['#1F1E1C','Onyx'],['#B08D57','Gold'],['#6E7B6B','Sage']]},
+  pal:[zP('Ivory & black','#F6F2EA','#FBF9F4','#1A1917','#77716A','#A8864F','#E9DFCF','#D8C7A8'),zP('Champagne','#EFE6D8','#F7F1E7','#2B2620','#857868','#B08D57','#E4D3B8','#CDB48C'),zP('Noir','#0E0D0C','#171513','#F2EDE4','#A69F94','#C9A86A','#2A2622','#3A342C',1)],
+  cover:x=>{const u=x.p[0];return`<section class="zi-cov zc-maison ${u?'':'np'}">${u?`<div class="zbg" style="${ivBg(u)}"></div>`:`<div class="mz-mono">${esc(x.h.mono)}</div>`}<div class="mz-in"><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'mz-nm')}<div class="mz-rule"></div><div class="mz-meta"><span>${esc(zWhen(x.d))}</span><span>${esc(zPl(x.d))}</span></div></div><div class="mz-side">${esc(ivTime(x.d.time)?ivTime(x.d.time).toUpperCase()+' · ':'')}${esc(zWhen(x.d)).toUpperCase()}</div></section>`}},
+florence:{c:'signature',n:'Florence',d:'Botanical stationery with an arched portrait and a wax seal to break.',intro:'seal',ms:1100,date:'line',det:'list',orn:'sprig',photo:1,video:0,music:1,
+  fonts:['romance','grace','atelier'],bgs:['paper','linen','plain'],deco:{k:'flora',n:'Flowers',o:[['roses','Roses'],['sprig','Greenery'],['none','None']]},
+  pal:[zP('Blush','#F7EFEA','#FCF8F5','#3B2F2C','#8C7A73','#B08A62','#E8C8BE','#D9B3A6'),zP('Sage','#EEF1EA','#F8FAF6','#2E3529','#76806E','#9B8A5A','#C9D3BE','#AEBDA0'),zP('Ivory','#F6F2EA','#FCFAF6','#2A2623','#827A70','#A8864F','#E7DCCB','#D6C4A6')],
+  cover:x=>{const fl=x.d.deco||'roses',art=fl==='none'?'':fl==='sprig'?ZART.sprig():ZART.rose();const u=x.p[0];return`<section class="zi-cov zc-flo np"><div class="fl-card">${art?`<div class="fl-c fl-tl">${art}</div><div class="fl-c fl-br">${art}</div>`:''}${u?`<div class="fl-arch" style="${ivBg(u)}"></div>`:''}<div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'fl-nm')}<div class="fl-d">${esc(zWhen(x.d))}${zPl(x.d)?'<br>'+esc(zPl(x.d)):''}</div></div></section>`}},
+monochrome:{c:'signature',n:'Monochrome',d:'Modern, graphic and minimal. Black, white and one great photograph.',intro:'curtain',ms:1200,date:'stack',det:'list',orn:'none',photo:1,video:0,music:1,
+  fonts:['vogue','gallery','modern'],bgs:['plain','paper'],deco:{k:'amp',n:'Ampersand',o:[['big','Oversized'],['small','Discreet']]},
+  pal:[zP('White','#FFFFFF','#F4F4F2','#111111','#6B6B6B','#111111','#E6E6E3','#CFCFCB'),zP('Black','#0B0B0B','#151515','#F5F5F3','#9A9A97','#F5F5F3','#262626','#333333',1),zP('Stone','#E9E6E0','#F3F1EC','#1C1B19','#77736B','#1C1B19','#D6D1C7','#C1BAAD')],
+  cover:x=>{const u=x.p[0],t=ivDate(x.d.date),dd=t?String(t.getDate()).padStart(2,'0')+' . '+String(t.getMonth()+1).padStart(2,'0')+' . '+String(t.getFullYear()).slice(2):'';return`<section class="zi-cov zc-mono np ${u?'':'nophoto'}">${u?`<div class="mo-ph" style="${ivBg(u)}"></div>`:''}<div class="mo-tx">${(x.d.deco||'big')==='big'?'<div class="mo-amp">&amp;</div>':''}<div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'mo-nm')}<div class="mo-dt">${esc(dd)}</div><div class="mo-pl">${esc(zPl(x.d))}</div></div></section>`}},
+cinema:{c:'signature',n:'Cinéma',d:'Your love story as a film premiere, with an optional background film.',intro:'leader',ms:2300,date:'line',det:'grid',orn:'rule',photo:1,video:1,music:1,
+  fonts:['gallery','vogue','atelier'],bgs:['plain'],deco:{k:'grain',n:'Film grain',o:[['on','On'],['off','Off']]},
+  pal:[zP('Noir & gold','#09090A','#141414','#F1ECE2','#9C958A','#C9A86A','#1E1C1A','#2B2824',1),zP('Sepia','#16110C','#211A13','#F2E6D4','#A99780','#D2A86E','#2A2117','#3A2D20',1),zP('Silver screen','#0D0E10','#17181B','#EEF0F2','#9AA0A6','#C7CCD1','#1E2024','#2A2C30',1)],
+  cover:x=>{const u=x.p[0],v=zVidBg(x.d.video);return`<section class="zi-cov zc-cin ${x.d.deco==='off'?'':'grain'}">${v||(u?`<div class="zbg" style="${ivBg(u)}"></div>`:'')}<div class="cn-bar t"></div><div class="cn-bar b"></div><div class="cn-in"><div class="cn-pre">${esc(x.h.pre)}</div>${zNm(x.h,'cn-nm')}<div class="cn-tag">${esc(x.h.kick)}</div><div class="cn-pr">Premiering ${esc(zWhen(x.d))}${zPl(x.d)?' · '+esc(zPl(x.d)):''}</div></div></section>`}},
+/* ---- The Sacred Collection ---- */
+chapel:{c:'sacred',n:'Chapel',d:'A gothic arch framing your photograph, crowned with a cross. Church doors open.',intro:'doors',ms:1500,date:'line',det:'list',orn:'cross',photo:1,video:0,music:1,
+  fonts:['heritage','serene','atelier'],bgs:['paper','linen','glow'],deco:{k:'arch',n:'Arch',o:[['photo','Your photo'],['glass','Window light']]},
+  pal:[zP('Ivory & gold','#F7F3EA','#FCFAF5','#2B2721','#857C6E','#B0904F','#E7DCC4','#D7C39A'),zP('Pale blue','#EEF2F6','#F8FAFC','#253041','#6F7C8C','#A8894F','#C7D5E4','#DCE6EF'),zP('Soft blush','#F8F0EE','#FDF8F7','#3A2C2C','#8C7775','#B08A62','#EBD3CE','#E0C1BA')],
+  cover:x=>{const u=x.d.deco==='glass'?'':x.p[0];return`<section class="zi-cov zc-chp np"><div class="ch-x">${ZART.cross()}</div><div class="ch-a">${ZART.arch(u,x.id)}</div><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'ch-nm')}${x.h.sub?`<div class="ch-sub">${esc(x.h.sub)}</div>`:''}<div class="ch-d">${esc(zWhen(x.d))}</div></section>`}},
+glass:{c:'sacred',n:'Stained Glass',d:'A rose window in your colours, with soft light turning slowly behind it.',intro:'rays',ms:1100,date:'circle',det:'grid',orn:'cross',photo:0,video:0,music:1,
+  fonts:['serene','heritage','grace'],bgs:['glow','paper','plain'],deco:{k:'pet',n:'Window',o:[['12','Twelve lights'],['8','Eight lights'],['16','Sixteen lights']]},
+  pal:[zP('Jewel','#F4F1EA','#FBF9F4','#252A35','#747B88','#B0904F','#7FA3C9','#D99A9A'),zP('Dawn','#F7F2EC','#FDFAF6','#352B2A','#8A7C77','#B48E5A','#E6B8A6','#A9C3D9'),zP('Evening','#141A26','#1C2433','#EEF0F4','#9BA4B4','#D1B076','#4F79A8','#B66A6A',1)],
+  cover:x=>`<section class="zi-cov zc-gls np"><div class="gl-rays"></div><div class="gl-w">${ZART.rosewin(+x.d.deco||12)}</div><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'gl-nm')}${x.h.sub?`<div class="gl-sub">${esc(x.h.sub)}</div>`:''}<div class="gl-d">${esc(zWhen(x.d))}</div></section>`},
+dove:{c:'sacred',n:'Dove',d:'A white dove with an olive branch on a soft sky. Gentle and peaceful.',intro:'dove',ms:1300,date:'trio',det:'list',orn:'olive',photo:1,video:0,music:1,
+  fonts:['grace','romance','serene'],bgs:['sky','paper','plain'],deco:{k:'photo',n:'Photo',o:[['circle','Round portrait'],['none','No photo']]},
+  pal:[zP('Pale blue','#F3F6F9','#FFFFFF','#2A3442','#7A8696','#A9905E','#CFDDEB','#E7EEF5'),zP('Blush','#FAF4F2','#FFFFFF','#3B2E2E','#8E7C7A','#B08A62','#F0D9D3','#F6E8E4'),zP('Ivory','#F8F5EE','#FFFFFF','#2E2A24','#857D71','#A8864F','#E8DFCC','#F2ECE0')],
+  cover:x=>{const u=x.d.deco==='none'?'':x.p[0];return`<section class="zi-cov zc-dov np"><div class="dv-bird">${ZART.dove()}</div><div class="dv-nm">${zNm(x.h,'')}</div><div class="zk">${esc(x.h.kick)}</div>${x.h.sub?`<div class="dv-sub">${esc(x.h.sub)}</div>`:''}${u?`<div class="dv-ph" style="${ivBg(u)}"></div>`:''}<div class="dv-d">${esc(zWhen(x.d))}</div></section>`}},
+candle:{c:'sacred',n:'Candlelight',d:'Three candles glowing beneath a cross. Warm, traditional and calm.',intro:'candles',ms:1500,date:'line',det:'list',orn:'cross',photo:0,video:0,music:1,
+  fonts:['atelier','heritage','serene'],bgs:['glow','paper','plain'],deco:{k:'flame',n:'Candles',o:[['flicker','Flickering'],['still','Still']]},
+  pal:[zP('Candle ivory','#F6F0E4','#FCF8F0','#2E271F','#857A6B','#B08D57','#EADBC0','#D9C29A'),zP('Midnight','#121318','#1B1C23','#F1ECE2','#A29C92','#D4B27A','#2A2B33','#35363F',1),zP('Soft blue','#EEF2F6','#FAFBFD','#26303D','#727D8B','#AE8E56','#D6E0EA','#C4D2E0')],
+  cover:x=>`<section class="zi-cov zc-can np ${x.d.deco==='still'?'still':''}"><div class="cd-x">${ZART.cross()}</div><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'cd-nm')}${x.h.sub?`<div class="cd-sub">${esc(x.h.sub)}</div>`:''}<div class="cd-c">${ZART.candles()}</div><div class="cd-d">${esc(zWhen(x.d))}</div></section>`},
+/* ---- The Celebration Collection ---- */
+velvet:{c:'celebration',n:'Velvet',d:'Black and gold milestone design with a foil number and falling confetti.',intro:'confetti',ms:1100,date:'stack',det:'grid',orn:'spark',photo:1,video:0,music:1,
+  fonts:['gala','vogue','gallery'],bgs:['plain','marble'],deco:{k:'conf',n:'Confetti',o:[['gold','Gold'],['none','None']]},
+  pal:[zP('Black & gold','#0B0A09','#161412','#F3EDE2','#A39B8E','#D6B26E','#3A3125','#F0D9A8',1),zP('Champagne','#EDE3D3','#F6F0E6','#2A241C','#857865','#B48A4A','#D8C3A0','#8C6A35'),zP('Emerald','#0D1F1A','#142A24','#F0EBDF','#9FB1A8','#D7B46E','#1F3B33','#F0D9A8',1)],
+  cover:x=>{const a=zAge(x.d),u=x.p[0];return`<section class="zi-cov zc-vel np">${x.d.deco==='none'?'':'<div class="zconf"></div>'}<div class="vl-n">${a||'✦'}</div><div class="vl-k">${esc(x.h.kick)}</div>${zNm(x.h,'vl-nm')}${u?`<div class="vl-ph" style="${ivBg(u)}"></div>`:''}<div class="vl-d">${esc(zWhen(x.d))}${zPl(x.d)?' · '+esc(zPl(x.d)):''}</div></section>`}},
+cake:{c:'celebration',n:'Make a Wish',d:'A layered birthday cake. Guests tap to light the candles.',intro:'wish',ms:1600,date:'ticket',det:'cards',orn:'spark',photo:0,video:0,music:1,
+  fonts:['modern','gala','playful'],bgs:['dots','plain','paper'],deco:{k:'top',n:'Topping',o:[['sprinkles','Sprinkles'],['plain','Plain']]},
+  pal:[zP('Strawberry','#FBEFF0','#FFF8F8','#3D2328','#8E6E73','#C79A5B','#F2B8C2','#E2677F'),zP('Pastel','#F3F2FB','#FCFBFF','#2F2B45','#78748F','#C2A061','#CFC4F0','#8FC9C2'),zP('Lemon','#FCF7E7','#FFFCF2','#3A3020','#877A60','#C69A44','#F6DC8C','#E58F6F')],
+  cover:x=>`<section class="zi-cov zc-cak np ${x.d.deco==='plain'?'':'spr'}"><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'ck-nm')}${zAge(x.d)?`<div class="ck-a">is turning ${zAge(x.d)}</div>`:''}<div class="ck-c">${ZART.cake(x.d.detail)}</div><div class="ck-d">${esc(zWhen(x.d))}</div></section>`},
+party:{c:'celebration',n:'Party Time',d:'Playful children’s design with balloons, bunting and a big bright name.',intro:'balloons',ms:1400,date:'ticket',det:'cards',orn:'none',photo:1,video:0,music:1,
+  fonts:['playful','fete'],bgs:['dots','plain'],deco:{k:'bal',n:'Balloons',o:[['many','Lots'],['few','A few']]},
+  pal:[zP('Rainbow','#FFF8EC','#FFFFFF','#2B2840','#76718F','#F2A43A','#4FB3E8','#F06A8C'),zP('Pastel','#F6F1FB','#FFFFFF','#352E48','#7D7590','#E7B65C','#9EC9F0','#F3A6BF'),zP('Ocean','#EEF7FB','#FFFFFF','#173247','#5F7A8E','#F2B33D','#3D9BD6','#5CC8B4')],
+  cover:x=>{const p=x.pal,cols=[p.ac,p.a2,p.a3],nm=String(x.h.big[0]||'');const many=(x.d.deco||'many')==='many';return`<section class="zi-cov zc-pty np"><div class="pt-bun">${ZART.bunting(9,cols)}</div><svg class="pt-bal" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${ZART.balloon(46,170,p.a3,1,0)}${ZART.balloon(352,130,p.a2,1.1,1.2)}${many?ZART.balloon(330,330,p.ac,.8,.6)+ZART.balloon(70,380,p.a2,.75,1.8)+ZART.balloon(370,470,p.a3,.6,.9):''}</svg><div class="zk">${esc(x.h.kick)}</div><h1 class="zi-nm pt-nm">${[...nm].map((ch,i)=>`<span style="color:${cols[i%3]}">${esc(ch)}</span>`).join('')}</h1>${zAge(x.d)?`<div class="pt-a">is turning <b>${zAge(x.d)}</b>!</div>`:''}${x.p[0]?`<div class="pt-ph" style="${ivBg(x.p[0])}"></div>`:''}<div class="pt-d">${esc(zWhen(x.d))}</div></section>`}},
+present:{c:'celebration',n:'The Present',d:'A wrapped gift that guests unwrap to reveal your invitation.',intro:'gift',ms:1300,date:'circle',det:'grid',orn:'ribbon',photo:1,video:0,music:1,
+  fonts:['fete','gala','modern'],bgs:['plain','paper','dots'],deco:{k:'ribbon',n:'Ribbon',o:[['corner','Corner ribbon'],['none','None']]},
+  pal:[zP('Pink & gold','#F9E8EA','#FFF6F7','#3A1F27','#8C6A72','#C49A57','#E8A4B4','#C9506E'),zP('Navy & blush','#14213A','#1C2C4A','#F5EDEB','#A8B0C2','#D4AE70','#E8B4B8','#3A5487',1),zP('Mint','#EAF6F1','#F8FDFB','#1F3A33','#6A8A80','#C3A05B','#A6DCC8','#4FA88E')],
+  cover:x=>`<section class="zi-cov zc-prs np">${x.d.deco==='none'?'':'<div class="pr-rib"></div>'}<div class="pr-g">${ZART.gift()}</div><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'pr-nm')}${x.p[0]?`<div class="pr-ph" style="${ivBg(x.p[0])}"></div>`:''}<div class="pr-d">${esc(zWhen(x.d))}</div></section>`},
+/* ---- The Achievement Collection ---- */
+laureate:{c:'achievement',n:'Laureate',d:'Navy and gold, a laurel wreath and caps thrown in the air.',intro:'caps',ms:1500,date:'circle',det:'grid',orn:'star',photo:1,video:0,music:1,
+  fonts:['heritage','scholar','gala'],bgs:['plain','stars','paper'],deco:{k:'star',n:'Stars',o:[['on','Gold stars'],['off','None']]},
+  pal:[zP('Navy & gold','#0F1B33','#16264A','#F2ECDF','#A6AFC2','#D4B06A','#C9A45C','#24365E',1),zP('Burgundy','#3A0F1C','#4A1626','#F4EBE0','#C2A4A8','#D7B373','#C9A45C','#5A1F30',1),zP('Ivory & black','#F5F1E8','#FCFAF5','#151515','#77736B','#A8864F','#C9A45C','#E8E0CF')],
+  cover:x=>`<section class="zi-cov zc-lau np">${x.d.deco==='off'?'':`<div class="la-sf">${ZART.starfield(18)}</div>`}<div class="la-cap">${ZART.cap()}</div><div class="la-w">${ZART.laurel()}<div class="la-in"><div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'la-nm')}</div></div>${x.d.school?`<div class="la-s">${esc(x.d.school)}</div>`:''}<div class="la-d">${esc(zWhen(x.d))}</div></section>`},
+diploma:{c:'achievement',n:'Diploma',d:'An engraved certificate with a ribbon seal. The scroll unrolls to reveal it.',intro:'scroll',ms:1400,date:'line',det:'list',orn:'rule',photo:0,video:0,music:1,
+  fonts:['romance','scholar','heritage'],bgs:['paper','linen','plain'],deco:{k:'seal',n:'Seal',o:[['on','Ribbon seal'],['off','None']]},
+  pal:[zP('Parchment','#F2EADA','#F8F2E6','#2C241A','#7E705C','#9C7A3E','#7A2232','#C9A45C'),zP('Ivory & navy','#F5F2EA','#FCFAF5','#1B2540','#6E7486','#A8864F','#1F3566','#C9A45C'),zP('Ivory & green','#F3F1E8','#FAF9F3','#1E2B22','#6E7A6F','#A8864F','#24503A','#C9A45C')],
+  cover:x=>`<section class="zi-cov zc-dip np"><div class="dp-f"><div class="dp-in"><div class="dp-u">${esc(x.d.school||'With great pride')}</div><div class="dp-c">This is to celebrate that</div>${zNm(x.h,'dp-nm')}<div class="dp-c">${esc(x.d.detail?'has been awarded '+x.d.detail:'has graduated with honour')}</div><div class="dp-row"><span>${esc(zWhen(x.d))}<i>Date</i></span><span>${esc(zPl(x.d)||'To be announced')}<i>Venue</i></span></div>${x.d.deco==='off'?'':`<div class="dp-seal">${ZART.rosette()}</div>`}</div></div></section>`},
+campus:{c:'achievement',n:'Campus',d:'Classical university architecture with an oval portrait and collegiate stripes.',intro:'seal',ms:1100,date:'trio',det:'list',orn:'books',photo:1,video:0,music:1,
+  fonts:['serene','heritage','modern'],bgs:['stripes','paper','plain'],deco:{k:'band',n:'Stripe',o:[['on','College stripe'],['off','None']]},
+  pal:[zP('Burgundy','#F5F0E8','#FCFAF6','#2A1A1E','#7E6E70','#7A2232','#B38A4A','#EADFCC'),zP('Navy','#F2F3F6','#FBFBFD','#18233D','#6C7488','#1F3566','#B38A4A','#DDE3EE'),zP('Forest','#F2F3EE','#FAFBF7','#1C2A20','#6C786E','#24503A','#B38A4A','#DCE4D8')],
+  cover:x=>`<section class="zi-cov zc-cam np">${x.d.deco==='off'?'':'<div class="cm-band"></div>'}<div class="cm-b">${ZART.building()}</div>${x.p[0]?`<div class="cm-ph" style="${ivBg(x.p[0])}"></div>`:''}<div class="zk">${esc(x.h.kick)}</div>${zNm(x.h,'cm-nm')}${x.d.school?`<div class="cm-s">${esc(x.d.school)}</div>`:''}<div class="cm-d">${esc(zWhen(x.d))}</div></section>`},
+honours:{c:'achievement',n:'Honours',d:'Editorial portrait with a giant class year and scattered gold stars.',intro:'stars',ms:1000,date:'stack',det:'grid',orn:'star',photo:1,video:0,music:1,
+  fonts:['gallery','vogue','modern'],bgs:['plain','stars','marble'],deco:{k:'yr',n:'Class year',o:[['big','Giant'],['small','Small']]},
+  pal:[zP('Black & gold','#0C0C0D','#161617','#F2EEE6','#9E9A92','#D4B06A','#2A2A2C','#3A3A3C',1),zP('Navy','#0F1B33','#17264A','#F2EEE6','#A6AFC2','#D4B06A','#1F2F55','#2B3D69',1),zP('Ivory','#F4F0E8','#FBF9F4','#161513','#7A756C','#A8864F','#E6DECF','#D6CAB4')],
+  cover:x=>{const y=zYear(x.d),u=x.p[0];return`<section class="zi-cov zc-hon np ${u?'':'nophoto'}">${u?`<div class="hn-ph" style="${ivBg(u)}"></div>`:''}<div class="hn-sf">${ZART.starfield(14)}</div><div class="hn-tx"><div class="zk">Class of</div>${y?`<div class="hn-y ${x.d.deco==='small'?'sm':''}"><span>${esc(y.slice(0,2))}</span><span>${esc(y.slice(2))}</span></div>`:''}${zNm(x.h,'hn-nm')}<div class="hn-k">${esc(x.h.kick)}</div><div class="hn-d">${esc(zWhen(x.d))}</div></div></section>`}}};
+const zTplIn=c=>Object.keys(IVT).filter(k=>IVT[k].c===c);
+
+/* film: a background clip for covers, or a player in the body */
+function zVidBg(u){u=ivSafe(u);if(!u||!/\.(mp4|webm|mov)(\?|$)/i.test(u))return'';return`<video class="zbgv" src="${esc(u)}" autoplay muted loop playsinline preload="metadata"></video>`}
+function zVidEmbed(u){u=String(u||'').trim();let m;
+  if((m=u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/)))return`<iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?rel=0&playsinline=1" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Our film" loading="lazy"></iframe>`;
+  if((m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/)))return`<iframe src="https://player.vimeo.com/video/${m[1]}?title=0&byline=0" allow="fullscreen; picture-in-picture" allowfullscreen title="Our film" loading="lazy"></iframe>`;
+  u=ivSafe(u);if(u&&/\.(mp4|webm|mov)(\?|$)/i.test(u))return`<video src="${esc(u)}" controls playsinline preload="metadata"></video>`;return''}
+
+/* the opening of each template (shown until the guest taps) */
+function zIntro(t,x){
+  const h=x.h,m=esc(h.mono),k=esc(h.kick),tap=(s)=>`<div class="zt">${s||'Tap to open'}</div>`;
+  const art={
+    envelope:()=>`<div class="zi-env">${ZART.envelope()}<div class="zenv-s">${ZART.wax(h.mono,x.d.deco||'#8A2E2E')}</div></div><div class="zk">${k}</div>${tap()}`,
+    seal:()=>`<div class="zi-wax"><div class="zw-l">${ZART.wax(h.mono,'var(--zi-gd)')}</div><div class="zw-r">${ZART.wax(h.mono,'var(--zi-gd)')}</div></div><div class="zk">${k}</div>${tap('Tap the seal to open')}`,
+    curtain:()=>`<div class="zi-cur l"></div><div class="zi-cur r"></div><div class="zi-cm"><div class="zm2">${m}</div><div class="zk">${k}</div>${tap()}</div>`,
+    leader:()=>`<div class="zi-ld"><div class="zld-c"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width=".6"/><path d="M50 0v100M0 50h100" stroke="currentColor" stroke-width=".5"/></svg><b class="zld-n"><i>3</i><i>2</i><i>1</i></b></div><div class="zk">A Zema Production</div>${tap('Tap to play')}</div>`,
+    doors:()=>`<div class="zi-door l"><span></span></div><div class="zi-door r"><span></span></div><div class="zi-dc"><div class="zdx">${ZART.cross()}</div><div class="zk">${k}</div>${tap()}</div>`,
+    rays:()=>`<div class="zi-ray"></div><div class="zi-rc"><div class="zrx">${ZART.cross()}</div><div class="zk">${k}</div>${tap()}</div>`,
+    dove:()=>`<div class="zi-dv">${ZART.dove()}</div><div class="zk">${k}</div>${tap()}`,
+    candles:()=>`<div class="zi-cn">${ZART.candles()}</div><div class="zk">${k}</div>${tap('Tap to light the candles')}`,
+    wish:()=>`<div class="zi-wish">${ZART.cake(x.d.detail)}</div><div class="zk">${k}</div>${tap('Make a wish · tap to light the candles')}`,
+    confetti:()=>`<div class="zi-cf">${m}</div><div class="zk">${k}</div>${tap()}<div class="zi-burst">${Array.from({length:36},(_,i)=>`<i style="--a:${i*10}deg;--r:${90+(i*37)%120}px;--c:${['var(--zi-gd)','var(--a3)','#fff'][i%3]}"></i>`).join('')}</div>`,
+    balloons:()=>`<svg class="zi-bl" viewBox="0 0 300 300" aria-hidden="true">${ZART.balloon(90,120,x.pal.a3,.9,0)}${ZART.balloon(150,90,x.pal.ac,1,0)}${ZART.balloon(210,125,x.pal.a2,.9,0)}</svg><div class="zk">${k}</div>${tap('Tap to let the balloons go')}`,
+    gift:()=>`<div class="zi-gf">${ZART.gift()}</div><div class="zk">${k}</div>${tap('Tap to unwrap')}`,
+    caps:()=>`<div class="zi-cp">${[0,1,2,3,4].map(i=>`<i style="--i:${i}">${ZART.cap()}</i>`).join('')}</div><div class="zk">${k}</div>${tap()}`,
+    scroll:()=>`<div class="zi-sc"><div class="zsc-p"></div><div class="zsc-r t"></div><div class="zsc-r b"></div><div class="zsc-rb"></div></div><div class="zk">${k}</div>${tap('Tap to unroll')}`,
+    stars:()=>`<div class="zi-st">${ZART.starfield(30)}</div><div class="zm">${m}</div><div class="zk">${k}</div>${tap()}`}[t.intro];
+  return`<div class="zi-seal zin zin-${t.intro}" data-z="ivopen" data-ms="${t.ms||900}" role="button" tabindex="0" aria-label="Open the invitation">${art?art():''}</div>`}
+
+/* formal date in words for certificate-style templates */
+const ZW1=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],ZW10=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+const ZORD={one:'first',two:'second',three:'third',five:'fifth',eight:'eighth',nine:'ninth',twelve:'twelfth'};
+const zW=n=>n<20?ZW1[n]:ZW10[Math.floor(n/10)]+(n%10?'-'+ZW1[n%10]:'');
+const zOrdW=n=>{const w=zW(n),p=w.split('-'),l=p.pop();return[...p,ZORD[l]||(l.endsWith('y')?l.slice(0,-1)+'ieth':l+'th')].join('-')};
+const zYearW=y=>y>=2000&&y<2100?'two thousand'+(y%100?' and '+zW(y%100):''):String(y);
+function zDate(style,dt,t1){
+  if(!dt)return'';const wd=dt.toLocaleDateString('en-GB',{weekday:'long'}),mo=dt.toLocaleDateString('en-GB',{month:'long'}),dd=dt.getDate(),yy=dt.getFullYear();
+  if(style==='line')return`<div class="zd-line" data-rv>${esc(wd)}, the ${zOrdW(dd)} of ${esc(mo)}<br>${zYearW(yy)}${t1?`<small>at ${esc(t1)}</small>`:''}</div>`;
+  if(style==='stack')return`<div class="zd-stack" data-rv><b>${String(dd).padStart(2,'0')}</b><span>${esc(mo)}</span><span>${yy}</span>${t1?`<small>${esc(wd)} · ${esc(t1)}</small>`:`<small>${esc(wd)}</small>`}</div>`;
+  if(style==='circle')return`<div class="zd-circle" data-rv><span>${esc(mo)}</span><b>${dd}</b><span>${yy}</span></div><div class="zi-time" data-rv>${esc(wd)}${t1?' · '+esc(t1):''}</div>`;
+  if(style==='ticket')return`<div class="zd-ticket" data-rv><div><small>Date</small><b>${dd} ${esc(mo.slice(0,3))}</b></div><div><small>Time</small><b>${esc(t1||'TBC')}</b></div><div><small>Day</small><b>${esc(wd.slice(0,3))}</b></div></div>`;
+  return`<div class="zi-date" data-rv><div class="zb">${esc(wd)}</div><div class="zd">${dd}<small>${esc(mo)}</small></div><div class="zb">${yy}</div></div>${t1?`<div class="zi-time" data-rv>at ${esc(t1)}</div>`:''}`}
+const zOrn=(o)=>({rule:'<div class="zrule"><i></i></div>',sprig:`<div class="zorn">${ZART.sprig()}</div>`,cross:`<div class="zorn sm">${ZART.cross()}</div>`,olive:`<div class="zorn wide">${ZART.olive()}</div>`,spark:'<div class="zorn sp"><svg viewBox="-12 -12 24 24"><path d="M0-10Q1-1 10 0Q1 1 0 10Q-1 1-10 0Q-1-1 0-10Z" fill="currentColor"/></svg></div>',ribbon:'<div class="zrule"><i></i></div>',star:`<div class="zorn sp"><svg viewBox="0 0 40 40" fill="currentColor">${zStar(20,20,16)}</svg></div>`,books:`<div class="zorn">${ZART.books()}</div>`})[o]||'';
+
+/* which RSVP questions each occasion asks */
+const IVQ={wedding:{msg:'Special notes',diet:1},engagement:{msg:'A note for the couple',diet:1},anniversary:{msg:'A message for the couple',diet:1},christening:{msg:'A personal message',diet:1},birthday:{msg:'A birthday message',diet:1,plus:1},graduation:{msg:'A congratulatory message',diet:0},private:{msg:'A message for the hosts',diet:1},other:{msg:'A message for the hosts',diet:1}};
+const zAskDiet=(kind,d)=>d.ask_diet===undefined||d.ask_diet===null?!!(IVQ[kind]||IVQ.other).diet:d.ask_diet!==false;
+
+/* the template renderer */
+function ivRender2(o){
+  const d=o.data||{},t=IVT[d.tpl],kind=IVK[o.kind]?o.kind:ZCOL[t.c].k0,h=ivHead(kind,d),demo=o.mode==='demo',pv=o.mode==='preview';
+  const pal=t.pal[Math.max(0,Math.min(t.pal.length-1,parseInt(d.pal,10)||0))],ac=zHex(d.acc)||pal.ac,fp=IVF[t.fonts.includes(d.font)?d.font:t.fonts[0]],bg=t.bgs.includes(d.bg)?d.bg:t.bgs[0];
+  const anim=d.anim!==false,intro=anim&&(!pv||o.intro);zFonts([t.fonts.includes(d.font)?d.font:t.fonts[0]]);
+  let ph=(Array.isArray(d.photos)?d.photos:[]).map(ivSafe).filter(Boolean);if(!ph.length&&(demo||o.samples))ph=(o.pool&&o.pool.length?o.pool:[ivScene(t.c==='sacred'?2:t.c==='celebration'?3:t.c==='achievement'?1:0),ivScene(3),ivScene(2)]);
+  if(!t.photo&&!ph.length)ph=[];
+  const p2={...pal,ac},x={h,d,p:ph,t,pal:p2,id:Math.random().toString(36).slice(2,8),kind};
+  const vars=`--zi-bg:${pal.bg};--zi-pa:${pal.pa};--zi-tx:${pal.tx};--zi-mu:${pal.mu};--zi-gd:${ac};--zi-ln:${zA(pal.tx,.14)};--zi-in:${pal.pa};--a2:${pal.a2};--a3:${pal.a3};--serif:${fp.fd};--sans:${fp.fb};--zn:${fp.fn};--seal:${zHex(d.deco)||'#8A2E2E'};background-color:${pal.bg};background-image:${ZBG[bg].css(p2)};color-scheme:${pal.dk?'dark':'light'}`;
+  const place=zPl(d),addr=String(d.address||'').trim(),t1=ivTime(d.time),t2=ivTime(d.end),dt=ivDate(d.date),dl=ivDate(d.deadline);
+  const map=ivSafe(d.map)||(place||addr?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([place,addr].filter(Boolean).join(', ')):'');
+  const det=[dt||t1?['When',dt?dt.toLocaleDateString('en-GB',{weekday:'long'}):'',ivShort(dt)+(t1?'\n'+t1+(t2?' until '+t2:''):'')]:null,place||addr?['Where',place||'The venue',addr,map]:null,d.dress?['Dress code',d.dress,d.dress_note||'']:null].filter(Boolean);
+  const detH=det.map(([l,a,b,m])=>`<div><div class="zk">${l}</div><h4>${esc(a)}</h4><p>${esc(b||'')}</p>${m?`<a class="zi-btn zsmb" href="${esc(m)}" target="_blank" rel="noopener">Open in Maps</a>`:''}</div>`).join('');
+  const sch=(Array.isArray(d.schedule)?d.schedule:[]).filter(s=>s&&(s.l||s.t));
+  const gal=ph.slice(1);const vid=zVidEmbed(d.video);const mus=ivSafe(d.music);
+  const cd=dt&&anim&&!pv?new Date(d.date+'T'+(/^\d{1,2}:\d{2}/.test(d.time||'')?d.time:'12:00')+':00'):null;
+  const rsvpH={birthday:'Will you celebrate with us?',graduation:'Will you join us?',christening:'Kindly reply'}[kind]||'Kindly reply';
+  return`<div class="zi zt t-${o.data.tpl} ${pal.dk?'zdk':''} ${anim?'':'zst'} ${pv&&!o.intro?'zpv in':''}" data-mode="${demo?'demo':pv?'preview':'live'}" style="${esc(vars)}">
+${o.flag?'<div class="zi-flag">Demo invitation · replies here are not saved</div>':''}
+${intro?zIntro(t,x):''}
+${mus?`<audio class="zi-au" src="${esc(mus)}" loop preload="none"></audio><button type="button" class="zi-mus" data-z="ivmus" aria-label="Play music" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pl" d="M8 5v14l11-7z"/><path class="pa" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>`:''}
+${t.cover(x)}
+<section class="zi-sec zi-iv"><div data-rv>${zOrn(t.orn)}<div class="zi-pre">${esc(h.pre)}</div>${IVK[kind].big==='hon'&&h.line?`<p class="zi-line">${esc(h.line)}</p>`:''}<div class="zi-h">${h.big.map(b=>b==='&'?'<em>&amp;</em>':esc(b)).join(' ')}</div>${IVK[kind].big!=='hon'&&h.line?`<p class="zi-line">${esc(h.line)}</p>`:''}${d.message?`<p class="zi-msg">${esc(d.message)}</p>`:''}</div>${zDate(t.date,dt,t1)}</section>
+${cd&&cd>new Date()?`<div class="zi-band"><section class="zi-sec" data-rv><div class="zk" style="margin-bottom:22px">Counting down</div><div class="zi-cd" data-cd="${cd.getTime()}">${['Days','Hours','Minutes','Seconds'].map(y=>`<div><b>–</b><span>${y}</span></div>`).join('')}</div></section></div>`:''}
+${vid&&!(t.video&&zVidBg(d.video))?`<section class="zi-sec zi-vs" style="padding-bottom:0"><div class="zk" data-rv>Our film</div><div class="zi-vf" data-rv>${vid}</div></section>`:''}
+${detH?`<section class="zi-sec" style="padding-bottom:0"><div data-rv><div class="zk">The details</div><div class="zi-dg zdet-${t.det}" style="--n:${det.length}">${detH}</div></div></section>`:''}
+${sch.length?`<section class="zi-sec" style="padding-bottom:0"><div data-rv><div class="zk">${kind==='wedding'?'Order of the day':'The plan'}</div><div class="zi-sch">${sch.map(s=>`<div><b>${esc(ivTime(s.t)||s.t||'')}</b><span>${esc(s.l||'')}</span></div>`).join('')}</div></div></section>`:''}
+${gal.length?`<section style="padding:clamp(72px,16cqw,140px) 0 0"><div class="zk" data-rv>Moments</div><div class="zi-gal" data-rv>${gal.map(u=>`<div style="${ivBg(u)}" role="img" aria-label="Photo"></div>`).join('')}</div></section>`:''}
+<section class="zi-sec" id="zi-rsvp"><div data-rv>${zOrn(t.orn)}<div class="zk">RSVP</div><div class="zi-h" style="font-size:clamp(34px,8cqw,60px)">${rsvpH}</div>${dl?`<p class="zi-line" style="font-style:italic">Please let us know by ${esc(ivShort(dl))}</p>`:''}</div>
+<div class="zi-rf">${o.open===false?'<p class="zi-msg">Replies for this invitation are now closed. Thank you.</p>':ivForm(o)}</div>
+${d.contact?`<p class="zi-note" style="margin-top:28px">Questions? ${esc(d.contact)}</p>`:''}</section>
+<footer class="zi-foot">With love · ${esc(h.short)}<div style="margin-top:14px;opacity:.7">Digital invitation by Zema Production</div></footer></div>`}
+
+/* sample details for each collection, used by demos and thumbnails */
+const ZDEMO={
+signature:{kind:'wedding',data:{hosts:'Amani & Daniel',date:'2027-05-22',time:'14:00',end:'23:00',venue:'The Orangery, Kensington',address:'Kensington Gardens, London W8 4PX',dress:'Black tie',message:'We would be honoured to have you with us as we begin our forever.',deadline:'2027-04-01',max_party:2,schedule:[{t:'14:00',l:'Ceremony'},{t:'15:30',l:'Drinks reception'},{t:'18:00',l:'Dinner and speeches'},{t:'21:00',l:'First dance'}]}},
+sacred:{kind:'christening',data:{honoree:'Noah',hosts:'Ruth & Michael',date:'2027-06-06',time:'11:00',venue:'St Mary’s Church',address:'Church Road, Stanmore HA7 4AQ',dress:'Smart attire',message:'Please join us as we give thanks and celebrate this blessing, followed by lunch at home.',deadline:'2027-05-15',max_party:4,schedule:[{t:'11:00',l:'Christening service'},{t:'13:00',l:'Family lunch'}]}},
+celebration:{kind:'birthday',data:{honoree:'Hana',detail:'30',hosts:'Her family',date:'2027-03-13',time:'19:30',venue:'The Rooftop, Shoreditch',address:'1 Rivington Street, London EC2A 3AY',dress:'Glamorous',message:'An evening of good food, music and the people we love.',deadline:'2027-02-20',max_party:2,schedule:[{t:'19:30',l:'Welcome drinks'},{t:'21:00',l:'Dinner'},{t:'22:30',l:'Dancing'}]}},
+achievement:{kind:'graduation',data:{honoree:'Selam Bekele',detail:'BSc Architecture · Class of 2027',school:'University College London',hosts:'The Bekele family',date:'2027-07-10',time:'16:00',venue:'The Garden Room',address:'25 Gordon Square, London WC1H 0AW',dress:'Smart casual',message:'Years of hard work, one proud day. Come and celebrate with us.',deadline:'2027-06-20',max_party:3,ask_diet:false,schedule:[{t:'16:00',l:'Drinks and canapés'},{t:'17:30',l:'Speeches'},{t:'18:00',l:'Dinner'}]}}};
+const ZDEMO_T={party:{honoree:'Lily',detail:'6',hosts:'Mum & Dad',venue:'The Play Barn',dress:'Party clothes',message:'Bouncy castle, cake and lots of fun!',max_party:3},cake:{honoree:'Hana',detail:'30'}};
+function zDemoOf(tpl,pool){const t=IVT[tpl],b=ZDEMO[t.c];return{kind:b.kind,data:{...b.data,...(ZDEMO_T[tpl]||{}),tpl,pal:0,photos:t.photo&&pool&&pool.length?pool.slice(0,4):[]},mode:'demo',pool:t.photo?pool:[],samples:t.photo}}
+
+/* ---------------- studio: shared helpers ---------------- */
+function zCtx(o){
+  const d=o.data||{},t=IVT[d.tpl],kind=IVK[o.kind]?o.kind:ZCOL[t.c].k0,pal=t.pal[Math.max(0,Math.min(t.pal.length-1,parseInt(d.pal,10)||0))],ac=zHex(d.acc)||pal.ac,fid=t.fonts.includes(d.font)?d.font:t.fonts[0],fp=IVF[fid],bg=t.bgs.includes(d.bg)?d.bg:t.bgs[0],p2={...pal,ac};
+  let ph=(Array.isArray(d.photos)?d.photos:[]).map(ivSafe).filter(Boolean);if(!ph.length&&(o.mode==='demo'||o.samples))ph=o.pool&&o.pool.length?o.pool:[ivScene(t.c==='sacred'?2:t.c==='celebration'?3:t.c==='achievement'?1:0)];
+  const vars=`--zi-bg:${pal.bg};--zi-pa:${pal.pa};--zi-tx:${pal.tx};--zi-mu:${pal.mu};--zi-gd:${ac};--zi-ln:${zA(pal.tx,.14)};--zi-in:${pal.pa};--a2:${pal.a2};--a3:${pal.a3};--serif:${fp.fd};--sans:${fp.fb};--zn:${fp.fn};--seal:${zHex(d.deco)||'#8A2E2E'};background-color:${pal.bg};background-image:${ZBG[bg].css(p2)};color-scheme:${pal.dk?'dark':'light'}`;
+  return{t,d,kind,vars,fid,x:{h:ivHead(kind,d),d,p:ph,t,pal:p2,id:Math.random().toString(36).slice(2,8),kind}}}
+function zThumb(tpl,pool){
+  const o=zDemoOf(tpl,pool||[]),c=zCtx(o);zFonts([c.fid]);
+  return`<div class="zs-tin"><div class="zi zt t-${tpl} zst in" style="${esc(c.vars+';--zi-vh:650px')}">${c.t.cover(c.x)}</div></div>`}
+function zFitThumbs(){document.querySelectorAll('.zs-th').forEach(th=>{const i=th.querySelector('.zs-tin');if(i)i.style.transform=`scale(${th.clientWidth/390})`})}
+/* an invitation inside a phone or desktop frame, scaled to fit its box */
+function zFrame(host,o,dev,keep){
+  if(!host)return null;const W=dev==='desktop'?1280:390,H=dev==='desktop'?800:780;
+  const old=host.querySelector('.zs-scr'),top=keep&&old?old.scrollTop:0;
+  const aw=Math.max(120,host.clientWidth-36),ah=Math.max(160,host.clientHeight-36),s=Math.min(1,aw/W,ah/H);
+  host.innerHTML=`<div class="zs-box ${dev==='desktop'?'desk':''}" style="width:${Math.round(W*s)}px;height:${Math.round(H*s)}px"><div class="zs-scl" style="width:${W}px;height:${H}px;transform:scale(${s})"><div class="zs-scr" style="--phh:${H}px">${ivRender(o)}</div></div></div>`;
+  const scr=host.querySelector('.zs-scr'),z=scr.querySelector('.zi');if(z)z._o=o;
+  ivMount(scr);if(top)scr.scrollTop=top;return{scr,z}}
+const zS=()=>{if(!ui.ivS||ui.ivS.wid!==(wed&&wed.id))ui.ivS={wid:wed&&wed.id,v:null,col:'',dev:'mobile',p:'edit',opened:false,open:{names:1}};return ui.ivS};
+let zLiveT=null,zAutoT=null;
+const zLiveSoon=()=>{clearTimeout(zLiveT);zLiveT=setTimeout(zPreview,180)};
+const zAutoSoon=()=>{clearTimeout(zAutoT);zAutoT=setTimeout(zAutoSave,2500)};
+function zClean(d0){const d=JSON.parse(JSON.stringify(d0||{}));d.schedule=(d.schedule||[]).filter(x=>x&&(String(x.t||'').trim()||String(x.l||'').trim()));d.photos=(d.photos||[]).map(ivSafe).filter(u=>/^https:/.test(u)).slice(0,8);d.max_party=ivMax(d);['music','video'].forEach(k=>{if(d[k]&&!ivSafe(d[k]))d[k]=''});if(d.acc&&!zHex(d.acc))d.acc='';return d}
+async function zAutoSave(){
+  const D=ui.ivD;if(!D||!D.dirty||!wed||!ivOn())return;const I=wed.invite.inv;if(I.published)return;
+  const data=zClean(D.data);let r;try{r=await IVA.save({kind:D.kind,theme:D.theme,data},false)}catch(e){r={error:e}}
+  if(r&&r.error){const el=$('#zssaved');if(el)el.textContent='Not saved yet: '+ivErr(r.error);return}
+  D.dirty=false;I.data=JSON.parse(JSON.stringify(data));I.kind=D.kind;
+  const el=$('#zssaved');if(el)el.textContent='Draft saved automatically · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const b=document.querySelector('[data-z="ivsave"]');if(b)b.textContent='Saved'}
+function zPreview(){
+  const host=$('#zsstage');if(!host||!wed||!ivOn())return;const D=ivDraft(),S=zS();
+  const f=zFrame(host,{kind:D.kind,theme:D.theme,data:D.data,mode:'preview',intro:true,samples:!D.data.photos.length},S.dev,true);
+  if(f&&f.z&&S.opened)f.z.classList.add('op','in')}
+function zAfter(){zFitThumbs();if($('#zsstage'))zPreview()}
+let zRsT=null;addEventListener('resize',()=>{clearTimeout(zRsT);zRsT=setTimeout(()=>{zAfter();if(zD&&$('#zdst'))zDemoMount();if(apS&&pkd&&$('#apfr')){const a=pkd.addons.find(x=>x.id===apS.id);if(a)apRe(a)}},150)});
+
+/* ---------------- full-screen demo / preview with device switch ---------------- */
+let zD=null;
+function zDemo(tpl,opts){
+  opts=opts||{};const t=IVT[tpl];if(!t&&!opts.o)return;
+  const pool=opts.pool||[];zD={tpl,opts,dev:innerWidth<700?'mobile':(opts.dev||'mobile'),o:opts.o||zDemoOf(tpl,pool)};
+  const ti=opts.o?(opts.title||'Your invitation'):t.n,sub=opts.o?(opts.sub||'Preview · only you can see this'):ZCOL[t.c].n+' · sample details';
+  const html=`<div class="zdm" role="dialog" aria-modal="true" aria-label="${esc(ti)}"><div class="zdm-bar"><span class="zdm-badge">${opts.o?'Preview':'Demo'}</span><div class="zdm-t">${esc(ti)}<small>${esc(sub)}</small></div><span class="zs-sp"></span><div class="zs-seg zdm-dev"><button class="${zD.dev==='mobile'?'on':''}" data-z="zddev" data-k="mobile">Mobile</button><button class="${zD.dev==='desktop'?'on':''}" data-z="zddev" data-k="desktop">Desktop</button></div><button class="zdm-b" data-z="zdre">Replay opening</button>${opts.use?`<button class="zdm-b pri" data-z="zduse" data-k="${esc(tpl)}">Use this design</button>`:''}<button class="zdm-x" data-z="zlx" aria-label="Close">×</button></div><div class="zdm-st" id="zdst"></div><div class="zdm-ft">${opts.o?'This is how guests will see it. Replies can’t be sent from a preview.':'A working demo with sample names and details. Try the opening and send a test reply: nothing is saved. Your invitation will show your own names, photos and details.'}</div></div>`;
+  const el=zlOn?zlSub(html):zlOpen(html);requestAnimationFrame(zDemoMount);return el}
+function zDemoMount(){if(!zD)return;const st=$('#zdst');if(!st)return;if(zD.o.mode==='demo'){ivG.o=zD.o}const f=zFrame(st,zD.o,zD.dev,false);zFitThumbs();return f}
+
+/* ---------------- studio: browse the collections ---------------- */
+function zBrowse(D){
+  const S=zS(),col=S.col||zColOf(D.kind)||'signature',cur=D.data.tpl;
+  return`<div class="zs-wide"><section class="card" style="margin-bottom:16px"><div class="lbl">Choose your design</div><p class="intro" style="margin:8px 0 0">Four collections, each made for its occasion. Tap any design to open a working demo, then choose the one you love. You can change it later.</p></section>
+<div class="zs-cols" role="tablist">${Object.keys(ZCOL).map(c=>`<button class="${c===col?'on':''}" data-z="zscol" data-k="${c}" role="tab" aria-selected="${c===col}">${esc(ZCOL[c].n.replace('The ',''))}<small>${esc(ZCOL[c].s)}</small></button>`).join('')}</div>
+<div class="zs-grid">${zTplIn(col).map(k=>`<button class="zs-card ${k===cur?'on':''}" data-z="zsdemo" data-k="${k}"><div class="zs-th">${k===cur?'<span class="zs-badge">Your design</span>':''}${zThumb(k)}</div><div class="zs-cn">${esc(IVT[k].n)}</div><div class="zs-cd">${esc(IVT[k].d)}</div></button>`).join('')}</div>
+<div class="cta" style="margin-top:20px">${IVT[cur]?'<button class="btn" data-z="zsback">← Back to my invitation</button>':''}${!IVT[cur]&&(D.data.hosts||D.data.honoree||D.data.title)?'<button class="btn" data-z="zsclassic">Keep the Classic design</button>':''}</div></div>`}
+
+/* ---------------- studio: the editor ---------------- */
+function zEditor(D){
+  const t=IVT[D.data.tpl],K=IVK[D.kind],d=D.data,S=zS(),Q=IVQ[D.kind]||IVQ.other;zFonts(t.fonts);
+  const F=(k,l,ph,ty,x)=>`<div class="f"><span class="l">${l}</span><input data-zf="${k}" type="${ty||'text'}" value="${esc(d[k]==null?'':d[k])}" placeholder="${esc(ph||'')}" ${x||''}></div>`;
+  const T=(k,l,ph,r)=>`<div class="f"><span class="l">${l}</span><textarea data-zf="${k}" rows="${r||3}" placeholder="${esc(ph||'')}" maxlength="900">${esc(d[k]||'')}</textarea></div>`;
+  const two=(a,b)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${a}${b}</div>`;
+  const sec=(k,title,body)=>`<details data-sec="${k}" ${S.open[k]?'open':''}><summary>${title}</summary><div>${body}</div></details>`;
+  const kinds=[...ZCOL[t.c].kinds,'private','other'];
+  const pi=Math.max(0,Math.min(t.pal.length-1,parseInt(d.pal,10)||0)),fid=t.fonts.includes(d.font)?d.font:t.fonts[0],bg=t.bgs.includes(d.bg)?d.bg:t.bgs[0],dv=t.deco?(d.deco||t.deco.o[0][0]):'';
+  const mob=`<div class="zs-seg zs-tabsm"><button class="${S.p==='edit'?'on':''}" data-z="zsp" data-k="edit">Edit</button><button class="${S.p==='preview'?'on':''}" data-z="zsp" data-k="preview">Preview</button></div>`;
+  const I=wed.invite.inv;
+  return`<div class="zs-wide"><div class="zs-ed" data-p="${S.p}">
+<div class="zs-ctl">${mob}
+<div class="zs-cur"><div class="zs-th">${zThumb(d.tpl)}</div><div style="flex:1;min-width:0"><b>${esc(t.n)}</b><span>${esc(ZCOL[t.c].n)}</span></div><button class="btn" data-z="zsbrowse">Change</button></div>
+${sec('names','Names and wording',`<div class="zs-lab">Occasion</div><div class="zs-row">${kinds.map(k=>`<button class="tab ${D.kind===k?'on':''}" data-z="ivkind" data-k="${k}">${esc(IVK[k].n)}</button>`).join('')}</div><div style="height:12px"></div>
+${K.ttl?F('title',K.ttl,K.ttlPh,'','maxlength="80"'):''}${K.hon?F('honoree',K.hon,K.honPh,'','maxlength="80"'):''}${K.det?F('detail',K.det,K.detPh,'','maxlength="60"'):''}${D.kind==='graduation'?F('school','University or school · optional','e.g. University College London','','maxlength="90"'):''}${K.who?F('hosts',K.who,K.whoPh,'','maxlength="100"'):''}
+${F('pre','Opening line · optional',K.pre,'','maxlength="120"')}${F('line','Invitation line · optional',K.line||'e.g. join us for an evening to remember','','maxlength="200"')}
+${T('message','Your welcome message · optional',K.msg,4)}`)}
+${sec('when','Date and place',`${F('date','Date','','date')}${two(F('time','Start time','','time'),F('end','Ends · optional','','time'))}${F('venue','Venue','e.g. The Orangery, Kensington','','maxlength="120"')}${F('address','Address and postcode','','','maxlength="200"')}${F('map','Map link · optional','Leave empty and we make one from the address','url','maxlength="500"')}${F('dress','Dress code · optional',K.dress?'e.g. '+K.dress:'','','maxlength="80"')}
+<div class="zs-lab">Order of the day · optional</div>${d.schedule.map((x,i)=>`<div class="ivsc"><input type="time" data-zsc="${i}" data-zk="t" value="${esc(x.t||'')}" aria-label="Time"><input data-zsc="${i}" data-zk="l" value="${esc(x.l||'')}" placeholder="e.g. Ceremony" maxlength="80" aria-label="Moment"><button data-z="ivscx" data-i="${i}" aria-label="Remove">×</button></div>`).join('')}${d.schedule.length<10?'<button class="btn" data-z="ivsca">+ Add a moment</button>':''}`)}
+${sec('photos',t.video?'Photos and film':'Photos and film',`<p class="zs-note" style="margin:0 0 6px">${t.photo?'The first photo is used on the cover.':'This design is illustrated. Your photos appear further down, in the gallery.'} Up to 8.</p>
+<div class="ivph">${d.photos.map((u,i)=>`<div style="${ivBg(ivSafe(u))}">${i?'':'<em>'+(t.photo?'Cover':'First')+'</em>'}<span>${i?`<button data-z="ivphc" data-i="${i}">Make first</button>`:'<i></i>'}<button data-z="ivphx" data-i="${i}">Remove</button></span></div>`).join('')}${d.photos.length<8?`<label><b>+</b>Add photos<input type="file" accept="image/*" multiple data-zup="ivph" style="display:none"></label>`:''}</div><div class="meta" id="ivphm" style="margin:6px 0 0"></div>
+<div class="zs-lab">Film · optional</div>${F('video','Link to your film','YouTube, Vimeo or an .mp4 link','url','maxlength="500"')}<div class="up"><label class="btn">Upload a short film<input type="file" accept="video/mp4,video/webm,video/quicktime" data-zup="ivvid" style="display:none"></label><span class="upm" id="zsvidm"></span></div><p class="zs-note">${t.video?'In this design the film plays softly behind your names.':'Your film appears in its own section of the invitation.'}</p>`)}
+${sec('style','Colours, fonts and finish',`<div class="zs-lab">Colour palette</div><div class="zs-sw">${t.pal.map((p,i)=>`<button class="${i===pi?'on':''}" data-z="zspal" data-k="${i}"><i style="background:${p.bg};--x:${p.ac};box-shadow:inset 0 0 0 1px ${zA(p.tx,.15)}"></i>${esc(p.n)}</button>`).join('')}</div>
+<div class="zs-lab">Accent colour</div><div class="zs-acc"><input type="color" data-zf="acc" value="${zHex(d.acc)||t.pal[pi].ac}" aria-label="Accent colour"><span class="zs-note" style="margin:0">Used for details, lines and highlights.</span>${zHex(d.acc)?'<button class="lnk" data-z="zsaccx" style="background:none;border:0;cursor:pointer;color:var(--mu);text-decoration:underline">Reset</button>':''}</div>
+<div class="zs-lab">Fonts</div><div class="zs-ft">${t.fonts.map(f=>`<button class="${f===fid?'on':''}" data-z="zsfont" data-k="${f}"><b style="font-family:${esc(IVF[f].fn)}">${esc(ivHead(D.kind,d).short||'Your names')}</b><small style="font-family:${esc(IVF[f].fb)}">${esc(IVF[f].n)}</small></button>`).join('')}</div>
+<div class="zs-lab">Background</div><div class="zs-row">${t.bgs.map(b=>`<button class="tab ${b===bg?'on':''}" data-z="zsbg" data-k="${b}">${esc(ZBG[b].n)}</button>`).join('')}</div>
+${t.deco?`<div class="zs-lab">${esc(t.deco.n)}</div><div class="zs-row">${t.deco.o.map(([v,n])=>`<button class="tab ${v===dv?'on':''}" data-z="zsdeco" data-k="${esc(v)}">${zHex(v)?`<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${v};margin-right:6px;vertical-align:-1px"></span>`:''}${esc(n)}</button>`).join('')}</div>`:''}
+<div class="zs-lab">Opening and movement</div><div class="zs-seg"><button class="${d.anim!==false?'on':''}" data-z="zsanim" data-k="1">Animated</button><button class="${d.anim===false?'on':''}" data-z="zsanim" data-k="0">Still</button></div><p class="zs-note">${d.anim!==false?'Guests see the opening animation, then gentle movement as they scroll.':'Guests go straight to the invitation, with no movement.'}</p>`)}
+${sec('music','Music',`<p class="zs-note" style="margin:0 0 10px">Starts when guests open the invitation, with a button to pause it.</p>${F('music','Link to a song file','https://… .mp3','url','maxlength="500"')}<div class="up"><label class="btn">Upload music<input type="file" accept="audio/mpeg,audio/mp4,audio/aac,audio/x-m4a" data-zup="ivmus" style="display:none"></label><span class="upm" id="zsmusm"></span></div>${d.music?'<button class="lnk" data-z="zsmusx" style="background:none;border:0;cursor:pointer;color:var(--mu);text-decoration:underline;margin-top:8px">Remove music</button>':''}<p class="zs-note">Only use music you have the right to share.</p>`)}
+${sec('replies','Replies',`${F('deadline','Reply by · optional','','date')}
+<div class="f"><span class="l">Each reply can include</span><select data-zf="max_party">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${ivMax(d)===i+1?'selected':''}>${i?(i===1&&Q.plus?'A plus-one':'Up to '+(i+1)+' people'):'Just the guest'}</option>`).join('')}</select></div>
+<label class="chk" style="margin:0 0 16px"><input type="checkbox" data-zf="ask_diet" ${zAskDiet(D.kind,d)?'checked':''}> Ask about dietary requirements</label>
+${F('contact','Contact for questions · optional','e.g. Call Ruth on 07…','','maxlength="120"')}<p class="zs-note">Guests are also asked for: ${esc(Q.msg.toLowerCase())}.</p>`)}
+<div class="ivsave"><button class="btn" data-z="zsfull">Full screen</button><button class="btn fill" data-z="ivsave">${D.dirty?(I.published?'Update live invitation':'Save'):'Saved'}</button></div>
+</div>
+<div class="zs-pv">${mob}<div class="zs-bar"><div class="zs-seg"><button class="${S.dev==='mobile'?'on':''}" data-z="zsdev" data-k="mobile">Mobile</button><button class="${S.dev==='desktop'?'on':''}" data-z="zsdev" data-k="desktop">Desktop</button></div><span class="zs-sp"></span><button class="lnk" data-z="zsreplay">Replay opening</button><button class="lnk" data-z="zsfull">Full screen</button></div>
+<div class="zs-stage" id="zsstage"></div><div class="zs-pill" id="zssaved">${I.published?'Live: changes reach guests when you tap Update.':'Draft: saved automatically as you go.'}</div></div>
+</div></div>`}
+function ivStudio(){
+  const D=ivDraft(),S=zS();
+  if(S.v==='classic')return`<div class="cta" style="margin:0 0 12px"><button class="btn" data-z="zsbrowse">Choose a new design</button></div>`+ivEd();
+  if(S.v===null)S.v=IVT[D.data.tpl]?'edit':'browse';
+  return S.v==='browse'||!IVT[D.data.tpl]?zBrowse(D):zEditor(D)}
+function zUse(tpl){
+  const t=IVT[tpl],D=ivDraft(),S=zS();if(!t)return;const was=D.data.tpl;
+  D.data.tpl=tpl;if(was!==tpl){D.data.pal=0;D.data.font=t.fonts[0];D.data.bg=t.bgs[0];D.data.deco=t.deco?t.deco.o[0][0]:'';D.data.acc='';if(D.data.anim===undefined)D.data.anim=true}
+  if(!ZCOL[t.c].kinds.includes(D.kind))D.kind=ZCOL[t.c].k0;if(D.kind==='birthday'&&!(+D.data.max_party>1))D.data.max_party=2;
+  D.dirty=true;S.v='edit';S.opened=false;zlClose(1);zD=null;render();zAutoSoon();toast(t.n+' is now your design')}
+async function zUpMedia(input,kind){
+  const f=(input.files||[])[0],m=$(kind==='music'?'#zsmusm':'#zsvidm'),D=ivDraft(),key=wed.invite.inv.upload_key;input.value='';if(!f)return;
+  const max=kind==='music'?15:50;if(f.size>max*1048576){toast(`That file is over ${max} MB. Please choose a smaller one, or paste a link.`);return}
+  const ext=(f.name.split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,'')||(kind==='music'?'mp3':'mp4');
+  if(m)m.textContent='Uploading…';
+  try{const path='invite/'+key+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const{error}=await sb.storage.from('covers').upload(path,f,{contentType:f.type||undefined,cacheControl:'31536000'});if(error)throw error;
+    D.data[kind]=sb.storage.from('covers').getPublicUrl(path).data.publicUrl;D.dirty=true;render();zAutoSoon();toast(kind==='music'?'Music added':'Film added')}
+  catch(e){const s=String(e&&e.message||e);if(m)m.textContent=/policy|row-level|mime|type/i.test(s)?'Uploads of this kind aren’t switched on yet. Paste a link instead, or ask Zema Production.':'Upload failed: '+s}}
+
+/* ---------------- studio clicks ---------------- */
+document.addEventListener('toggle',e=>{const el=e.target;if(el&&el.dataset&&el.dataset.sec&&ui.ivS){ui.ivS.open[el.dataset.sec]=el.open?1:0}},true);
+document.addEventListener('click',e=>{
+  const t=e.target&&e.target.closest&&e.target.closest('[data-z]');if(!t)return;const z=t.dataset.z,k=t.dataset.k;
+  if(z==='zddev'&&zD){zD.dev=k;document.querySelectorAll('[data-z="zddev"]').forEach(b=>b.classList.toggle('on',b.dataset.k===k));zDemoMount();return}
+  if(z==='zdre'&&zD){zDemoMount();return}
+  if(z==='zduse'){zUse(k);return}
+  if(z==='ivmus'){const zi=t.closest('.zi'),au=zi&&zi.querySelector('.zi-au');if(!au)return;if(au.paused){au.play().then(()=>t.setAttribute('aria-pressed','true')).catch(()=>{})}else{au.pause();t.setAttribute('aria-pressed','false')}return}
+  if(z==='ivplus'){const f=t.closest('.zi-form'),h=f.querySelector('.zi-p');if(h)h.value=t.dataset.v;t.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===t));return}
+  if(z==='ivopen'&&t.closest('#zsstage')){zS().opened=true;return}
+  if(!wed||!ivOn())return;const S=zS();
+  if(z==='zscol'){S.col=k;render();return}
+  if(z==='zsdemo'){zDemo(k,{use:true,pool:ivDraft().data.photos.map(ivSafe).filter(Boolean)});return}
+  if(z==='zsbrowse'){S.v='browse';S.col=zColOf(ivDraft().kind)||S.col;render();scrollTo({top:Math.max(0,($('.zs-wide')||document.body).getBoundingClientRect().top+scrollY-20)});return}
+  if(z==='zsback'){S.v='edit';render();return}
+  if(z==='zsclassic'){S.v='classic';render();return}
+  if(z==='zsp'){S.p=k;const ed=$('.zs-ed');if(ed)ed.dataset.p=k;document.querySelectorAll('[data-z="zsp"]').forEach(b=>b.classList.toggle('on',b.dataset.k===k));if(k==='preview')zPreview();return}
+  if(z==='zsdev'){S.dev=k;document.querySelectorAll('[data-z="zsdev"]').forEach(b=>b.classList.toggle('on',b.dataset.k===k));zPreview();return}
+  if(z==='zsreplay'){S.opened=false;const sc=$('#zsstage .zs-scr');if(sc)sc.scrollTop=0;zPreview();return}
+  if(z==='zsfull'){const D=ivDraft();S.opened=false;zDemo(D.data.tpl,{o:{kind:D.kind,theme:D.theme,data:JSON.parse(JSON.stringify(D.data)),mode:'preview',intro:true,samples:!D.data.photos.length},title:ivHead(D.kind,D.data).short||'Your invitation',sub:'Preview · only you can see this'});return}
+  const D=ivDraft(),T=IVT[D.data.tpl];if(!T)return;
+  const set=(f,v)=>{D.data[f]=v;D.dirty=true;render();zAutoSoon()};
+  if(z==='zspal'){D.data.acc='';set('pal',+k);return}
+  if(z==='zsaccx'){set('acc','');return}
+  if(z==='zsfont'){set('font',k);return}
+  if(z==='zsbg'){set('bg',k);return}
+  if(z==='zsdeco'){set('deco',k);return}
+  if(z==='zsanim'){S.opened=false;set('anim',k==='1');return}
+  if(z==='zsmusx'){set('music','');return}
+});
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return;if(t.dataset.zup==='ivmus')zUpMedia(t,'music');else if(t.dataset.zup==='ivvid')zUpMedia(t,'video')});
+
+/* ---------------- packages page: the invitation extra ---------------- */
+function apInvStage(a){
+  const s=apS;s.col=s.col||'signature';if(!IVT[s.tpl]||IVT[s.tpl].c!==s.col)s.tpl=zTplIn(s.col)[0];
+  const top=`<div class="ap-tb">${apTabs(['Designs','Guest RSVP','Couple’s dashboard'],s.t)}</div>`;
+  if(s.t===2)return top+`<div class="ap-cv"><div class="pnl" id="apdash">${apDashInner()}</div></div><div class="ap-sm">Sample data · not real guests</div>`;
+  const P=apAll(a);
+  return top+`<div class="ap-cols">${Object.keys(ZCOL).map(c=>`<button class="${c===s.col?'on':''}" data-z="apcol" data-k="${c}">${esc(ZCOL[c].s)}</button>`).join('')}</div>
+<div class="ap-cv ap-fr" id="apfr"></div>
+<div class="ap-tpl">${zTplIn(s.col).map(k=>`<button class="${k===s.tpl?'on':''}" data-z="aptpl" data-k="${k}" aria-label="${esc(IVT[k].n)}"><div class="zs-th">${zThumb(k,P)}</div>${esc(IVT[k].n)}</button>`).join('')}</div><div class="ap-sm" style="bottom:auto;top:14px;left:auto;right:70px">Demo</div>`}
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-z]');if(!t||!apS||!pkd)return;const a=pkd.addons.find(x=>x.id===apS.id);if(!a)return;const z=t.dataset.z,k=t.dataset.k;
+  if(z==='apcol'){apS.col=k;apS.tpl=zTplIn(k)[0];apS.t=0;apRe(a)}
+  else if(z==='aptpl'){apS.tpl=k;apRe(a)}},true);
 
 init();
 </script></body></html>
