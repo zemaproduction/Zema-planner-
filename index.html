@@ -1782,7 +1782,7 @@ async function acceptBk(id){
     const pkI=pk&&pk.wed.find(x=>x.n===pn),preA=pk&&pk.addons.find(x=>x.pre);
     if(ty==='Wedding'&&((pkI&&pkI.pre)||(preA&&ids.includes(preA.id))))await sb.from('event_days').insert({wedding_id:data.id,kind:'Pre-wedding shoot',day_date:null,price:0}).then(()=>{},()=>{});
     /* the Digital Invitations & RSVP extra switches the invitation on for the couple's link */
-    if(ids.includes('invite')||(ty==='Wedding'&&pkI&&Array.isArray(pkI.inc)&&pkI.inc.includes('invite')))await ivEnable(data.id,{name:b.name,ty,date:b.event_date,address:b.location||''}).catch(()=>{});
+    if(ids.includes('invite')||(ty==='Wedding'&&pkI&&((Array.isArray(pkI.inc)&&pkI.inc.includes('invite'))||(pkI.f||[]).some(x=>/digital invitation/i.test(x)))))await ivEnable(data.id,{name:b.name,ty,date:b.event_date,address:b.location||''}).catch(()=>{});
   }
   const locs=[b.location,b.location2,b.location3].filter(Boolean);
   if(locs.length)await sb.from('wedding_locations').insert(locs.map((x,i)=>({wedding_id:data.id,name:'Location '+(i+1),address:x})));
@@ -1871,7 +1871,9 @@ const colPk=()=>{
     if(col.pkg==='__hr'){const r=HRK.find(x=>x[0]===col.hk),rt=colRate(col.hk);return r&&rt!=null?{hr:1,n:'By the hour · '+r[1]+' · '+col.hh+' hours',kind:r[1],rate:rt,inc:[]}:null}
     return pkd.ev.find(k=>k.n&&k.n===col.pkg)||null}
   return pkd.wed.find(k=>k.n&&k.n===col.pkg)||null};
-const colIncl=a=>{const k=colPk();if(!a||!k)return false;return EVM?(Array.isArray(k.inc)&&k.inc.includes(a.id)):!!(a.pre&&k.pre)||(!a.pre&&Array.isArray(k.inc)&&k.inc.includes(a.id))};
+/* an extra counts as included when the package is set to include it, or when the package's own list of inclusions names it */
+const colIncF=(k,a)=>Array.isArray(k.f)&&k.f.some(x=>{const s=String(x).toLowerCase(),n=String(a.n||'').toLowerCase().trim();return(n.length>3&&s.includes(n))||(apType(a)==='invite'&&/digital invitation/.test(s))});
+const colIncl=a=>{const k=colPk();if(!a||!k)return false;return EVM?(Array.isArray(k.inc)&&k.inc.includes(a.id)):!!(a.pre&&k.pre)||(!a.pre&&((Array.isArray(k.inc)&&k.inc.includes(a.id))||colIncF(k,a)))};
 const colAdList=()=>pkd?pkd.addons.filter(a=>a.n&&!(EVM&&a.pre)):[];
 /* drop anything that is no longer on the price list, and extras the chosen package already includes */
 function colCheck(){
