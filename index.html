@@ -1820,6 +1820,7 @@ async function loadPk(){
   catch(_){return{d:pkNorm(null),err:true}}
 }
 function pkgView(d){
+  if(PKMODE==='all')return pkChooser();
   pkd=d;colCheck();
   const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
   if(PKMODE==='wed'&&!bk.done)bk.v.event_type='Wedding';
@@ -1843,6 +1844,16 @@ ${d.evNote?`<p class="intro" style="margin-top:18px">${esc(d.evNote)}</p>`:''}
 <div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
 <footer><span>Zema Production · London</span></footer></div>
 ${W||PKMODE==='ev'?'<div id="colbar" class="cbar off" aria-live="polite"></div>':''}`}
+/* ---- Old all-packages link (?p=1): no longer shows every package; the client picks Weddings or Other events. ---- */
+function pkChooser(){
+  const base=location.pathname,h=location.hash||'';
+  const card=(href,t,d,b)=>`<a class="card pk" href="${esc(href)}" style="display:block;text-decoration:none;color:inherit"><div class="nm" style="font-size:28px">${t}</div><p class="intro" style="margin:8px 0 18px">${d}</p><span class="btn pri" style="width:100%;display:flex;align-items:center;justify-content:center">${b}</span></a>`;
+  return`<header class="pkhd"><div class="brand">ZEMA PRODUCTION</div><h1>What are you planning?</h1><div class="meta">Photography &amp; videography · London &amp; worldwide</div><p class="pklead">Choose your occasion to see the collections made for it.</p></header>
+<div class="pkn" style="margin-top:32px">
+${card(base+'?p=wedding'+h,'Weddings','Wedding day coverage, extra days such as church or Hammawiti, and wedding extras.','See wedding collections')}
+${card(base+'?p=events'+h,'Other events','Engagements, christenings, birthdays, photoshoots and hourly coverage.','See event collections')}
+<div class="cta"><a class="btn fill" href="${esc(CONTACT.wa)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="tel:${esc(CONTACT.tel)}">Call</a><a class="btn" href="${esc(CONTACT.ig)}" target="_blank" rel="noopener">Instagram</a></div>
+<footer><span>Zema Production · London</span></footer></div>`}
 /* ---- Wedding collection builder (packages page): one package, optional extras, a live total, carried into the booking form.
    The total is always worked out from the price list (pkd), and the server works it out again when the booking is sent. ---- */
 const EVM=PKMODE==='ev',CKEY='zemaCol'+(EVM?'Ev':'');
