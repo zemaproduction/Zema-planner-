@@ -52,6 +52,9 @@ self.addEventListener('fetch', event => {
 
   if (url.hostname.endsWith('supabase.co')) return;
 
+  /* The intro video is never cached here: iPhones stream video in pieces and need it straight from GitHub. */
+  if (/\.mp4$/i.test(url.pathname)) return;
+
   const isStatic = url.origin === self.location.origin ||
     /(^|\.)cdn\.jsdelivr\.net$|(^|\.)fonts\.googleapis\.com$|(^|\.)fonts\.gstatic\.com$/.test(url.hostname);
   if (!isStatic) return;
