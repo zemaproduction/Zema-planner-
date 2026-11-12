@@ -3732,7 +3732,7 @@ function openMenu(){
   const r=(a,t,d)=>`<button class="or" data-a="${a}"><span class="nm">${t}</span><span class="sub">${d}</span></button>`;
   $('#modal').innerHTML=`<div class="ov"><div class="m"><h3>Menu</h3>
 <div class="lbl" style="margin-bottom:8px">Packages and bookings</div>
-${r('editPk','Edit packages','Prices and wording')}${r('mkt','Invitation marketing','Views, taps and enquiries from invitations')}${r('copyPW','Wedding packages link','Weddings only, with extra days')}${r('copyPE','Events packages link','Small events and hourly rate')}${r('copyP','All packages link','Everything on one page')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('shotV','Shot lists','Must-haves for each type of event')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
+${r('editPk','Edit packages','Prices and wording')}${r('webV','Website visitors','Who visits zemaproduction.com')}${r('mkt','Invitation marketing','Views, taps and enquiries from invitations')}${r('copyPW','Wedding packages link','Weddings only, with extra days')}${r('copyPE','Events packages link','Small events and hourly rate')}${r('copyP','All packages link','Everything on one page')}${r('copyBk','Copy booking form link','Opens at the form')}${r('copyEq','Copy enquiry form link','For your bio')}${r('shotV','Shot lists','Must-haves for each type of event')}${r('locV','Location ideas',locs.length?locs.filter(x=>x.active).length+' shown to clients':'Places you recommend')}
 <div class="lbl" style="margin:26px 0 8px">Settings</div>
 ${r('themeV','Appearance',THEMES[themePref])}${r('pushV','Notifications','Alerts on this phone')}${r('appV','iPhone app &amp; widget',STANDALONE?'Installed on this phone':'Install and Home Screen widget')}${r('revV','Reviews',revs.filter(x=>!x.approved).length?revs.filter(x=>!x.approved).length+' waiting':'For your website')}${r('cleanV','Clear unused photos','Free up storage space')}${r('backup','Download backup',(()=>{try{const d=localStorage.getItem('zemaLastBackup');return d?'Last saved '+fmtD(d):'Never saved'}catch(_){return''}})())}${r('demoV','Demo event',demoW?'Share with prospects':'Not created yet')}${r('goV','Quick links','For home screen icons')}${r('iconV','App icon','Your logo on the icons')}${r('calV','Phone calendar','Subscribe or reset')}${r('invSet','Invoice settings','Business and bank details')}${r('impV','Import invoices','Past invoices from Zoho')}${r('reloadV','Reload the app','Fetch the latest version')}
 <div class="bt" style="margin-top:24px"><button class="dng" data-a="out">Sign out</button><button class="btn" data-a="close">Close</button></div></div></div>`;
@@ -6739,6 +6739,68 @@ ${(S.by||[]).length?`<div class="lbl" style="margin:20px 0 6px">By invitation</d
 <div class="bt" style="margin-top:18px"><a class="btn" href="${esc(location.origin+location.pathname+'?zp=1')}" target="_blank" rel="noopener">Open marketing page</a><button class="btn fill" data-zc="1">Done</button></div>`;
   box.querySelector('[data-zc]').onclick=()=>el.remove()}
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-a="mkt"]');if(!t||TOKEN||!user)return;e.stopPropagation();try{closeM()}catch(_){}zpStats()},true);
+
+
+/* ---- Website visitors (Menu → Website visitors): counts from zemaproduction.com, no cookies, no IP addresses ---- */
+const WSITE='https://www.zemaproduction.com/';
+const WPAGES={'/':'Home','/about/':'About','/portfolio/':'Portfolio','/portfolio/weddings/':'Portfolio · Weddings','/portfolio/pre-wedding/':'Portfolio · Pre-wedding & couples','/portfolio/church-and-tradition/':'Portfolio · Church & tradition','/portfolio/celebrations/':'Portfolio · Celebrations & events','/portfolio/portraits/':'Portfolio · Portraits & photoshoots','/services/':'Packages','/experience/':'The Zema experience','/planner/':'Zema Planner page','/testimonials/':'Kind words','/contact/':'Contact & enquiry form'};
+const wsPage=x=>WPAGES[x.path]||(/^404 /.test(x.path||'')?'Page not found ('+x.path.slice(4)+')':(x.title||x.path||'Unknown'));
+const wsCountry=(()=>{let dn=null;try{dn=new Intl.DisplayNames(['en-GB'],{type:'region'})}catch(_){}return c=>{if(!c||c==='Unknown')return'Unknown';if(/^[A-Z]{2}$/.test(c)&&dn){try{return dn.of(c)}catch(_){}}return c}})();
+const WDAY=['','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+let wsDays=30;
+function wsCss(){if(document.getElementById('ws-css'))return;const st=document.createElement('style');st.id='ws-css';st.textContent=`
+.ws-rng{display:flex;gap:6px;margin:0 0 16px;flex-wrap:wrap}.ws-rng button{min-height:36px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:var(--s);color:var(--tx);font:500 13px var(--sans);cursor:pointer}.ws-rng button.on{border-color:var(--ac);background:var(--act);color:var(--ac2)}
+.ws-up{color:var(--ok)}.ws-dn{color:var(--bad)}
+.ws-ch{display:flex;align-items:flex-end;gap:2px;height:96px;margin:6px 0 4px;padding-top:6px}.ws-ch i{flex:1;min-width:2px;background:var(--ac);opacity:.85;border-radius:2px 2px 0 0}.ws-ch i.z{background:var(--line2);opacity:1}
+.ws-ax{display:flex;justify-content:space-between;font-size:11px;color:var(--mu)}
+.ws-r{padding:9px 0;border-bottom:1px solid var(--line)}.ws-r:last-child{border-bottom:0}.ws-r .row2 span:first-child{color:var(--tx)}
+.ws-b{height:4px;border-radius:2px;background:var(--s2);margin-top:6px;overflow:hidden}.ws-b i{display:block;height:100%;background:var(--ac);border-radius:2px}
+.ws-sec{background:var(--s);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}`;document.head.appendChild(st)}
+async function webStats(days){
+  wsCss();if(days)wsDays=days;
+  let el=document.getElementById('ws-m');
+  if(!el){el=ivModal('<h3>Website visitors</h3><p class="intro">Loading…</p>');el.id='ws-m'}
+  const box=el.querySelector('div');
+  let r;try{r=await sb.rpc('site_stats',{days:wsDays})}catch(e){r={error:e}}
+  if(r.error||!r.data){box.innerHTML=`<h3>Website visitors</h3><p class="intro">${/function|schema|site_stats/i.test(String(r.error&&r.error.message))?'Run <b>zema-website-visitors.sql</b> in the Supabase SQL Editor once, then try again.':'Could not load the numbers: '+esc(String(r.error&&r.error.message||'no data'))}</p><div class="bt"><button class="btn" data-wc="1">Close</button></div>`;box.querySelector('[data-wc]').onclick=()=>el.remove();return}
+  const S=r.data,T=S.tot||{},P=S.prev||{},N=v=>(+v||0).toLocaleString('en-GB');
+  const chg=(a,b)=>{a=+a||0;b=+b||0;if(!b)return a?'<small>new this period</small>':'<small>&nbsp;</small>';const p=Math.round((a-b)/b*100);return`<small class="${p>=0?'ws-up':'ws-dn'}">${p>=0?'▲':'▼'} ${Math.abs(p)}% vs previous ${wsDays} days</small>`};
+  const tile=(l,v,sub)=>`<div><b>${N(v)}</b><span>${l}</span>${sub||''}</div>`;
+  const rate=T.visitors?Math.round(T.enq_sent/T.visitors*1000)/10:0;
+  /* trend: daily, or weekly for longer ranges */
+  let pts=(S.daily||[]).map(x=>({d:x[0],v:+x[1]||0}));
+  if(pts.length>92){const w=[];pts.forEach((x,i)=>{if(i%7===0)w.push({d:x.d,v:0});w[w.length-1].v+=x.v});pts=w}
+  const mx=Math.max(1,...pts.map(x=>x.v)),fd=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const chart=pts.length?`<div class="ws-ch">${pts.map(x=>`<i class="${x.v?'':'z'}" style="height:${x.v?Math.max(4,Math.round(x.v/mx*100)):2}%" title="${esc(fd(x.d))}: ${x.v}"></i>`).join('')}</div><div class="ws-ax"><span>${esc(fd(pts[0].d))}</span><span>busiest ${S.daily.length>92?'week':'day'}: ${N(mx)} visitors</span><span>${esc(fd(pts[pts.length-1].d))}</span></div>`:'';
+  const list=(arr,name,val,max,sub)=>{const m=Math.max(1,...arr.map(x=>+val(x)||0));return arr.slice(0,max||10).map(x=>`<div class="ws-r"><div class="row2"><span>${esc(name(x))}</span><span>${sub(x)}</span></div><div class="ws-b"><i style="width:${Math.round((+val(x)||0)/m*100)}%"></i></div></div>`).join('')};
+  const sec=(t,html,note)=>html?`<div class="lbl" style="margin:20px 0 4px">${t}</div>${note?`<p class="hint" style="margin:0 0 4px">${note}</p>`:''}<div class="ws-sec">${html}</div>`:'';
+  const pages=list(S.pages||[],wsPage,x=>x.views,15,x=>`${N(x.views)} views · ${N(x.visitors)} ${x.visitors==1?'person':'people'}`);
+  const srcs=list(S.sources||[],x=>x.name,x=>x.n,10,x=>`${N(x.n)} ${x.n==1?'person':'people'}${x.enq?' · '+N(x.enq)+' enquir'+(x.enq==1?'y':'ies'):''}`);
+  const ctry=list(S.countries||[],x=>wsCountry(x.name),x=>x.n,8,x=>N(x.n));
+  const city=list(S.cities||[],x=>{const p=String(x.name).split(', ');return p[0]+(p[1]?', '+wsCountry(p[1]):'')},x=>x.n,8,x=>N(x.n));
+  const totDev=(S.devices||[]).reduce((a,x)=>a+(+x.n||0),0)||1;
+  const dev=list(S.devices||[],x=>x.name,x=>x.n,5,x=>Math.round(x.n/totDev*100)+'%');
+  const brw=list(S.browsers||[],x=>x.name,x=>x.n,6,x=>N(x.n));
+  const bw=(S.weekdays||[]).slice().sort((a,b)=>b[1]-a[1])[0],bh=(S.hours||[]).slice().sort((a,b)=>b[1]-a[1])[0];
+  const hr=h=>{const f=x=>{x=(x+24)%24;return (x%12||12)+(x<12?'am':'pm')};return f(h)+'–'+f(h+1)};
+  const busy=bw&&bh?`<p class="meta" style="margin:14px 0 0;font-size:14px">Busiest day <b style="color:var(--tx)">${WDAY[bw[0]]}</b> · busiest hour <b style="color:var(--tx)">${hr(bh[0])}</b> (UK time). A good time to post.</p>`:'';
+  const empty=!T.views;
+  box.innerHTML=`<h3>Website visitors</h3>
+<div class="ws-rng">${[[7,'7 days'],[30,'30 days'],[90,'3 months'],[365,'12 months']].map(([d,l])=>`<button class="${d===wsDays?'on':''}" data-wd="${d}">${l}</button>`).join('')}</div>
+<div class="zp-st">${tile('Visitors',T.visitors,chg(T.visitors,P.visitors))}${tile('Page views',T.views,chg(T.views,P.views))}${tile('On the site now',S.now,'<small>last 5 minutes</small>')}${tile('Enquiries sent',T.enq_sent,`<small>${rate}% of visitors${T.enq_start?' · '+N(T.enq_start)+' started the form':''}</small>`)}${tile('WhatsApp taps',T.whatsapp,'')}${tile('Instagram taps',T.instagram,'')}${tile('Package builder opens',T.builder,'')}${T.call?tile('Call or email taps',T.call,''):''}</div>
+${empty?`<p class="empty" style="padding:22px 0">No visits counted ${wsDays===7?'this week':'in this period'} yet. Numbers appear as soon as someone opens zemaproduction.com.</p>`:`
+${sec('Visitors over time',chart)}
+${sec('Most visited pages',pages)}
+${sec('How they found you',srcs,'Add <b>?s=whatsapp</b> or <b>?s=tiktok</b> to links you share (e.g. zemaproduction.com/?s=whatsapp) to see them here by name. Links opened from WhatsApp otherwise show as Direct.')}
+${sec('Countries',ctry)}${sec('Cities',city,'Approximate, from the visitor’s internet connection.')}
+${sec('Devices',dev)}${sec('Browsers and apps',brw)}
+${busy}`}
+<p class="hint" style="margin:18px 0 0">A visitor is counted once a day. Nothing is stored on visitors’ phones and no IP addresses are kept, so no cookie banner is needed. Websites can’t see gender or age.</p>
+<div class="bt" style="margin-top:16px;flex-wrap:wrap"><a class="btn" href="${WSITE}?zema_me=1" target="_blank" rel="noopener">Don’t count my visits</a><a class="btn" href="${WSITE}" target="_blank" rel="noopener">Open website</a><button class="btn fill" data-wc="1">Done</button></div>`;
+  box.querySelector('[data-wc]').onclick=()=>el.remove();
+  box.querySelectorAll('[data-wd]').forEach(b=>b.onclick=()=>{box.querySelectorAll('[data-wd]').forEach(x=>x.classList.toggle('on',x===b));webStats(+b.dataset.wd)});
+}
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('[data-a="webV"]');if(!t||TOKEN||!user)return;e.stopPropagation();try{closeM()}catch(_){}const o=document.getElementById('ws-m');if(o)o.remove();webStats()},true);
 
 init();
 </script></body></html>
