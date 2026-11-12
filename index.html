@@ -1841,6 +1841,8 @@ async function loadPk(){
 }
 function pkgView(d){
   if(PKMODE==='all')return pkChooser();
+  /* opened from the website (?np): never show prices */
+  if(QS.get('np')!==null)d.hide=true;
   pkd=d;colCheck();
   const pr=p=>d.hide?'Price on request':p,prc=p=>pr(p)?`<div class="prc">${esc(pr(p))}</div>`:'<div style="height:10px"></div>';
   if(PKMODE==='wed'&&!bk.done)bk.v.event_type='Wedding';
