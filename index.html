@@ -4221,8 +4221,10 @@ function revView(){
 <div class="brand">ZEMA PRODUCTION</div><h1>Reviews</h1><div class="meta">${revs.filter(r=>r.approved).length} approved · ${revs.filter(r=>!r.approved).length} waiting</div>
 ${revErr?'<p class="intro" style="margin-top:16px">Reviews aren’t set up yet. Run the latest SQL in Supabase once, then refresh this page.</p>':''}
 <p class="intro" style="margin-top:22px">Ask for a review from an event’s Delivery tab. Only reviews you approve will appear on your website.</p>
+<p class="intro" style="margin-top:10px">For past clients, send your general review link: <b>zemaproduction.com/review</b></p>
+<div class="cta" style="margin-top:0"><a class="btn" href="https://wa.me/?text=${encodeURIComponent('Hi, it was a pleasure capturing your celebration. If you have a minute, I’d be so grateful for a short review:\nhttps://www.zemaproduction.com/review/')}" target="_blank" rel="noopener">Send review link on WhatsApp</a></div>
 <div class="cta" style="margin-top:0"><button class="btn fill" data-a="addRev">+ Add a review yourself</button></div>
-<div>${revs.length?revs.map(r=>{const w=r.wedding_id&&weds.find(x=>x.id===r.wedding_id);return`<div class="g"><div class="bd"><div class="nm">${esc(r.name)}</div><div class="sub" style="color:var(--ac);letter-spacing:.2em">${stars(Number(r.rating)||5)}</div>${w?`<div class="sub">${esc(etype(w))} · ${fmtD(w.wedding_date)}</div>`:''}
+<div>${revs.length?revs.map(r=>{const w=r.wedding_id&&weds.find(x=>x.id===r.wedding_id);return`<div class="g"><div class="bd"><div class="nm">${esc(r.name)}</div><div class="sub" style="color:var(--ac);letter-spacing:.2em">${stars(Number(r.rating)||5)}</div>${w?`<div class="sub">${esc(etype(w))} · ${fmtD(w.wedding_date)}</div>`:(r.event?`<div class="sub">${esc(r.event)}</div>`:'')}
 <div><span class="tag ${r.approved?'approved':''}">${r.approved?'Approved for the website':'Waiting for your approval'}</span></div>
 ${r.body?`<p class="ntx" style="font-size:14px;color:var(--tx2)">${esc(r.body)}</p>`:''}
 <div class="acts"><button data-a="togRev" data-id="${r.id}">${r.approved?'Hide from the website':'Approve'}</button><button data-a="editRev" data-id="${r.id}">Edit</button><button data-a="delRev" data-id="${r.id}">Delete</button></div></div></div>`}).join(''):'<p class="empty">No reviews yet.</p>'}</div>`}
